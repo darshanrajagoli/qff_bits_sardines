@@ -1,0 +1,7 @@
+backend,q,kind,alternative,p_same,p_near,separation,probability_source,status,k,cutoff,tau,false_alarm,power
+aer-noisy:FakeFez,1,ancilla,orthogonal,0.017,0.4835,0.46649999999999997,worst observed raw seed,ok,14,2,0.14285714285714285,0.0015538695989850966,0.9909757121782686
+aer-noisy:FakeFez,1,destructive,orthogonal,0.00475,0.4935,0.48875,worst observed raw seed,ok,11,1,0.09090909090909091,0.0012060703148317707,0.9934049936164293
+aer-noisy:FakeFez,2,ancilla,near,0.054,0.381,0.327,worst observed raw seed,ok,30,5,0.16666666666666666,0.004789642533600556,0.9900560869898802
+aer-noisy:FakeFez,2,destructive,near,0.02125,0.36125,0.34,worst observed raw seed,ok,20,2,0.1,0.008344847263132085,0.9906580220366
+aer-noisy:FakeFez,3,ancilla,near,0.1005,0.2625,0.162,worst observed raw seed,ok,120,20,0.16666666666666666,0.008385837378231344,0.9910756295593076
+aer-noisy:FakeFez,3,destructive,near,0.06775,0.24675,0.179,worst observed raw seed,ok,82,11,0.13414634146341464,0.009115504714556827,0.990652444642136

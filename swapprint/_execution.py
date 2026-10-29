@@ -114,7 +114,8 @@ def _confusion(counts0: dict, counts1: dict, n: int):
 
 
 
-def run_local(qc, shots=4000, backend=None, seed=None, readout_cal=False, memory=False):
+def run_local(qc, shots=4000, backend=None, seed=None, readout_cal=False, memory=False,
+              *, transpile_seed=None, simulator_seed=None, return_details=False):
     """Reference run() local dispatch; also expose ISA circuit, memory and elapsed time.
 
     Ideal Aer uses Qiskit's built-in, seeded native-basis translation stage.
@@ -127,6 +128,8 @@ def run_local(qc, shots=4000, backend=None, seed=None, readout_cal=False, memory
 
     if shots < 1:
         raise ValueError("shots must be >= 1")
+    transpile_seed = seed if transpile_seed is None else transpile_seed
+    simulator_seed = seed if simulator_seed is None else simulator_seed
     ideal = backend is None
     if ideal:
         backend = AerSimulator(method="statevector")
@@ -141,15 +144,69 @@ def run_local(qc, shots=4000, backend=None, seed=None, readout_cal=False, memory
         from qiskit.transpiler.preset_passmanagers.builtin_plugins import BasisTranslatorPassManager
 
         config = PassManagerConfig(basis_gates=backend.configuration().basis_gates,
-                                   target=backend.target, seed_transpiler=seed)
+                                   target=backend.target, seed_transpiler=transpile_seed)
         pm = BasisTranslatorPassManager().pass_manager(config, optimization_level=3)
     else:
-        pm = generate_preset_pass_manager(optimization_level=3, backend=backend, seed_transpiler=seed)
+        pm = generate_preset_pass_manager(optimization_level=3, backend=backend, seed_transpiler=transpile_seed)
     isa = pm.run(qc)
     circuits = [isa] + (_calibration_circuits(isa) if readout_cal else [])
-    result = backend.run(circuits, shots=shots, seed_simulator=seed, memory=memory).result()
+    result = backend.run(circuits, shots=shots, seed_simulator=simulator_seed, memory=memory).result()
     seconds = perf_counter() - start
     counts = result.get_counts(0)
     cal = (_confusion(result.get_counts(1), result.get_counts(2), isa.num_clbits)
            if readout_cal else None)
-    return counts, cal, isa, seconds, result.get_memory(0) if memory else None
+    output = counts, cal, isa, seconds, result.get_memory(0) if memory else None
+    if return_details:
+        return (*output, {"counts": counts, "calibration_counts":
+                         [result.get_counts(1), result.get_counts(2)] if readout_cal else None,
+                         "physical_qubits": _measured_physical_qubits(isa)})
+    return output
+
+
+def bootstrap_p1(counts, kind, q, calibration_counts=None, *, resamples=2000, seed=0):
+    """95% percentile parametric intervals, including calibration sampling noise.
+
+    Multinomials use the empirical test/all-0/all-1 distributions. Resampling
+    complete calibration outcomes preserves correlations between measured bits.
+    Correction uses the same independent-bit inverse and clipping as p1_from_counts.
+    These are conditional shot-noise intervals, not device/model uncertainty.
+    """
+    if not isinstance(resamples, (int, np.integer)) or resamples < 1:
+        raise ValueError("resamples must be a positive integer")
+    n = 1 if kind == "ancilla" else 2 * q
+    size = 1 << n
+    rng = np.random.default_rng(seed)
+
+    def sample(c):
+        p = np.zeros(size)
+        for key, value in c.items():
+            p[_key_to_int(key)[0]] += value
+        total = int(p.sum())
+        if total < 1:
+            raise ValueError("empty counts")
+        return rng.multinomial(total, p / total, size=resamples) / total
+
+    p = sample(counts)
+    mask = np.array([outcome_bit(k, kind, q) for k in range(size)], dtype=bool)
+    raw = p[:, mask].sum(axis=1)
+    result = {"p1_raw_lo": float(np.quantile(raw, .025)),
+              "p1_raw_hi": float(np.quantile(raw, .975))}
+    if calibration_counts is not None:
+        bits = (np.arange(size)[:, None] >> np.arange(n)) & 1
+        e01 = sample(calibration_counts[0]) @ bits
+        e10 = 1 - sample(calibration_counts[1]) @ bits
+        tensor = p.reshape([resamples] + [2] * n)
+        for j in range(n):
+            a, b = e01[:, j], e10[:, j]
+            det = 1 - a - b
+            if np.any(np.abs(det) < 1e-8):
+                raise ValueError("singular bootstrap readout confusion matrix")
+            inv = np.array([[1 - b, -b], [-a, 1 - a]]).transpose(2, 0, 1) / det[:, None, None]
+            axis = n - j
+            moved = np.moveaxis(tensor, axis, -1)
+            moved = np.einsum("rij,r...j->r...i", inv, moved)
+            tensor = np.moveaxis(moved, -1, axis)
+        calibrated = np.clip(tensor.reshape(resamples, size)[:, mask].sum(axis=1), 0, 1)
+        result.update(p1_cal_lo=float(np.quantile(calibrated, .025)),
+                      p1_cal_hi=float(np.quantile(calibrated, .975)))
+    return result

@@ -1,0 +1,5 @@
+{
+  "canonical_key": "3a4cb38b75f4",
+  "validated_circuits": 66,
+  "method": "Loaded cached QPY circuits and recounted every two-qubit gate and depth; promoted identical transpilations to canonical snapshot key"
+}

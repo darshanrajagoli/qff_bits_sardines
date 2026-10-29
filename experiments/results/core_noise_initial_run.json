@@ -1,0 +1,28 @@
+{
+  "label": "toy states on a simulated IBM device noise model",
+  "seconds": 548.7469415999949,
+  "shots": 4000,
+  "calibration_shots_per_state": 4000,
+  "bootstrap_resamples": 2000,
+  "state_seed": 2026,
+  "transpile_seeds": [
+    7,
+    23,
+    91
+  ],
+  "simulator_seeds": [
+    4328,
+    4344,
+    4412
+  ],
+  "optimization_level": 3,
+  "qiskit": "2.6.1",
+  "aer": "0.18.2",
+  "runtime": "0.51.0",
+  "notes": [
+    "FakeFez base q=1..3: 271.23s; including optional q=4: 271.23s."
+  ],
+  "rough_guide_gate_count": 256.18803940997066,
+  "median_fez_two_qubit_error": 0.0039033828523107883,
+  "image_target_f": 2.4536922664259593e-06
+}
