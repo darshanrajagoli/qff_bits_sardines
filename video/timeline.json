@@ -1,0 +1,118 @@
+{
+  "_doc": "Drives video/record.py ('app' segments, in order) and video/finish.py (all segments, in order). Story: video/narration.md. Types: hook, title, diagram, section, app, chart, figures, end. 'vo' is narrated (edge-tts) and captioned; 'tts' overrides the spoken text. {name} placeholders come from out/raw/facts.json. App segments with \"show\": false are recorded but not used. Camera 'at': seconds into the segment, or 'idle:N+x' / 'click:N+x' (action N of the segment). 'target': a name in 'targets' or 'full'; 'focus': 'truth' zooms on the edited tile inside an image target; 'scale' caps the zoom (2.0 = native, the take is captured at 2x). 'clip': where the footage starts (default: segment start, long waits cut).",
+  "meta": {
+    "artwork": "hokusai_great_wave.png",
+    "seed": 0,
+    "voice": "en-US-AndrewNeural",
+    "rate": "-5%",
+    "fps": 30,
+    "crossfade": 0.45,
+    "music": true,
+    "repo": "github.com/darshanrajagoli/qff_bits_sardines"
+  },
+  "segments": [
+    {"type": "hook", "id": "hook", "dur": 13.0,
+     "vo": "This is Hokusai's Great Wave. We changed one pixel, by one shade. Can you see what changed? Neither can anyone. A quantum fingerprint can.",
+     "vo_at": 0.8},
+
+    {"type": "title", "id": "title", "dur": 3.6,
+     "kicker": "Qiskit Fall Fest 2026 hackathon · Problem 5 · Quantum Fingerprint",
+     "title": "SwapPrint", "sub": "Quantum fingerprints for digital art"},
+
+    {"type": "diagram", "id": "idea", "dur": 23.0,
+     "vo": "Digital art is copied and edited endlessly. SwapPrint gives every 4×4 patch an 11-qubit quantum fingerprint, built from an error-correcting code, after Buhrman and colleagues, 2001. A SWAP test compares two fingerprints. In an ideal test, identical patches never read one. A changed patch reads one about half the time.",
+     "tts": "Digital art is copied, and edited, endlessly. SwapPrint gives every four-by-four patch an eleven-qubit quantum fingerprint, built from an error-correcting code, after Buhrman and colleagues, 2001. A SWAP test compares two fingerprints. In an ideal test, identical patches never read one. A changed patch reads one about half the time.",
+     "vo_at": 0.5},
+
+    {"type": "app", "id": "setup", "show": false,
+     "actions": [{"action": "select_sidebar", "label": "Artwork", "option": "Under the Wave off Kanagawa"},
+                 {"action": "goto_tab", "tab": "2 · Tamper"},
+                 {"action": "click_button", "name": "Surprise me"}]},
+
+    {"type": "section", "id": "s1", "num": "01", "title": "Spot the edit", "sub": "The live app, one hidden edit"},
+
+    {"type": "app", "id": "guess",
+     "actions": [{"action": "goto_tab", "tab": "3 · Verify"},
+                 {"action": "click_image", "x": 0.28, "y": 0.36}],
+     "vo": "Here's the live app. Somewhere in this image, one pixel moved by one shade. We take a guess, and press Verify.",
+     "targets": {"game": [{"text_block": "Spot the edit"}, {"iframe": 0}, {"sel": "[data-testid='stButton']", "text": "Verify"}]},
+     "camera": [{"at": 0.3, "target": "game", "dur": 1.8, "scale": 1.3}]},
+
+    {"type": "app", "id": "verify",
+     "actions": [{"action": "click_button", "name": "Verify"}],
+     "vo": "Change detected.",
+     "targets": {"verdict": {"text_block": "CHANGE DETECTED"}},
+     "camera": [{"at": 0.0, "target": "verdict", "dur": 1.1, "scale": 1.8}],
+     "clip": "click:0-0.3", "min_dur": 3.4, "sync": {"src": "idle:0-0.45", "word": "Change", "lead": 0.1}},
+
+    {"type": "app", "id": "shots",
+     "actions": [{"action": "scroll_to_text", "text": "Live SWAP test"},
+                 {"action": "click_button", "name": "▶ Play shots", "watch": {"sel": ".shots .shot", "counts": [1, 2]}}],
+     "vo": "These are the SWAP-test shots for the suspicious tile. In a noiseless test, identical states can never give a one. And there it is, on shot {strict_first_shot}.",
+     "tts": "These are the SWAP-test shots for the suspicious tile. In a noiseless test, identical states can never give a one... And there it is, on shot {strict_first_shot_word}.",
+     "targets": {"strip": [{"text_block": "Live SWAP test"}, {"sel": ".shots"}, {"text_block": "After "}]},
+     "camera": [{"at": 0.2, "target": "strip", "dur": 1.2, "scale": 1.9}],
+     "sync": {"src": "magenta:1", "region": "strip", "word": "there", "lead": 0.25},
+     "hold_sync": 1.4,
+     "lower": {"title": "One tile, shot by shot", "sub": "Grey = 0 · magenta = 1 · the first 1 is outlined", "at": 0.8, "dur": 4.0}},
+
+    {"type": "app", "id": "heatmap",
+     "isolated_target": "heat",
+     "actions": [{"action": "scroll_to_text", "text": "Where it changed"}],
+     "vo": "The heatmap lands on the exact 4×4 tile. Across held-out paintings, 7 shots is the median exact budget for 99% detection.",
+     "tts": "The heatmap lands on the exact four-by-four tile. Across held-out paintings, seven shots is the median exact budget for ninety-nine percent detection.",
+     "targets": {"heat": {"iframe": 0}},
+     "camera": [{"at": 0.0, "target": "heat", "dur": 1.4, "scale": 1.35},
+                {"at": 1.9, "target": "heat", "focus": "truth", "dur": 2.0, "scale": 3.0}]},
+
+    {"type": "section", "id": "s2", "num": "02", "title": "Why the encoding|matters", "sub": "Same edit, same test"},
+
+    {"type": "app", "id": "frqi",
+     "actions": [{"action": "radio_sidebar", "label": "Encoding", "option": "frqi (baseline)"},
+                 {"action": "click_button", "name": "Verify", "scroll_first": true}],
+     "vo": "Why does this work? The textbook encoding stores pixels as angles. A one-shade change barely moves that state: its overlap stays at 0.9999997, and the test sees nothing.",
+     "tts": "Why does this work? The textbook encoding stores pixels as angles. A one-shade change barely moves that state: its overlap stays at zero point nine nine nine nine nine nine seven... and the test sees nothing.",
+     "targets": {"verdict": {"text_block": "NO CHANGE DETECTED"}},
+     "camera": [{"at": "idle:1+0.1", "target": "verdict", "dur": 1.4, "scale": 1.7}],
+     "clip": "click:0-0.4",
+     "lower": {"title": "FRQI baseline", "sub": "Pixels stored as angles · same edit, same 32 shots", "at": "idle:1+1.6", "dur": 4.4}},
+
+    {"type": "chart", "id": "bars", "dur": 11.5,
+     "vo": "For a 99% chance of catching this edit, the angle encoding needs about 15.5 million shots. SwapPrint needs 7.",
+     "tts": "For a ninety-nine percent chance of catching this edit, the angle encoding needs about fifteen and a half million shots. SwapPrint needs seven.",
+     "vo_at": 0.6},
+
+    {"type": "section", "id": "s3", "num": "03", "title": "Rigour", "sub": "Measured, not assumed"},
+
+    {"type": "figures", "id": "rigour",
+     "vo": "We tested it properly. 15 artworks. 22 conditions. 69,300 trials. Perceptual thresholds checked on held-out paintings. Qiskit Aer: 97 of 100 Wilson 95% intervals contain the exact value. Then real hardware: 18 toy comparisons on IBM's Marrakesh processor, 4,000 shots each. Noise makes even identical states fire. Readout correction helps, but leaves circuit error. These are small toy states, not full-image hardware results.",
+     "tts": "We tested it properly. Fifteen artworks. Twenty-two conditions. Sixty-nine thousand three hundred trials. Perceptual thresholds checked on held-out paintings. Qiskit Aer: ninety-seven of one hundred Wilson ninety-five percent intervals contain the exact value. Then real hardware: eighteen toy comparisons on IBM's Marrakesh processor, four thousand shots each. Noise makes even identical states fire. Readout correction helps, but leaves circuit error. These are small toy states, not full-image hardware results.",
+     "vo_at": 0.3,
+     "cards": [
+       {"fig": "encodings_shots_needed.png", "big": "69,300", "label": "trials · 15 artworks · 22 tamper cases", "cue": "tested"},
+       {"fig": "perceptual_roc.png", "big": "6", "label": "held-out paintings for the perceptual thresholds", "cue": "Perceptual"},
+       {"fig": "core_validation.png", "big": "97 / 100", "label": "Wilson 95% intervals contain the exact p1", "cue": "Qiskit"},
+       {"fig": "core_hardware.png", "big": "18", "label": "toy comparisons · real ibm_marrakesh · 4,000 shots each", "cue": "Then"},
+       {"fig": "core_hardware.png", "big": "Noise", "label": "q = 1–3 only · readout correction leaves circuit error", "cue": "Noise"}
+     ]},
+
+    {"type": "app", "id": "restore", "show": false,
+     "actions": [{"action": "radio_sidebar", "label": "Encoding", "option": "strict"},
+                 {"action": "click_button", "name": "Verify", "scroll_first": true}]},
+
+    {"type": "section", "id": "s4", "num": "04", "title": "Honest limits", "sub": "What this is, and what it is not"},
+
+    {"type": "app", "id": "close",
+     "actions": [{"action": "goto_tab", "tab": "3 · Verify"}],
+     "vo": "To be clear: in practice, a classical SHA-256 hash is the better integrity check today, and full circuits are far beyond current hardware. What SwapPrint shows is how the encoding decides what a quantum measurement can see.",
+     "tts": "To be clear: in practice, a classical SHA-two-fifty-six hash is the better integrity check today, and full circuits are far beyond current hardware. What SwapPrint shows... is how the encoding decides what a quantum measurement can see.",
+     "targets": {"top": [{"text_block": "CHANGE DETECTED"}, {"iframe": 0}]},
+     "camera": [{"at": 0.0, "target": "top", "dur": 9.0, "scale": 1.25}],
+     "lower": {"title": "SHA-256 per tile: 5.82 ms", "sub": "The classical baseline wins on practicality (README, Table T1)", "at": 1.0, "dur": 5.6}},
+
+    {"type": "end", "id": "end", "dur": 6.5,
+     "vo": "SwapPrint. By team sardines.", "vo_at": 0.5,
+     "title": "SwapPrint · team sardines", "sub": "github.com/darshanrajagoli/qff_bits_sardines",
+     "lines": ["IBM Qiskit Fall Fest 2026 hackathon · Problem 5", "Built with Qiskit"]}
+  ]
+}
