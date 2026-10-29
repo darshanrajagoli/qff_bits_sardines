@@ -22,7 +22,7 @@
 
 ## The Demo
 
-An interactive web application built with Streamlit and styled with IBM's Carbon Design System lets users register artwork fingerprints, apply realistic digital tampering, challenge a friend, run live SWAP tests shot by shot, and execute real 23-qubit circuits on Qiskit Aer.
+An interactive web application built with Streamlit and styled with the open-source Carbon Design System lets users register artwork fingerprints, apply realistic digital tampering, challenge a friend, run live SWAP tests shot by shot, and execute real 23-qubit circuits on Qiskit Aer.
 
 | Verification Heatmap & Live SWAP Test | Interactive Tampering Studio |
 |:---:|:---:|
@@ -183,7 +183,7 @@ Every artwork was evaluated across 22 conditions: one unchanged control and 21 n
 | Figure | Summary Visualization | Key Takeaway |
 |---|:---:|---|
 | **F1: Detection vs Shots** | ![F1](experiments/figures/detection_vs_shots.png) | In strict mode, analytical curves and empirical trials match precisely (within Wilson 95% intervals). At eight shots, the five single-pixel cases produced 744/750 detections: 99.20% (95% Wilson interval: 98.27%–99.63%). Strict controls produced 0/1,350 false alarms (95% Wilson interval: 0%–0.284%); the ideal identical-input false-alarm probability is exactly zero. |
-| **F2: Shots Needed Across Cases** | ![F2](experiments/figures/encodings_shots_needed.png) | Strict mode detects all 21 tampering cases in $< 32$ shots. F2’s perceptual results use the historical median hash and $t=0.52$. FRQI requires over $10^7$ shots for fine edits, proving that encoding dictates sensitivity. |
+| **F2: Shots Needed Across Cases** | ![F2](experiments/figures/encodings_shots_needed.png) | Strict mode detects all 21 tampering cases in $< 32$ shots. Perceptual mode uses the calibrated median hash ($t=0.65$, 2,048 shots). FRQI requires over $10^7$ shots for fine edits, showing that encoding dictates sensitivity. |
 | **F3: Collision Distribution** | ![F3](experiments/figures/collisions.png) | Overlap distribution over $1,000,000$ distinct tile pairs matches the theoretical $\mathcal{N}(0, 1/2048)$ Gaussian. Among 1,000,000 sampled distinct-content strict tile pairs, maximum absolute overlap was 0.1083984375, supporting the heuristic bound. Perceptual hashes matched for 345/26,880 distinct-content pairs (1.283%). |
 | **F4: Perceptual ROC Curves** | ![F4](experiments/figures/perceptual_roc.png) | Sweeping threshold $t$ across flatness cutoffs $\sigma$ reveals an optimal operating point at $\sigma = 25.0, t = 0.65$. Constant-colour regions share an all-zero AC hash, so perceptual mode cannot distinguish their colours; strict mode retains that information. |
 | **F5: Tamper Localisation** | ![F5](experiments/figures/localisation.png) | The heatmap displays flagged 4×4 tiles. Finite-shot checks can miss changed tiles; unchanged tiles have exactly zero flag probability in the ideal model. Flagged 4×4 tiles identify modified regions for `patch12`, `copy_move48`, `splice48`, and `text`. |
@@ -251,7 +251,7 @@ To maintain strict scientific integrity, we explicitly detail the limitations of
 
 ## The Interactive App
 
-An interactive web application built with Streamlit, Plotly, and Qiskit lets users test the system in real time. Styled using IBM's Carbon Design System tokens and typography (`docs/style/carbon.css`).
+An interactive web application built with Streamlit, Plotly, and Qiskit lets users test the system in real time. Styled using the open-source Carbon Design System tokens and typography (`docs/style/carbon.css`).
 
 ```bash
 # 1. Install dependencies
@@ -269,9 +269,19 @@ Open `http://localhost:8501` in your browser, or visit the live public deploymen
 |---|---|
 | **1 · Fingerprint** | View the canonical 256×256 artwork, inspect the math of the $[2048, 384]$ code, and visualize the **Fingerprint Mosaic** (codeword bits mapped to RGB color tiles). Download registered fingerprints as `.npz` files. |
 | **2 · Tamper** | Interactive canvas studio: click any coordinate to apply single-pixel nudges, red patches, copy-moves, splices, text insertions, LSB watermarks, or JPEG re-saves. Includes Undo, Reset, a **"Surprise Me"** button that hides an invisible 1-pixel edit for the game, and a **"Challenge a friend"** mode that hides your custom edits so someone else can test their eyes against the quantum verifier. |
-| **3 · Verify** | **Spot the Edit:** Guess where the tamper occurred, then run verification. Displays the verdict, total shots evaluated, a 64×64 **tamper heatmap** highlighting altered tiles, a zoomed inspection of the most suspicious tile, and a **Live SWAP Test** visualizer that plays shots one by one with a real-time Wilson interval. Includes **Compare Encodings** (Strict vs Perceptual vs FRQI) and a **"Run on Qiskit Aer"** button to execute true 23-qubit circuits. |
+| **3 · Verify** | **Spot the Edit:** Guess where the tamper occurred, then run verification. Displays the verdict, total shots evaluated, a 64×64 **tamper heatmap** highlighting altered tiles, a zoomed inspection of the most suspicious tile, and a **Live SWAP Test** visualizer that plays shots one by one with a real-time Wilson interval. Includes **Compare Encodings** (Strict vs Perceptual vs FRQI), a **"Run on Qiskit Aer"** button to execute true 23-qubit circuits, and **Check a file** to verify an image against a registered `.npz` without uploading the original (a strict `.npz` can itself reconstruct the canonical image). |
 | **How It Works** | Comprehensive educational walkthrough of the 5-step pipeline, circuit diagrams, mathematical derivations, and honest limitations. |
 | **Results** | Interactive gallery displaying all generated figures (F1–F7, ablation, noise) with captions from `captions.json` and `core_captions.json`. |
+
+### How the App Computes, Said Precisely
+- **Verify uses the `exact` backend:** each unit's overlap is computed exactly and its SWAP-test outcomes are sampled, identical in distribution to a noiseless circuit on that unit (evaluates in under 2 seconds).
+- **"Run on Qiskit Aer" runs a real circuit** for one tile, executed in a separate process. The tile is chosen classically (by the exact overlap or user click), making this a hybrid demonstration rather than a purely quantum verifier.
+- **Every number on screen is computed from `swapprint` at runtime**, including the code bound, shot counts, perceptual threshold, and single-bit flip range; none are hardcoded.
+- **A fingerprint is not secret:** a strict `.npz` decodes back to the image, and there is no secret key. Anyone can fingerprint anything, so a check only shows consistency with a trusted stored reference. It is an integrity check, not a signature or watermark. "No change detected" is not proof that nothing changed.
+
+### Third-Party Code & Design in the App
+- **Libraries:** Streamlit (Apache-2.0), Plotly (MIT), streamlit-image-coordinates (MIT), Pillow (MIT-CMU), Qiskit and Qiskit Aer (Apache-2.0), Playwright (Apache-2.0). Artworks are CC0 / Public Domain from museum collections (`data/artworks/SOURCES.md`).
+- **Design & Typography:** Built with tokens from the [Carbon Design System](https://carbondesignsystem.com) (Apache-2.0; tokens from `swapprint/style.py`, CSS in `docs/style/carbon.css`) and typography set in [IBM Plex](https://github.com/IBM/plex) (SIL Open Font License 1.1; fonts located in `app/static/fonts/` with `OFL.txt`). SwapPrint is an independent student project by team sardines and is not made or endorsed by IBM.
 
 ---
 
