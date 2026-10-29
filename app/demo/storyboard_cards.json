@@ -1,0 +1,207 @@
+[
+ {
+  "say": "",
+  "action": "card",
+  "kind": "title",
+  "title": "SwapPrint",
+  "sub": "Quantum fingerprints for digital art",
+  "kicker": "team sardines · Qiskit Fall Fest 2026",
+  "hold": 4
+ },
+ {
+  "say": "",
+  "action": "card_off",
+  "hold": 0.3
+ },
+ {
+  "say": "SwapPrint: quantum fingerprints for digital art. We start with Hokusai's Great Wave.",
+  "action": "select_sidebar",
+  "label": "Artwork",
+  "option": "Under the Wave off Kanagawa",
+  "hold": 5
+ },
+ {
+  "say": "Every 4x4 patch gets its own 11-qubit fingerprint state.",
+  "action": "goto_tab",
+  "tab": "1 · Fingerprint",
+  "hold": 7,
+  "check": "fingerprint"
+ },
+ {
+  "say": "",
+  "action": "card",
+  "kind": "section",
+  "title": "Tamper",
+  "hold": 2.5
+ },
+ {
+  "say": "",
+  "action": "card_off",
+  "hold": 0.3
+ },
+ {
+  "say": "Now someone quietly edits the artwork: one pixel, one colour level.",
+  "action": "goto_tab",
+  "tab": "2 · Tamper",
+  "hold": 4
+ },
+ {
+  "say": "Surprise me hides a single invisible edit somewhere in the image.",
+  "action": "click_button",
+  "name": "Surprise me",
+  "hold": 5
+ },
+ {
+  "say": "Can you spot the edit? Nobody can by eye.",
+  "action": "goto_tab",
+  "tab": "3 · Verify",
+  "hold": 5
+ },
+ {
+  "say": "Let's guess: click where we think the change is.",
+  "action": "click_image",
+  "x": 0.6,
+  "y": 0.79,
+  "hold": 4
+ },
+ {
+  "say": "",
+  "action": "card",
+  "kind": "section",
+  "title": "Verify",
+  "hold": 2.5
+ },
+ {
+  "say": "",
+  "action": "card_off",
+  "hold": 0.3
+ },
+ {
+  "say": "Press Verify: the SWAP test compares every fingerprint, tile by tile.",
+  "action": "click_button",
+  "name": "Verify",
+  "hold": 3
+ },
+ {
+  "say": "CHANGE DETECTED. The heatmap points straight at the edited tile.",
+  "action": "scroll_to_text",
+  "text": "CHANGE DETECTED",
+  "hold": 8,
+  "check": "verdict"
+ },
+ {
+  "say": "Untouched tiles never fire. A changed tile fires about half the time.",
+  "action": "scroll_to_text",
+  "text": "Live SWAP test",
+  "hold": 3
+ },
+ {
+  "say": "Watch the SWAP test shots arrive one by one: grey is 0, magenta is 1.",
+  "action": "click_button",
+  "name": "▶ Play shots",
+  "hold": 4
+ },
+ {
+  "say": "The same test, as a real circuit on Qiskit's Aer simulator.",
+  "action": "scroll_to_text",
+  "text": "Run it on a real Qiskit circuit",
+  "hold": 3
+ },
+ {
+  "say": "Aer agrees with the exact answer.",
+  "action": "click_button",
+  "name": "Run on Qiskit Aer",
+  "hold": 7
+ },
+ {
+  "say": "",
+  "action": "card",
+  "kind": "section",
+  "title": "Encoding matters",
+  "hold": 2.5
+ },
+ {
+  "say": "",
+  "action": "card_off",
+  "hold": 0.3
+ },
+ {
+  "say": "Why the encoding matters: same edit, same SWAP test, three encodings.",
+  "action": "scroll_to_text",
+  "text": "Compare encodings",
+  "hold": 8
+ },
+ {
+  "say": "Switch to the textbook baseline encoding, FRQI.",
+  "action": "radio_sidebar",
+  "label": "Encoding",
+  "option": "frqi (baseline)",
+  "hold": 3
+ },
+ {
+  "say": "Verify again with FRQI...",
+  "action": "click_button",
+  "name": "Verify",
+  "scroll_first": true,
+  "hold": 2
+ },
+ {
+  "say": "NO CHANGE DETECTED. FRQI needs millions of shots to notice this edit.",
+  "action": "scroll_to_text",
+  "text": "NO CHANGE DETECTED",
+  "hold": 7,
+  "check": "frqi"
+ },
+ {
+  "say": "Same SWAP test, different encoding: 99% detection takes 15.5 million shots with FRQI, 7 with ours.",
+  "action": "scroll_to_text",
+  "text": "Compare encodings",
+  "hold": 6
+ },
+ {
+  "say": "How: tile, error-correcting code, 11-qubit sign state, SWAP test. One flipped bit flips about half the signs.",
+  "action": "goto_tab",
+  "tab": "How it works",
+  "hold": 7
+ },
+ {
+  "say": "",
+  "action": "card",
+  "kind": "section",
+  "title": "Results",
+  "hold": 2.5
+ },
+ {
+  "say": "",
+  "action": "card_off",
+  "hold": 0.3
+ },
+ {
+  "say": "Measured, not assumed: 12 paintings, 3 stress images, 22 conditions, Wilson 95% intervals on sampled rates.",
+  "action": "goto_tab",
+  "tab": "Results",
+  "hold": 6,
+  "check": "results"
+ },
+ {
+  "say": "Honest limit: on a simulated IBM device noise model (FakeFez), identical states start to fire, so real devices need thresholds.",
+  "action": "scroll_to_text",
+  "text": "Circuits and noise",
+  "hold": 7
+ },
+ {
+  "say": "SHA-256 is still better in practice. What SwapPrint shows: the encoding decides what a SWAP test can see.",
+  "action": "goto_tab",
+  "tab": "3 · Verify",
+  "hold": 5
+ },
+ {
+  "say": "",
+  "action": "card",
+  "kind": "end",
+  "title": "SwapPrint",
+  "sub": "team sardines",
+  "foot": "Design tokens: Carbon Design System (Apache-2.0). Typeface: IBM Plex (SIL OFL 1.1). SwapPrint is an independent project and is not made or endorsed by IBM.",
+  "hold": 4
+ }
+]

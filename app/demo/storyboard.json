@@ -37,7 +37,7 @@
    "action": "goto_tab", "tab": "How it works", "hold": 7},
   {"say": "Measured, not assumed: 12 paintings, 3 stress images, 22 conditions, Wilson 95% intervals on sampled rates.",
    "action": "goto_tab", "tab": "Results", "hold": 6, "check": "results"},
-  {"say": "Honest limit: on a simulated IBM noise model, identical states start to fire, so real devices need thresholds.",
+  {"say": "Honest limit: on a simulated IBM device noise model (FakeFez), identical states start to fire, so real devices need thresholds.",
    "action": "scroll_to_text", "text": "Circuits and noise", "hold": 7},
   {"say": "SHA-256 is still better in practice. What SwapPrint shows: the encoding decides what a SWAP test can see.",
    "action": "goto_tab", "tab": "3 · Verify", "hold": 5}

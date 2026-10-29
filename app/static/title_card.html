@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SwapPrint title card</title>
+<!--
+  SwapPrint · team sardines: 1920x1080 title cards, section cards, lower thirds and the end card for the demo video.
+
+  Design: Carbon Design System g100 tokens (Apache-2.0) + IBM Plex (SIL OFL 1.1). Accent #8a3ffc is the violet of q-bits.in
+  (Carbon Purple 60). No IBM logo, wordmark or brand mark. Not made or endorsed by IBM.
+
+  Query parameters (all optional, text only; use | for a line break; values are set with textContent, never as HTML):
+    kind      title (default) | section | lower | end
+    title     main text            e.g. title=SwapPrint
+    sub       secondary line       e.g. sub=Quantum fingerprints for digital art
+    kicker    small line above     e.g. kicker=Qiskit Fall Fest 2026 · Problem 5   (plain text)
+    num       section number       e.g. num=02     (section cards)
+    foot      small line at bottom e.g. foot=SwapPrint · team sardines    (default for title/section/end)
+    theme     g100 (default) | white
+    anim      1 (default, 400 ms fade/slide) | 0 (still frame: use for screenshots)
+    fontbase  where the Plex TTFs live (default: ../../swapprint/fonts/ from docs/style/, or fonts/ from app/static/)
+
+  Examples:
+    title_card.html?title=SwapPrint&sub=Quantum%20fingerprints%20for%20digital%20art&kicker=Problem%205%20%C2%B7%20Quantum%20Fingerprint
+    title_card.html?kind=section&num=02&title=Tamper&sub=One%20pixel%2C%20one%20colour%20level
+    title_card.html?kind=lower&title=Darshan%20Rajagoli&sub=Core%20and%20SWAP%20test    (transparent: overlay it)
+    title_card.html?kind=end&title=Thank%20you&sub=github.com%2Fdarshanrajagoli%2Fqff_bits_sardines
+-->
+<style>
+  :root {
+    /* Carbon g100 */
+    --background: #161616; --layer-01: #262626; --layer-02: #393939;
+    --text-primary: #f4f4f4; --text-secondary: #c6c6c6; --text-helper: #a8a8a8;
+    --border-subtle: #525252; --accent: #8a3ffc; --accent-bright: #a56eff;
+    --alert: #ee5396; --grid: rgba(138, 63, 252, 0.08);
+    --sp: 8px;                                   /* Carbon 8 px grid */
+    --ease: cubic-bezier(0.2, 0, 0.38, 0.9);     /* Carbon productive motion */
+  }
+  body.white {
+    --background: #ffffff; --layer-01: #f4f4f4; --layer-02: #e0e0e0;
+    --text-primary: #161616; --text-secondary: #525252; --text-helper: #6f6f6f;
+    --border-subtle: #c6c6c6; --accent: #8a3ffc; --accent-bright: #6929c4; --grid: rgba(138, 63, 252, 0.07);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 100%; height: 100%; overflow: hidden; background: transparent; }
+  body { font-family: "IBM Plex Sans", "Helvetica Neue", Arial, sans-serif; color: var(--text-primary); -webkit-font-smoothing: antialiased; }
+
+  /* The stage is always 1920x1080 and is scaled to the window by script (so a 1280x720 preview looks the same). */
+  #stage { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; transform-origin: 0 0; overflow: hidden; }
+  .card { position: absolute; inset: 0; display: none; background: var(--background); }
+  body[data-kind="title"] #title, body[data-kind="section"] #section, body[data-kind="end"] #end { display: block; }
+  body[data-kind="lower"] #lower { display: block; background: transparent; }
+
+  /* subtle circuit grid, like the event site's .circuit-field, 40 px = 5 x 8 px */
+  .grid { position: absolute; inset: 0;
+    background-image: linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+    background-size: 40px 40px; background-position: 50% 50%; }
+  .rail { position: absolute; left: 128px; right: 128px; top: 128px; bottom: 112px; }   /* 16 x 8 px margins */
+
+  .kicker { font-size: 28px; line-height: 40px; letter-spacing: 0; color: var(--text-secondary); font-weight: 400; }
+  .bar { width: 160px; height: 8px; margin: 32px 0 48px; background: linear-gradient(90deg, #ff7eb6 0%, #ee5396 42%, #8a3ffc 100%); }
+  .title { font-weight: 600; font-size: 144px; line-height: 152px; letter-spacing: -1px; max-width: 1500px; white-space: pre-line; }
+  .sub { margin-top: 40px; font-size: 44px; line-height: 64px; font-weight: 400; color: var(--text-secondary); max-width: 1380px; white-space: pre-line; }
+  .foot { position: absolute; left: 0; bottom: 0; font-size: 24px; line-height: 32px; color: var(--text-helper); letter-spacing: 0.16px; }
+  .foot b { color: var(--text-primary); font-weight: 600; }
+  .foot .dot { color: var(--accent-bright); padding: 0 12px; }
+
+  /* section card: big number left, heading right */
+  #section .num { position: absolute; left: 128px; top: 50%; transform: translateY(-50%);
+    font: 600 400px/400px "IBM Plex Mono", Menlo, monospace; color: var(--accent); letter-spacing: -8px; opacity: 0.95; }
+  #section .text { position: absolute; left: 640px; right: 128px; top: 50%; transform: translateY(-50%); }
+  #section .title { font-size: 112px; line-height: 120px; }
+  #section .bar { margin: 0 0 40px; }
+
+  /* end card */
+  #end .title { font-size: 128px; line-height: 136px; }
+  .credit { position: absolute; left: 0; right: 0; bottom: 56px; font-size: 22px; line-height: 32px; color: var(--text-helper); max-width: 1500px; }
+
+  /* lower third: transparent card, bar bottom-left on the 8 px grid, safe margins 96 x 80 */
+  #lower .third { position: absolute; left: 96px; bottom: 96px; display: flex; align-items: stretch; max-width: 1100px; }
+  #lower .accent { width: 8px; background: var(--accent); flex: none; }
+  #lower .box { background: rgba(22, 22, 22, 0.92); padding: 20px 40px 24px 32px; }
+  body.white #lower .box { background: rgba(255, 255, 255, 0.94); }
+  #lower .title { font-size: 44px; line-height: 56px; letter-spacing: 0; font-weight: 600; max-width: none; }
+  #lower .sub { margin: 0; font-size: 28px; line-height: 40px; max-width: none; }
+
+  /* motion (kind-agnostic): 400 ms fade + 16 px rise, disabled with anim=0 */
+  body.anim .rail > *, body.anim #section .text, body.anim #section .num, body.anim .third { animation: rise 400ms var(--ease) both; }
+  body.anim .rail > *:nth-child(2) { animation-delay: 80ms; } body.anim .rail > *:nth-child(3) { animation-delay: 160ms; }
+  body.anim .rail > *:nth-child(4) { animation-delay: 240ms; }
+  @keyframes rise { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
+  body.anim #section .num, body.anim #section .text { animation-name: fade; }
+  @keyframes fade { from { opacity: 0; } to { opacity: 1; } }
+</style>
+</head>
+<body>
+<div id="stage">
+  <section class="card" id="title">
+    <div class="grid"></div>
+    <div class="rail">
+      <div class="kicker" data-f="kicker"></div>
+      <div class="bar"></div>
+      <div class="title" data-f="title"></div>
+      <div class="sub" data-f="sub"></div>
+      <div class="foot" data-f="foot"></div>
+    </div>
+  </section>
+
+  <section class="card" id="section">
+    <div class="grid"></div>
+    <div class="num" data-f="num"></div>
+    <div class="text">
+      <div class="bar"></div>
+      <div class="title" data-f="title"></div>
+      <div class="sub" data-f="sub"></div>
+    </div>
+    <div class="rail"><div class="foot" data-f="foot"></div></div>
+  </section>
+
+  <section class="card" id="lower">
+    <div class="third">
+      <div class="accent"></div>
+      <div class="box">
+        <div class="title" data-f="title"></div>
+        <div class="sub" data-f="sub"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="card" id="end">
+    <div class="grid"></div>
+    <div class="rail">
+      <div class="kicker" data-f="kicker"></div>
+      <div class="bar"></div>
+      <div class="title" data-f="title"></div>
+      <div class="sub" data-f="sub"></div>
+      <div class="credit">Design tokens: Carbon Design System (Apache-2.0). Typeface: IBM Plex (SIL OFL 1.1).
+        SwapPrint is an independent project, not made or endorsed by IBM.</div>
+    </div>
+  </section>
+</div>
+
+<script>
+(() => {
+  const q = new URLSearchParams(location.search);
+  // When the recorder injects the card as an overlay it may set window.__CARD__ = {kind: "...", title: "..."} instead.
+  const ext = (window.__CARD__ || (window.parent && window.parent !== window && window.parent.__CARD__)) || {};
+  const get = (k, d = "") => (ext[k] !== undefined ? String(ext[k]) : (q.has(k) ? q.get(k) : d));
+
+  const kind = ["title", "section", "lower", "end"].includes(get("kind")) ? get("kind") : "title";
+  const theme = get("theme") === "white" ? "white" : "g100";
+  document.body.dataset.kind = kind;
+  document.body.classList.add(theme === "white" ? "white" : "g100");
+  if (get("anim", "1") !== "0") document.body.classList.add("anim");
+
+  const defaults = {
+    title: { kicker: "Qiskit Fall Fest 2026 · Problem 5 · Quantum Fingerprint", foot: "SwapPrint · team sardines" },
+    section: { foot: "SwapPrint · team sardines" },
+    end: { kicker: "SwapPrint · team sardines", foot: "" },
+    lower: {},
+  }[kind];
+  const text = (k) => (get(k, defaults[k] || "")).replace(/\|/g, "\n");
+
+  document.querySelectorAll("[data-f]").forEach((el) => {
+    const k = el.dataset.f;
+    const v = text(k);
+    if (k === "foot" && v.includes("·")) {          // "SwapPrint · team sardines": brand in semibold
+      const [a, ...rest] = v.split("·");
+      const b = document.createElement("b"); b.textContent = a.trim();
+      const dot = document.createElement("span"); dot.className = "dot"; dot.textContent = "·";
+      el.append(b, dot, document.createTextNode(rest.join("·").trim()));
+    } else el.textContent = v;
+    if (!v) el.style.display = "none";
+  });
+
+  // Plex: file:// from docs/style/ -> ../../swapprint/fonts/ ; served from app/static/ -> fonts/
+  const fb = get("fontbase", location.pathname.includes("/static/") ? "fonts/" : "../../swapprint/fonts/");
+  const faces = [["IBM Plex Sans", 400, "IBMPlexSans-Regular"], ["IBM Plex Sans", 600, "IBMPlexSans-SemiBold"],
+                 ["IBM Plex Mono", 600, "IBMPlexMono-SemiBold"]];
+  const loads = faces.map(([fam, w, file]) =>
+    new FontFace(fam, `url(${fb}${file}.ttf)`, { weight: String(w) }).load().then((ff) => document.fonts.add(ff)).catch(() => {}));
+  // <html data-ready="1"> once the Plex files are in: the recorder waits for this before showing/screenshotting the card.
+  Promise.all(loads).then(() => document.fonts.ready).then(() => document.documentElement.setAttribute("data-ready", "1"));
+
+  const fit = () => { document.getElementById("stage").style.transform = `scale(${Math.min(innerWidth / 1920, innerHeight / 1080)})`; };
+  addEventListener("resize", fit); fit();
+})();
+</script>
+</body>
+</html>
