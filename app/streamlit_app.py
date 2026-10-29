@@ -742,22 +742,27 @@ def tab_results():
     st.markdown("### Results")
     st.caption("Figures from experiments/figures/, exactly as listed in captions.json (tamper experiments) and "
                "core_captions.json (circuits, noise, hardware).")
-    shown = 0
-    for name in ("captions.json", "core_captions.json"):
-        path = core.FIG_DIR / name
-        if not path.exists():
-            continue
+    def captions(name: str) -> dict:
         try:
-            caps = json.loads(path.read_text(encoding="utf-8"))
+            return json.loads((core.FIG_DIR / name).read_text(encoding="utf-8"))
         except (OSError, json.JSONDecodeError):
+            return {}
+
+    core_caps = captions("core_captions.json")
+    # each figure once; Darshan's core_* figures keep the caption from his own core_captions.json
+    sections = [("Tamper experiments", {k: v for k, v in captions("captions.json").items() if k not in core_caps}),
+                ("Circuits and noise", core_caps)]
+    shown = 0
+    for heading, caps in sections:
+        figs = [(png, cap) for png, cap in caps.items() if (core.FIG_DIR / png).exists()]
+        if not figs:
             continue
-        for png, caption in caps.items():
-            fig = core.FIG_DIR / png
-            if fig.exists():
-                st.image(str(fig), output_format="PNG", width="stretch")
-                st.caption(caption)
-                st.divider()
-                shown += 1
+        st.markdown(f"#### {heading}")
+        for png, caption in figs:
+            st.image(str(core.FIG_DIR / png), output_format="PNG", width="stretch")
+            st.caption(caption)
+            st.divider()
+            shown += 1
     if not (core.FIG_DIR / "captions.json").exists():
         st.info("The tamper-experiment figures (F1–F5) and the classical baseline table arrive with milestone E2.")
     if shown == 0:
