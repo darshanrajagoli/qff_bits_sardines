@@ -69,3 +69,14 @@ def test_fingerprint_validation():
     bad = sp.Fingerprint(mode="perceptual", q=6, grid=(4, 4), unit_px=64, data=fp.data * 2, version=fp.version)
     assert core.fingerprint_problem(bad)
     assert core.fingerprint_problem(sp.Fingerprint(mode="x", q=6, grid=(4, 4), unit_px=64, data=fp.data, version=""))
+
+
+def test_challenge_scoring():
+    base = core.load_artwork("hokusai_great_wave.png")
+    edited = core.replay(base, [{"name": "patch", "params": {"y": 100, "x": 50, "size": 6, "rgb": [255, 0, 0]}}])
+    assert core.changed_box(base, edited) == (100, 50, 106, 56)
+    assert core.guess_distance(base, edited, (102, 52)) == 0
+    assert core.guess_distance(base, edited, (100, 60)) == 5
+    assert core.changed_box(base, base) is None and core.guess_distance(base, base, (0, 0)) is None
+    assert "global" in core.describe_box((0, 0, 256, 256))
+    assert core.describe_box((5, 7, 6, 8)) == "at row 5, column 7"
