@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import datetime
 from io import BytesIO
+from pathlib import Path
 
 import numpy as np
 from PIL import Image, ImageDraw, ImageFont
@@ -22,17 +23,16 @@ FOOTER = (
     "An unsigned integrity record, not a signature or watermark. "
     "“No change detected” is not proof that nothing changed."
 )
-CREDIT = "SwapPrint · team sardines. Type: IBM Plex (OFL 1.1). Not made or endorsed by IBM."
+CREDIT = "SwapPrint · team sardines. Type: Departure Mono (OFL 1.1)."
 
 
-def _font(size, face="IBMPlexSans-Regular"):
-    """Load bundled Plex, retaining portable rendering when a font is missing."""
-    path = style.font_paths().get(face)
-    if path is not None:
-        try:
-            return ImageFont.truetype(str(path), size=size)
-        except OSError:
-            pass
+def _font(size):
+    """Load bundled Departure Mono, retaining rendering when it is missing."""
+    path = Path(__file__).resolve().parent / "static" / "fonts" / "DepartureMono-Regular.otf"
+    try:
+        return ImageFont.truetype(str(path), size=size)
+    except OSError:
+        pass
     return ImageFont.load_default(size=size)
 
 
@@ -74,30 +74,28 @@ def make_certificate(
     """
     card = Image.new("RGB", (1200, 675), BACKGROUND)
     draw = ImageDraw.Draw(card)
-    fonts = {size: _font(size) for size in (12, 14, 16)}
-    headings = {size: _font(size, "IBMPlexSans-SemiBold") for size in (20, 32)}
-    numbers = {size: _font(size, "IBMPlexMono-Regular") for size in (16, 20)}
+    fonts = {size: _font(size) for size in (11, 22, 33)}
 
-    def text(x, y, value, size=16, fill=TEXT, font=None):
+    def text(x, y, value, size=11, fill=TEXT, font=None):
         draw.text((x, y), value, font=font or fonts[size], fill=fill, anchor="lt")
 
-    text(40, 32, "SwapPrint verification record", font=headings[32])
+    text(40, 32, "SwapPrint verification record", font=fonts[33])
     draw.line((40, 80, 1160, 80), fill=style.PURPLE, width=1)
 
-    title_lines = _wrap(draw, artwork_title, headings[20], 1120)
+    title_lines = _wrap(draw, artwork_title, fonts[22], 1120)
     if len(title_lines) > 3:
         title_lines = title_lines[:3]
         last = title_lines[-1]
-        while last and draw.textlength(last + "…", font=headings[20]) > 1120:
+        while last and draw.textlength(last + "…", font=fonts[22]) > 1120:
             last = last[:-1]
         title_lines[-1] = last + "…"
     for index, line in enumerate(title_lines):
-        text(40, 96 + index * 24, line, font=headings[20])
+        text(40, 96 + index * 24, line, font=fonts[22])
 
     noun = "CONTENT CHANGE" if cmp.mode == "perceptual" else "CHANGE"
     verdict = f"{noun} DETECTED" if cmp.tampered else f"NO {noun} DETECTED"
     text(40, 192, verdict, fill=style.ALERT_ON_DARK if cmp.tampered else TEXT,
-         font=headings[32])
+         font=fonts[33])
 
     thumbnails = [("Original", Image.fromarray(original)), ("Checked", Image.fromarray(checked))]
     if heatmap_img is not None:
@@ -114,18 +112,18 @@ def make_certificate(
     draw.rectangle((808, 240, 1159, 511), fill=PANEL, outline=BORDER, width=1)
     backend = ("Exact backend", "analytical sampler") if cmp.backend == "exact" else ("Backend", cmp.backend)
     details = [
-        ("Mode", cmp.mode, fonts[16]),
-        (*backend, fonts[16]),
-        ("Shots per unit", str(cmp.shots), numbers[16]),
-        ("Flagged units", f"{np.count_nonzero(cmp.flagged)} out of {np.size(cmp.flagged)}", numbers[16]),
-        ("Date/time", when.isoformat(sep=' ', timespec='seconds'), numbers[16]),
-        ("SwapPrint", swapprint.__version__, numbers[16]),
+        ("Mode", cmp.mode, fonts[11]),
+        (*backend, fonts[11]),
+        ("Shots per unit", str(cmp.shots), fonts[11]),
+        ("Flagged units", f"{np.count_nonzero(cmp.flagged)} out of {np.size(cmp.flagged)}", fonts[11]),
+        ("Date/time", when.isoformat(sep=' ', timespec='seconds'), fonts[11]),
+        ("SwapPrint", swapprint.__version__, fonts[11]),
     ]
     y = 256
     for label, value, font in details:
         prefix = f"{label}: " if label != "SwapPrint" else f"{label} "
         text(824, y, prefix, fill=style.ACCENT_ON_DARK)
-        offset = draw.textlength(prefix, font=fonts[16])
+        offset = draw.textlength(prefix, font=fonts[11])
         if draw.textlength(value, font=font) > 320 - offset:
             y += 24
             offset = 0
@@ -137,12 +135,12 @@ def make_certificate(
     if cmp.miss_bound is not None:
         draw.rectangle((40, 528, 1159, 591), fill=PANEL, outline=BORDER, width=1)
         text(56, 536, "heuristic miss bound P(no detection | a tile changed)", fill=style.ACCENT_ON_DARK)
-        text(56, 560, f"{cmp.miss_bound:.1e}", font=numbers[20])
+        text(56, 560, f"{cmp.miss_bound:.1e}", font=fonts[22])
 
     draw.line((40, 608, 1160, 608), fill=BORDER, width=1)
-    for index, line in enumerate(_wrap(draw, FOOTER, fonts[14], 1120)):
-        text(40, 624 + index * 16, line, 14, MUTED)
-    text(40, 648, CREDIT, 12, MUTED)
+    for index, line in enumerate(_wrap(draw, FOOTER, fonts[11], 1120)):
+        text(40, 624 + index * 16, line, 11, MUTED)
+    text(40, 648, CREDIT, 11, MUTED)
 
     output = BytesIO()
     card.save(output, format="PNG")

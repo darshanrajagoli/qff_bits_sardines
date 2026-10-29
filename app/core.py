@@ -317,11 +317,19 @@ def heatmap(img: np.ndarray, cmp: sp.Comparison, size: int = 512, guess=None, tr
         d.rectangle([x0 * scale - pad, y0 * scale - pad, x1 * scale + pad, y1 * scale + pad],
                     outline=(255, 255, 255), width=round(2 * k))
     if guess is not None:
-        gy, gx = guess
-        cx, cy = (gx + 0.5) * scale, (gy + 0.5) * scale
-        d.line([cx - 12 * k, cy, cx + 12 * k, cy], fill=(255, 210, 0), width=round(3 * k))
-        d.line([cx, cy - 12 * k, cx, cy + 12 * k], fill=(255, 210, 0), width=round(3 * k))
+        draw_guess(out, guess)
     return out
+
+
+def draw_guess(im: Image.Image, guess: tuple[int, int]) -> Image.Image:
+    """The yellow spot-the-edit cross at canonical (row, col), drawn in place on an upscaled image."""
+    scale, k = im.width / sp.config.CANON, im.width / 512  # marker sizes are tuned for 512 px
+    gy, gx = guess
+    cx, cy = (gx + 0.5) * scale, (gy + 0.5) * scale
+    d = ImageDraw.Draw(im)
+    d.line([cx - 12 * k, cy, cx + 12 * k, cy], fill=(255, 210, 0), width=round(3 * k))
+    d.line([cx, cy - 12 * k, cx, cy + 12 * k], fill=(255, 210, 0), width=round(3 * k))
+    return im
 
 
 def most_suspicious(cmp: sp.Comparison) -> int:

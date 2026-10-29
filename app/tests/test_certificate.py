@@ -31,14 +31,17 @@ def assert_png(data):
         assert image.getpixel((0, 0)) == ImageColor.getrgb(style.tokens("g100")["background"])
 
 
-def test_plex_fonts_and_carbon_background(artwork):
-    for face in ("IBMPlexSans-SemiBold", "IBMPlexSans-Regular", "IBMPlexMono-Regular"):
-        path = style.font_paths()[face]
-        assert path.is_file()
-        font = _font(16, face)
-        assert isinstance(font, ImageFont.FreeTypeFont)
-        assert Path(font.path) == path
+@pytest.mark.parametrize("size", [11, 22, 33])
+def test_departure_mono_font_is_loaded(size):
+    path = Path(__file__).resolve().parents[1] / "static" / "fonts" / "DepartureMono-Regular.otf"
+    assert path.is_file()
+    font = _font(size)
+    assert isinstance(font, ImageFont.FreeTypeFont)
+    assert Path(font.path) == path
+    assert font.size == size
 
+
+def test_carbon_background(artwork):
     fingerprint = sp.fingerprint(artwork, "strict")
     assert_png(make_certificate(
         artwork, artwork, sp.compare(fingerprint, fingerprint, seed=0),

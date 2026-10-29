@@ -1,0 +1,149 @@
+/* SwapPrint pixel theme. Loaded after docs/style/carbon.css; only CSS variables here, so one file serves both
+   modes. The light or dark token block (streamlit_app.py: TOKENS) is injected before this file. Type: Departure Mono
+   (SIL OFL 1.1) everywhere except formulas, which keep KaTeX. One weight only, so emphasis is colour and size, never
+   synthetic bold. Departure Mono is drawn on an 11 px grid: big sizes are multiples of 11 so edges stay crisp. */
+
+:root {
+  --font-sans: "Departure Mono", ui-monospace, Menlo, Consolas, monospace;
+  --font-mono: "Departure Mono", ui-monospace, Menlo, Consolas, monospace;
+  --px: 3px;                                   /* one "pixel" of the border art */
+}
+.stApp { font-synthesis: none; -webkit-font-smoothing: antialiased; }
+.stApp b, .stApp strong { font-weight: 400; color: var(--accent-text); }
+::selection { background: var(--accent); color: #ffffff; }
+
+/* a faint pixel grid behind the page, like graph paper */
+[data-testid="stMain"], .stMain {
+  background-image: radial-gradient(var(--grid-dot) 1px, transparent 1.2px);
+  background-size: 22px 22px;
+}
+
+/* headings: pixel sizes on the 11 px grid, letter-spaced, never bold */
+h1, h2, h3, h4, h5, h6 { font-weight: 400 !important; letter-spacing: 0.02em; }
+.stApp h1 { font-size: 44px; line-height: 1.25; }
+.stApp h2 { font-size: 33px; line-height: 1.33; }
+.stApp h3 { font-size: 26px; line-height: 1.35; }
+.stApp h4 { font-size: 19px; line-height: 1.4; color: var(--accent-text); }
+.stApp h3::before { content: "▚ "; color: var(--accent); }
+hr { border: 0; height: var(--px); background: repeating-linear-gradient(90deg, var(--border-subtle) 0 var(--px), transparent var(--px) calc(2 * var(--px))); }
+
+/* title with a slow terminal cursor (1 Hz, off for reduced motion) */
+.sp-title { font-size: 66px !important; font-weight: 400 !important; letter-spacing: 0.02em; line-height: 1.1 !important; }
+.sp-cursor { display: inline-block; width: 0.5em; height: 0.85em; margin-left: 0.12em; background: var(--accent);
+  vertical-align: -0.05em; animation: sp-blink 1.1s steps(1) infinite; }
+@keyframes sp-blink { 50% { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .sp-cursor { animation: none; } }
+.sp-sub { color: var(--text-secondary) !important; }
+.sp-credit { color: var(--text-helper) !important; }
+.lead { color: var(--text-primary); }
+
+/* tabs */
+[data-baseweb="tab"] { font-size: 16px; letter-spacing: 0.02em; }
+[data-baseweb="tab-highlight"] { height: var(--px) !important; }
+
+/* buttons: hard pixel shadow that the button presses into */
+.stButton > button, .stDownloadButton > button, [data-testid^="stBaseButton"] {
+  font-weight: 400 !important; letter-spacing: 0; transition: transform 60ms, box-shadow 60ms;
+  padding-left: 12px !important; padding-right: 12px !important;
+}
+.stButton > button p, .stDownloadButton > button p { white-space: normal; line-height: 1.2; }
+.stButton > button[kind="primary"], [data-testid="stBaseButton-primary"] {
+  background: var(--accent); color: #ffffff; box-shadow: var(--px) var(--px) 0 0 var(--accent-shadow);
+}
+.stButton > button[kind="primary"]:hover, [data-testid="stBaseButton-primary"]:hover { background: var(--accent-hover); color: #ffffff; }
+.stButton > button[kind="secondary"], [data-testid="stBaseButton-secondary"], .stDownloadButton > button {
+  background: var(--background); border: 2px solid var(--text-primary); color: var(--text-primary);
+  box-shadow: var(--px) var(--px) 0 0 var(--border-strong);
+}
+.stButton > button[kind="secondary"]:hover, [data-testid="stBaseButton-secondary"]:hover, .stDownloadButton > button:hover {
+  background: var(--text-primary); color: var(--background);
+}
+.stButton > button:active:not(:disabled), [data-testid^="stBaseButton"]:active:not(:disabled), .stDownloadButton > button:active {
+  transform: translate(var(--px), var(--px)); box-shadow: none;
+}
+.stButton > button:disabled, .stDownloadButton > button:disabled, [data-testid^="stBaseButton"]:disabled,
+.stButton > button:disabled:hover, [data-testid^="stBaseButton"]:disabled:hover {
+  background: transparent; border: 2px dashed var(--border-subtle); color: var(--disabled-text); box-shadow: none; cursor: not-allowed;
+}
+[data-testid="stBaseButton-primary"]:disabled, [data-testid="stBaseButton-primary"]:disabled:hover {
+  background: var(--disabled-bg); border: 2px dashed transparent; color: var(--disabled-text);
+}
+[data-testid="stBaseButton-elementToolbar"] { box-shadow: none !important; }
+
+/* pixel cards: notched corners drawn with four offset shadows (the classic 8-bit frame) */
+.sp-step, .sp-stat, .sp-card {
+  --frame: var(--border-subtle);
+  background: var(--layer-01); margin: var(--px);
+  box-shadow: 0 calc(-1 * var(--px)) 0 0 var(--frame), 0 var(--px) 0 0 var(--frame),
+              calc(-1 * var(--px)) 0 0 0 var(--frame), var(--px) 0 0 0 var(--frame);
+}
+.sp-step { border-top: 0 !important; --frame: var(--accent); }
+.sp-step:hover { background: var(--layer-hover-01); }
+.sp-stat { border-left: 0 !important; }
+.sp-stat.win, .sp-card.win { --frame: var(--accent); }
+.sp-step .num, .sp-stat .big { font-family: var(--font-mono) !important; font-weight: 400 !important; color: var(--accent-text) !important; }
+.sp-step .num { font-size: 33px !important; }
+.sp-stat .big { font-size: 44px !important; }
+.sp-stat:not(.win) .big { color: var(--text-primary) !important; }
+.sp-step .ttl { font-weight: 400 !important; color: var(--text-primary) !important; font-size: 17px !important; }
+.sp-step .txt { color: var(--text-secondary) !important; font-size: 13px !important; letter-spacing: 0;
+  word-break: normal; overflow-wrap: normal; hyphens: auto; -webkit-hyphens: auto; }
+.sp-step .ttl { hyphens: auto; -webkit-hyphens: auto; word-break: normal; overflow-wrap: normal; }
+.sp-stat .lbl { font-weight: 400 !important; color: var(--text-secondary) !important; }
+.sp-stat .det { color: var(--text-helper) !important; }
+.sp-step .viz { background: var(--viz-bg) !important; }
+
+/* bordered Streamlit containers get the same pixel frame */
+[data-testid="stVerticalBlockBorderWrapper"], div[data-testid="stVerticalBlock"][data-border="true"] {
+  border-radius: 0 !important;
+}
+
+/* notices, verdicts and shot chips */
+.cds-notice { background: var(--layer-01) !important; color: var(--text-primary) !important; border-color: var(--border-subtle) !important; }
+.cds-notice.alert { border-left-color: var(--alert) !important; }
+.verdict { font-weight: 400 !important; font-size: 44px !important; letter-spacing: 0.02em; }
+.verdict.hit { color: var(--alert-text) !important; }
+.verdict.miss { color: var(--text-secondary) !important; }
+.fine { color: var(--text-helper) !important; }
+.box { background: var(--layer-01) !important; border-color: var(--border-subtle) !important; }
+.shot { background: var(--layer-02) !important; color: var(--text-secondary) !important; font-family: var(--font-mono) !important; }
+.shot.one { background: var(--alert) !important; color: #ffffff !important; font-weight: 400 !important; }
+
+/* tables (glossary, experiments) */
+.stApp table { border-collapse: collapse; }
+.stApp th { font-weight: 400 !important; color: var(--accent-text); }
+
+/* full screen on double-click: make the picture toolbar visible without hovering (touch screens) */
+@media (hover: none) {
+  [data-testid="stFullScreenFrame"]:has([data-testid="stImage"]) [data-testid="stElementToolbar"] { opacity: 1 !important; }
+}
+[data-testid="stImage"] img { cursor: zoom-in; }
+
+/* the hidden component that adds double-click full screen takes no space */
+[data-testid="stElementContainer"]:has(iframe[height="0"]), .element-container:has(iframe[height="0"]) { display: none; }
+
+/* Start here: centred and welcoming */
+[role="tabpanel"]:has(.sp-hero) { max-width: 1000px; margin-left: auto; margin-right: auto; }
+[role="tabpanel"]:has(.sp-hero) h3, [role="tabpanel"]:has(.sp-hero) h4 { text-align: center; }
+[role="tabpanel"]:has(.sp-hero) h3::before { content: ""; }
+[role="tabpanel"]:has(.sp-hero) [data-testid="stCaptionContainer"] { text-align: center; }
+.sp-hero { text-align: center; margin: 8px auto 28px auto; max-width: 880px; }
+.sp-hero .kicker { color: var(--accent-text); font-size: 16px; letter-spacing: 0.12em; }
+.sp-hero .big { font-size: 55px; line-height: 1.15; color: var(--text-primary); margin: 10px 0 14px 0; }
+.sp-hero .sub { font-size: 19px; line-height: 1.5; color: var(--text-secondary); }
+.sp-badges { display: flex; flex-wrap: wrap; gap: 14px; justify-content: center; margin: 22px 0 6px 0; }
+.sp-badge { --frame: var(--border-subtle); background: var(--layer-01); padding: 10px 16px; margin: var(--px);
+  box-shadow: 0 calc(-1 * var(--px)) 0 0 var(--frame), 0 var(--px) 0 0 var(--frame),
+              calc(-1 * var(--px)) 0 0 0 var(--frame), var(--px) 0 0 0 var(--frame); }
+.sp-badge b { display: block; font-size: 22px; color: var(--accent-text); }
+.sp-badge span { font-size: 14px; color: var(--text-secondary); }
+.sp-centre { text-align: center; }
+.sp-card { padding: 22px 24px; }
+.sp-card .lbl { color: var(--accent-text); letter-spacing: 0.08em; font-size: 14px; }
+.sp-card .det { color: var(--text-primary); font-size: 17px; line-height: 1.55; margin-top: 8px; }
+@media (max-width: 640px) {
+  .sp-title { font-size: 44px !important; }
+  .sp-hero .big { font-size: 33px; }
+  .stApp h3 { font-size: 22px; }
+  .verdict, .sp-stat .big { font-size: 33px !important; }
+}

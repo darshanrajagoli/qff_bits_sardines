@@ -1,93 +1,68 @@
-# SwapPrint Streamlit theme: Carbon g100 (dark) + IBM Plex, accent = q-bits.in purple.
-# Verified headless on Streamlit 1.66.1 (see docs/style/README.md, "Streamlit theme").
-#
-# Install:   copy this file over .streamlit/config.toml (it keeps the server/client/browser blocks of the old one)
-#            and copy swapprint/fonts/IBMPlex{Sans,Mono}-{Regular,Medium,SemiBold,Bold}.ttf to app/static/fonts/
-#            (Streamlit serves <script dir>/static/ at /app/static/ when server.enableStaticServing = true).
-# Tokens:    Carbon v11 g100 (@carbon/themes 11.84.0). Colours and fonts credit: Carbon (Apache-2.0), IBM Plex (OFL 1.1).
-#
-# White theme instead? Replace base/backgroundColor/secondaryBackgroundColor/textColor/borderColor/codeBackgroundColor with:
-#   base = "light"  backgroundColor = "#ffffff"  secondaryBackgroundColor = "#f4f4f4"  textColor = "#161616"
-#   borderColor = "#c6c6c6"  codeBackgroundColor = "#f4f4f4"  primaryColor = "#8a3ffc"  linkColor = "#6929c4"
+# SwapPrint Streamlit theme: pixel-art look on the Carbon colour tokens, accent = q-bits.in purple.
+# Type: Departure Mono by Helena Zhang (SIL OFL 1.1, app/static/fonts/DepartureMono-OFL.txt) for all app text;
+# formulas stay in KaTeX (LaTeX). Two modes: [theme.light] and [theme.dark]; viewers switch in ⋮ → Settings.
+# Colour tokens: Carbon v11 white / g100 (@carbon/themes 11.84.0, Apache-2.0). Fonts are served from app/static/
+# (server.enableStaticServing). Departure Mono has a single weight: headings use size, not bold.
 
 [theme]
-base = "dark"
-primaryColor = "#8a3ffc"                 # q-bits.in --qiskit-violet = Carbon Purple 60 (white text on it: 5.0:1)
-backgroundColor = "#161616"              # Carbon g100 background (Gray 100)
-secondaryBackgroundColor = "#262626"     # layer-01 (Gray 90): sidebar, cards, inputs
-textColor = "#f4f4f4"                    # text-primary (Gray 10)
-linkColor = "#be95ff"                    # Purple 40: links on dark
-linkUnderline = true
-borderColor = "#525252"                  # border-subtle-01 (Gray 70)
-dataframeBorderColor = "#393939"         # border-subtle-00 (Gray 80)
-dataframeHeaderBackgroundColor = "#393939"   # layer-02 (Gray 80)
+primaryColor = "#8a3ffc"                 # q-bits.in --qiskit-violet = Carbon Purple 60
+baseRadius = "none"                      # square, pixel corners
+buttonRadius = "none"
+font = "Departure Mono"
+headingFont = "Departure Mono"
+codeFont = "Departure Mono"
+baseFontSize = 16
+headingFontWeights = [400, 400, 400, 400, 400, 400]
 showWidgetBorder = true
+linkUnderline = true
+
+[[theme.fontFaces]]
+family = "Departure Mono"
+url = "app/static/fonts/DepartureMono-Regular.woff2"
+weight = "400"
+style = "normal"
+
+[theme.dark]
+primaryColor = "#8a3ffc"
+backgroundColor = "#161616"              # Gray 100
+secondaryBackgroundColor = "#262626"     # Gray 90: sidebar, cards, inputs
+textColor = "#f4f4f4"                    # Gray 10
+linkColor = "#be95ff"                    # Purple 40
+borderColor = "#525252"                  # Gray 70
+dataframeBorderColor = "#393939"
+dataframeHeaderBackgroundColor = "#393939"
 codeTextColor = "#be95ff"
 codeBackgroundColor = "#262626"
-redColor = "#fa4d56"                     # support-error (g100)
+redColor = "#fa4d56"
 orangeColor = "#ff832b"
-yellowColor = "#f1c21b"                  # support-warning
-greenColor = "#42be65"                   # support-success (g100)
-blueColor = "#4589ff"                    # interactive (g100)
-violetColor = "#a56eff"                  # Purple 50
+yellowColor = "#f1c21b"
+greenColor = "#42be65"
+blueColor = "#4589ff"
+violetColor = "#a56eff"
 grayColor = "#8d8d8d"
-baseRadius = "none"                      # Carbon is square-cornered
-buttonRadius = "none"
-font = "IBM Plex Sans"
-headingFont = "IBM Plex Sans"
-codeFont = "IBM Plex Mono"
-baseFontSize = 16
-headingFontWeights = [600, 600, 600, 600, 600, 600]
 chartCategoricalColors = ["#8a3ffc", "#33b1ff", "#007d79", "#ff7eb6", "#fa4d56", "#fff1f1", "#6fdc8c", "#4589ff", "#d02670", "#d2a106", "#08bdba", "#bae6ff", "#ba4e00", "#d4bbff"]
 chartSequentialColors = ["#1c0f30", "#31135e", "#491d8b", "#6929c4", "#8a3ffc", "#a56eff", "#be95ff", "#d4bbff", "#e8daff", "#f6f2ff"]
 
-[[theme.fontFaces]]
-family = "IBM Plex Sans"
-url = "app/static/fonts/IBMPlexSans-Regular.ttf"
-weight = "400"
-style = "normal"
-
-[[theme.fontFaces]]
-family = "IBM Plex Sans"
-url = "app/static/fonts/IBMPlexSans-Medium.ttf"
-weight = "500"
-style = "normal"
-
-[[theme.fontFaces]]
-family = "IBM Plex Sans"
-url = "app/static/fonts/IBMPlexSans-SemiBold.ttf"
-weight = "600"
-style = "normal"
-
-[[theme.fontFaces]]
-family = "IBM Plex Sans"
-url = "app/static/fonts/IBMPlexSans-Bold.ttf"
-weight = "700"
-style = "normal"
-
-[[theme.fontFaces]]
-family = "IBM Plex Mono"
-url = "app/static/fonts/IBMPlexMono-Regular.ttf"
-weight = "400"
-style = "normal"
-
-[[theme.fontFaces]]
-family = "IBM Plex Mono"
-url = "app/static/fonts/IBMPlexMono-Medium.ttf"
-weight = "500"
-style = "normal"
-
-[[theme.fontFaces]]
-family = "IBM Plex Mono"
-url = "app/static/fonts/IBMPlexMono-SemiBold.ttf"
-weight = "600"
-style = "normal"
-
-[[theme.fontFaces]]
-family = "IBM Plex Mono"
-url = "app/static/fonts/IBMPlexMono-Bold.ttf"
-weight = "700"
-style = "normal"
+[theme.light]
+primaryColor = "#8a3ffc"
+backgroundColor = "#ffffff"
+secondaryBackgroundColor = "#f4f4f4"     # Gray 10
+textColor = "#161616"                    # Gray 100
+linkColor = "#6929c4"                    # Purple 70
+borderColor = "#c6c6c6"                  # Gray 30
+dataframeBorderColor = "#e0e0e0"
+dataframeHeaderBackgroundColor = "#e0e0e0"
+codeTextColor = "#6929c4"
+codeBackgroundColor = "#f4f4f4"
+redColor = "#da1e28"
+orangeColor = "#ff832b"
+yellowColor = "#b28600"
+greenColor = "#24a148"
+blueColor = "#0f62fe"
+violetColor = "#6929c4"
+grayColor = "#6f6f6f"
+chartCategoricalColors = ["#6929c4", "#1192e8", "#005d5d", "#9f1853", "#fa4d56", "#520408", "#198038", "#002d9c", "#ee5396", "#b28600", "#009d9a", "#012749", "#8a3800", "#a56eff"]
+chartSequentialColors = ["#f6f2ff", "#e8daff", "#d4bbff", "#be95ff", "#a56eff", "#8a3ffc", "#6929c4", "#491d8b", "#31135e", "#1c0f30"]
 
 [server]
 enableStaticServing = true               # required for [[theme.fontFaces]] files under app/static/

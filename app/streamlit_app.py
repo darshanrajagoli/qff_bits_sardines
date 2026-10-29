@@ -24,6 +24,7 @@ from datetime import datetime, timedelta, timezone  # noqa: E402
 import numpy as np  # noqa: E402
 import plotly.graph_objects as go  # noqa: E402
 import streamlit as st  # noqa: E402
+import streamlit.components.v1 as components  # noqa: E402
 from streamlit_image_coordinates import streamlit_image_coordinates  # noqa: E402
 
 import core  # noqa: E402
@@ -93,7 +94,68 @@ def _one_line(css: str) -> str:
     return re.sub(r"\s+", " ", css).strip()
 
 
+# Colour tokens per mode (Carbon white / g100), read by app/pixel.css. Viewers switch mode in ⋮ → Settings.
+TOKENS = {
+    "dark": {"background": "#161616", "layer-01": "#262626", "layer-02": "#393939", "layer-hover-01": "#333333",
+             "text-primary": "#f4f4f4", "text-secondary": "#c6c6c6", "text-helper": "#a8a8a8",
+             "border-subtle": "#525252", "border-strong": "#8d8d8d", "accent": "#8a3ffc", "accent-hover": "#6929c4",
+             "accent-text": "#be95ff", "accent-shadow": "#31135e", "alert": "#ee5396", "alert-text": "#ff7eb6",
+             "link": "#be95ff", "focus": "#ffffff", "grid-dot": "rgba(244,244,244,0.07)", "viz-bg": "#161616",
+             "disabled-bg": "#393939", "disabled-text": "#8d8d8d", "support-info": "#4589ff",
+             "support-warning": "#f1c21b", "support-success": "#42be65", "support-error": "#fa4d56"},
+    "light": {"background": "#ffffff", "layer-01": "#f4f4f4", "layer-02": "#e0e0e0", "layer-hover-01": "#e8e8e8",
+              "text-primary": "#161616", "text-secondary": "#525252", "text-helper": "#6f6f6f",
+              "border-subtle": "#c6c6c6", "border-strong": "#8d8d8d", "accent": "#8a3ffc", "accent-hover": "#6929c4",
+              "accent-text": "#6929c4", "accent-shadow": "#31135e", "alert": "#ee5396", "alert-text": "#d02670",
+              "link": "#6929c4", "focus": "#8a3ffc", "grid-dot": "rgba(22,22,22,0.08)", "viz-bg": "#161616",
+              "disabled-bg": "#e0e0e0", "disabled-text": "#8d8d8d", "support-info": "#0043ce",
+              "support-warning": "#b28600", "support-success": "#24a148", "support-error": "#da1e28"},
+}
+
+
+def theme_mode() -> str:
+    """'light' or 'dark', following the viewer's Streamlit theme (⋮ → Settings); dark if unknown."""
+    try:
+        return "light" if (st.context.theme.type or "dark") == "light" else "dark"
+    except Exception:  # noqa: BLE001 - st.context.theme is missing in bare mode (tests)
+        return "dark"
+
+
+@st.cache_resource(show_spinner=False)
+def pixel_css(mode: str) -> str:
+    """The light or dark token block, then app/pixel.css (which only reads the tokens)."""
+    try:
+        css = (Path(__file__).resolve().parent / "pixel.css").read_text(encoding="utf-8")
+    except OSError:
+        css = ""
+    return ":root, .stApp {" + "".join(f"--{k}: {v};" for k, v in TOKENS[mode].items()) + "}" + css
+
+
 st.markdown(f"<style>{_one_line(carbon_css())}</style>", unsafe_allow_html=True)
+st.markdown(f"<style>{_one_line(pixel_css(theme_mode()))}</style>", unsafe_allow_html=True)
+
+# Double-click or double-tap a picture to open (and close) it full screen: presses that picture's own Streamlit
+# full-screen button. Runs once per page from a hidden component (same origin as the app frame).
+FULLSCREEN_JS = """<script>
+const d = window.parent.document;
+if (!d.__spFullscreen) {
+  d.__spFullscreen = true;
+  const toggle = (t) => {
+    const frame = t && t.closest ? t.closest('[data-testid="stFullScreenFrame"]') : null;
+    if (!frame || !frame.querySelector('[data-testid="stImage"]')) return false;
+    const b = frame.querySelector('[data-testid="stBaseButton-elementToolbar"][aria-label*="ullscreen"]');
+    if (b) { b.click(); return true; }
+    return false;
+  };
+  d.addEventListener('dblclick', (e) => { if (toggle(e.target)) e.preventDefault(); });
+  let lastTap = 0;
+  d.addEventListener('touchend', (e) => {
+    const now = Date.now();
+    if (now - lastTap < 320 && toggle(e.target)) { e.preventDefault(); lastTap = 0; } else { lastTap = now; }
+  }, {passive: false});
+}
+</script>"""
+components.html(FULLSCREEN_JS, height=0)
 
 
 # ---------------------------------------------------------------- cached work
@@ -247,7 +309,9 @@ with st.sidebar:
         reset_edits()
 
     mode = st.radio("Encoding", core.MODES, format_func=core.MODE_LABEL.get, horizontal=False,
-                    help="strict: any change at all · perceptual: visible content only · frqi: the textbook baseline")
+                    help="strict: catches changes to exact pixels, with a probability you set by the shots · "
+                         "perceptual: compares a coarse content summary, so small visible edits can be missed · "
+                         "frqi: the textbook pixels-as-angles baseline")
     if mode == "perceptual":
         shots = st.slider("Shots per region", 256, 16384, int(sp.config.PERCEPTUAL_SHOTS), 256, key="shots_p",
                           help="Perceptual mode estimates an overlap, so it needs many shots.")
@@ -258,19 +322,22 @@ with st.sidebar:
     st.divider()
     st.caption(f"swapprint {sp.__version__} · exact backend = analytical sampler, identical in distribution to a "
                f"noiseless SWAP-test circuit on each unit")
-    st.markdown('<div class="sp-credit">SwapPrint · team sardines. Type: IBM Plex (SIL OFL 1.1). Colours and spacing: '
-                'Carbon Design System (Apache-2.0). Not made or endorsed by IBM.</div>', unsafe_allow_html=True)
+    st.caption("Light or dark mode: ⋮ menu → Settings. Double-click any picture for full screen.")
+    st.markdown('<div class="sp-credit">SwapPrint · team sardines. Type: Departure Mono by Helena Zhang (SIL OFL 1.1). '
+                'Colours: Carbon Design System tokens (Apache-2.0). Not made or endorsed by IBM.</div>',
+                unsafe_allow_html=True)
 
 edited = core.replay(base, ss.history)
 edited_sha = core.sha(edited)
 game = ss.game
 game_on = bool(game and not game["revealed"])
 
-st.markdown('<div class="sp-title">SwapPrint</div><br>'
+st.markdown('<div class="sp-title">SwapPrint<span class="sp-cursor"></span></div><br>'
             '<div class="sp-sub">Quantum fingerprints for digital art, checked with a SWAP test</div>',
             unsafe_allow_html=True)
 st.markdown('<div class="lead">Every 4×4 patch of an artwork gets an 11-qubit quantum fingerprint. A SWAP test '
-            'compares fingerprints: an untouched patch never fires, a changed patch fires about half the time.</div>',
+            'compares fingerprints: in the ideal noiseless model an untouched patch never fires, and a typical changed '
+            'patch fires about half the time.</div>',
             unsafe_allow_html=True)
 
 tabs = st.tabs(["Start here", "1 · Fingerprint", "2 · Tamper", "3 · Verify", "How it works", "Results"])
@@ -289,17 +356,26 @@ def tab_start():
     miss1, miss_default = 1 - p1, (1 - p1) ** cfg.DEFAULT_SHOTS
     tiles = cfg.STRICT_GRID ** 2
 
-    st.markdown("### Start here: SwapPrint in plain words")
     st.markdown(
-        '<div class="sp-vs"><div class="sp-stat win"><div class="lbl">The question</div>'
-        '<div class="det" style="font-size:1rem;color:var(--text-primary,#f4f4f4)">Has anyone changed this digital '
-        "painting, even by one pixel you could never see? And if so, where?</div></div>"
-        '<div class="sp-stat win"><div class="lbl">Our answer</div>'
-        '<div class="det" style="font-size:1rem;color:var(--text-primary,#f4f4f4)">Give every small patch of the painting '
-        "a fingerprint made for a quantum computer, then compare the original's fingerprints with the copy's using a "
-        "quantum test called the <b>SWAP test</b>. A changed patch makes the test fire; a heatmap shows where.</div>"
+        '<div class="sp-hero"><div class="kicker">START HERE · NO QUANTUM KNOWLEDGE NEEDED</div>'
+        '<div class="big">Can a quantum test spot a pixel you can\'t?</div>'
+        '<div class="sub">SwapPrint gives every small patch of a painting a fingerprint made for a quantum computer, '
+        "then compares the original with a copy. Change one pixel by the smallest step and the test notices, and "
+        "shows you where.</div>"
+        '<div class="sp-badges">'
+        f'<div class="sp-badge"><b>{tiles:,}</b><span>patches per image</span></div>'
+        f'<div class="sp-badge"><b>{cfg.STRICT_Q} qubits</b><span>per patch fingerprint</span></div>'
+        f'<div class="sp-badge"><b>{fs["strict"]["need99"]} shots</b><span>to catch a 1-pixel edit 99% of the time</span></div>'
         "</div></div>", unsafe_allow_html=True)
-    st.caption("This is a research demo of encoding and measurement, run on a simulator of a perfect quantum computer. "
+    st.markdown(
+        '<div class="sp-vs"><div class="sp-card win"><div class="lbl">THE QUESTION</div>'
+        '<div class="det">Has anyone changed this digital painting, even by one pixel you could never see? '
+        "And if so, where?</div></div>"
+        '<div class="sp-card win"><div class="lbl">OUR ANSWER</div>'
+        '<div class="det">Fingerprint every patch as a quantum state, then compare original and copy with a small '
+        "quantum circuit called the <b>SWAP test</b>. A changed patch makes it fire; a heatmap shows where.</div>"
+        "</div></div>", unsafe_allow_html=True)
+    st.caption("A research demo of encoding and measurement, run on a simulator of a perfect quantum computer. "
                "It is not a security product; see “What this is not” below.")
 
     st.markdown("#### Try it in 60 seconds")
@@ -424,7 +500,8 @@ def tab_fingerprint():
             f"- The code is a public pseudo-random linear [{info['m']}, {info['n']}] code (seed `{info['seed']}`). "
             f"A single-bit change flips {core.single_bit_flips()[0]}–{core.single_bit_flips()[1]} of the "
             f"{info['m']:,} signs (exact, over all {info['n']} bit positions).\n"
-            f"- Heuristic guarantee: minimum distance ≥ {info['d_min_guaranteed']}, so every changed tile has "
+            f"- Heuristic guarantee: two different tiles differ in {info['d_min_guaranteed']:,} to "
+            f"{info['m'] - info['d_min_guaranteed']:,} codeword bits, so |overlap| ≤ {info['overlap_max']:.3f}, every changed tile has "
             f"p1 ≥ {info['p1_min']:.3f}, and {sp.shots_needed(1e-6, info['p1_min'])} shots miss it with "
             f"probability ≤ 10⁻⁶.\n"
             f"- Perceptual mode: {sp.config.PERCEPTUAL_GRID**2} regions of 64×64 px, a 64-bit pHash each, "
@@ -605,9 +682,13 @@ def tab_verify():
                         "is**, then press Verify and let the SWAP test answer.")
         g1, g2 = st.columns([1, 1], gap="large")
         with g1:
-            click = streamlit_image_coordinates(core.upscale(edited, 768), key="game-click", width="stretch")
+            pic = core.upscale(edited, 768).convert("RGB")
+            if ss.game["guess"]:
+                core.draw_guess(pic, ss.game["guess"])  # the same yellow cross the reveal uses
+            click = streamlit_image_coordinates(pic, key="game-click", width="stretch")
             if new_click("game", click):
                 ss.game = {**ss.game, "guess": click_to_canon(click)}
+                st.rerun()  # redraw at once with the cross on the guess
         with g2:
             if ss.game["guess"]:
                 gy, gx = ss.game["guess"]
@@ -751,7 +832,7 @@ def live_swap_test(cmp):
 
 @st.fragment
 def aer_panel(cmp):
-    st.markdown("### Run it on a real Qiskit circuit (Aer)")
+    st.markdown("### Simulate the SWAP-test circuit with Qiskit Aer")
     if not AER_ENABLED:
         st.info("The Aer simulator is switched off on this deployment (memory). It runs in the local demo.")
         return
@@ -912,14 +993,15 @@ def tab_how():
 
     c1, c2 = st.columns(2, gap="large")
     with c1.container(border=True):
-        st.markdown("**The sign state** of a bit string c of length m = 2^q:")
-        st.latex(r"|h_c\rangle = \frac{1}{\sqrt{m}} \sum_{i=0}^{m-1} (-1)^{c_i} |i\rangle, \qquad "
-                 r"\langle h_a | h_b \rangle = 1 - \frac{2\,d(a,b)}{m}")
+        st.markdown("**The sign state** of a bit string $c$ of length $m = 2^q$, and the overlap of two of them:")
+        st.latex(r"|h_c\rangle = \frac{1}{\sqrt{m}} \sum_{i=0}^{m-1} (-1)^{c_i} |i\rangle")
+        st.latex(r"\langle h_a | h_b \rangle = 1 - \frac{2\,d(a,b)}{m}")
         st.markdown("**The SWAP test** reads 1 with probability")
         st.latex(r"p_1 = \frac{1 - |\langle h_a | h_b \rangle|^2}{2}")
         st.latex(r"P(\text{caught in } k \text{ shots}) = 1 - (1 - p_1)^k")
-        st.markdown(f"Identical states give p1 = 0, so they **never** read 1. The code keeps any two different tiles at "
-                    f"distance ≥ {info['d_min_guaranteed']} (heuristic bound), so overlap ≤ {info['overlap_max']:.3f} "
+        st.markdown(f"Identical states give p1 = 0, so they **never** read 1 in the noiseless model. Under the "
+                    f"random-code heuristic, any two different tiles differ in between {info['d_min_guaranteed']:,} "
+                    f"and {info['m'] - info['d_min_guaranteed']:,} codeword bits, so |overlap| ≤ {info['overlap_max']:.3f} "
                     f"and p1 ≥ {info['p1_min']:.3f}: {sp.shots_needed(1e-3, info['p1_min'])} shots miss a changed tile "
                     f"with probability ≤ 10⁻³, {sp.shots_needed(1e-6, info['p1_min'])} shots ≤ 10⁻⁶.")
     with c2.container(border=True):
@@ -954,7 +1036,7 @@ def tab_how():
         '<div class="cds-notice warning" style="margin-top:0"><b>What we don\'t claim</b><ul>'
         "<li>that it's a secure signature or watermark</li>"
         "<li>that it's a quantum advantage in our setting</li>"
-        "<li>that it was run on hardware when it wasn't</li>"
+        "<li>that the full-image test ran on hardware: only small toy states ran on a real IBM chip (F8)</li>"
         "<li>that entanglement gives security</li>"
         "<li>any number without saying how many runs it came from</li></ul>"
         "“No change detected” is not proof that nothing changed: the miss bound is P(no detection | a tile changed), "
