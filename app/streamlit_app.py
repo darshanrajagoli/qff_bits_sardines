@@ -487,8 +487,8 @@ def tab_verify():
         r, c = core.unit_rc(cmp, unit)
         fp = fp_of(base, mode)
         why = "picked by you" if ss.aer_pick is not None else "most suspicious by the exact overlap"
-        st.markdown(f"**{word.title()} (row {r}, col {c})**, {why}: overlap {cmp.overlap.flat[unit]:.4f}, "
-                    f"p1 {cmp.p1.flat[unit]:.4f}, {int(cmp.ones.flat[unit])} ones in {cmp.shots:,} shots")
+        st.markdown(f"**{word.title()} (row {r}, col {c})**, {why}: overlap {cmp.overlap.flat[unit]:.7f}, "
+                    f"p1 {cmp.p1.flat[unit]:.3g}, {int(cmp.ones.flat[unit])} ones in {cmp.shots:,} shots")
         za, zb = core.zoom_pair(base, edited, unit, cmp.grid, fp.unit_px, 230)
         z1, z2 = st.columns(2)
         z1.image(za, caption="original", output_format="PNG", width="stretch")
