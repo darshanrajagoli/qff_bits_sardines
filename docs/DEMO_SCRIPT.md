@@ -1,60 +1,57 @@
 # SwapPrint: 3-Minute Demo Video Script (Milestone E5)
 
-**Target duration:** 2 minutes 40 seconds (under the 3-minute hard ceiling).  
-**Word count:** ~370 words.  
+**Target duration:** 2 minutes 45 seconds (under the 3-minute hard ceiling).  
+**Word count:** ~210 spoken words (paced comfortably with title and section cards).  
 **Cast / Voiceover:** Team Sardines (Problem 5: Quantum Fingerprint).  
+**Recording Pipeline:** Fully automated via `python app/demo/record_demo.py app/demo/storyboard_cards.json` (1920×1080, IBM Carbon title/section/end cards, IBM Plex captions).  
 **Reproducibility:** Seed pinned to `42` in Verify settings so every measurement trace is deterministic.
 
 ---
 
-### Beat 1: The Question (0:00 – 0:10, 10s)
-* **Visual:** Browser opens to SwapPrint local Streamlit app at `http://localhost:8501`. Title banner visible in IBM Carbon styling.
-* **Narration (26 words):**  
-  > "Can a quantum experiment verify the creative integrity of digital artwork? This is SwapPrint: creative tamper detection using 11-qubit error-correcting states and the SWAP test."
+### Beat 1: Title Card & The Question (0:00 – 0:15, 15s)
+* **Visual:** Carbon title card: *SwapPrint · Quantum fingerprints for digital art · team sardines · Qiskit Fall Fest 2026*. Transitions to local/public app showing Hokusai's *Under the Wave off Kanagawa*. Switch to **Tab 1: Fingerprint** showing canonical 256×256 image and 64×64 tile breakdown.
+* **Narration:**  
+  > "SwapPrint: quantum fingerprints for digital art. We start with Hokusai's Great Wave. Every 4x4 patch gets its own 11-qubit fingerprint state."
 
 ---
 
-### Beat 2: Pick Artwork & Fingerprint Mosaic (0:10 – 0:30, 20s)
-* **Visual:** Sidebar selects Hokusai's *The Great Wave*. Switch to **Tab 1: Fingerprint**. The 256×256 image displays beside its 64×64 tile breakdown (4,096 tiles, each 4×4 pixels).
-* **Narration (50 words):**  
-  > "We canonicalise any artwork to 256 by 256 pixels, divided into 4,096 tiles of 4 by 4 pixels. Passing each tile through a linear code yields a 2,048-bit codeword, mapped directly to the signs of an 11-qubit quantum state. Two identical tiles produce an overlap of exactly one."
+### Beat 2: Section Card: Tamper & Invisible Edit (0:15 – 0:40, 25s)
+* **Visual:** Carbon section card: *Tamper*. Switch to **Tab 2: Tamper**. Click **"Surprise me"** (or use **"Challenge a friend"**). A secret 1-pixel edit is applied at coordinate $(x=154, y=202)$. Switch to **Tab 3: Verify**.
+* **Narration:**  
+  > "Now someone quietly edits the artwork: one pixel, one colour level. Surprise me hides a single invisible edit somewhere in the image. Can you spot the edit? Nobody can by eye. Let's guess: click where we think the change is."
 
 ---
 
-### Beat 3: "Surprise Me" Invisible Tamper (0:30 – 0:50, 20s)
-* **Visual:** Switch to **Tab 2: Tamper**. Click **"Surprise me"**. The tool secretly alters a single pixel by one colour value (`pixel_1` delta +1). Switch to **Tab 3: Verify**.
-* **Narration (48 words):**  
-  > "Now, someone tampers with the artwork. We click 'Surprise me', which alters just a single pixel by one brightness level. Looking at the two side-by-side images, the change is entirely invisible to the human eye. Can a quantum verification test detect it?"
+### Beat 3: Verify, Live SWAP Test & Qiskit Aer (0:40 – 1:30, 50s)
+* **Visual:** Click **"Verify"**. Banner flashes magenta: `CHANGE DETECTED`. Heatmap highlights the tampered 4×4 tile at $(154, 202)$. Click **"▶ Play shots"**: ancilla measurement outcomes stream in real time (gray `0`s, magenta `1`s). Click **"Run on Qiskit Aer"**: executes a real 23-qubit circuit in a child process; simulator output matches exact theoretical $p_1$.
+* **Narration:**  
+  > "Press Verify: the SWAP test compares every fingerprint, tile by tile. CHANGE DETECTED. The heatmap points straight at the edited tile. Untouched tiles never fire. A changed tile fires about half the time. Watch the SWAP test shots arrive one by one: grey is 0, magenta is 1. The same test, as a real circuit on Qiskit's Aer simulator. Aer agrees with the exact answer."
 
 ---
 
-### Beat 4: Verify & Live SWAP-Test Heatmap (0:50 – 1:20, 30s)
-* **Visual:** Set Seed to `42`, shots to `32`. Click **"Verify"**. The banner flashes magenta: `CHANGE DETECTED`. Scroll to **Heatmap**: a sharp alert highlight pinpoints the tampered tile. Click **"▶ Play shots"**: ancilla measurement outcomes stream in real time (magenta `1`s, gray `0`s). A `1` arrives at shot 2.
-* **Narration (80 words):**  
-  > "We click Verify. A SWAP test compares every tile state against the registered original. In the ideal noiseless model, identical inputs have zero probability of producing a one; we flag a tile when a one is observed. A single-bit change flips 955 to 1080 of the 2,048 signs, computed exactly across all 384 input-bit positions. Here, shot two reads one. The alert heatmap locates the flagged 4 by 4 tile without requiring image upload."
+### Beat 4: Compare Encodings — Why Physics Matters (1:30 – 2:05, 35s)
+* **Visual:** Scroll to **Compare Encodings**. Switch sidebar radio to **"frqi (baseline)"**. Click **Verify**. Banner shows green `NO CHANGE DETECTED`.
+* **Narration:**  
+  > "Why the encoding matters: same edit, same SWAP test, three encodings. Switch to the textbook baseline encoding, FRQI. Verify again with FRQI... NO CHANGE DETECTED. FRQI needs millions of shots to notice this edit. Same SWAP test, different encoding: 99% detection takes 15.5 million shots with FRQI, 7 with ours."
 
 ---
 
-### Beat 5: Compare Encodings — Why Physics Matters (1:20 – 1:45, 25s)
-* **Visual:** Scroll to **Compare Encodings** table. Switch sidebar to **"frqi (baseline)"** and click **Verify**. Banner shows green `NO CHANGE DETECTED`.
-* **Narration (68 words):**  
-  > "Why does encoding matter? Most approaches encode pixels as angles—the textbook FRQI method. On this identical single-pixel edit, FRQI’s quantum overlap is approximately 0.9999997. It needs over 15 million shots for 99% detection, whereas SwapPrint's strict mode flags it in a median budget of seven shots. The error-correcting sign encoding makes quantum verification practical."
+### Beat 5: How It Works & Rigorous Evaluation (2:05 – 2:30, 25s)
+* **Visual:** Switch to **Tab: How it works** (shows 5-step pipeline diagram and mathematical formulations). Carbon section card: *Results*. Switch to **Tab: Results** (displays Figures F1–F5 and noise study F6).
+* **Narration:**  
+  > "How: tile, error-correcting code, 11-qubit sign state, SWAP test. One flipped bit flips about half the signs. Measured, not assumed: 12 paintings, 3 stress images, 22 conditions, Wilson 95% intervals on sampled rates."
 
 ---
 
-### Beat 6: Rigorous Evaluation & Honest Limits (1:45 – 2:30, 45s)
-* **Visual:** Switch to **Tab 5: Results**. Display Figure F2 (shots needed across 22 conditions), F3 (1,000,000 collision pairs), and Darshan's Figure F6 (noise on FakeFez).
-* **Narration (95 words):**  
-  > "We evaluated SwapPrint across 12 museum paintings and three stress images under 22 conditions. Among one million sampled distinct-content strict tile pairs, maximum absolute overlap was 0.1084, supporting our heuristic bound. Perceptual mode detects changes to a coarse DCT hash. But we state all limitations honestly: classical SHA-256 is far faster. Full 11-qubit circuits require over 4,000 gates—beyond today's physical hardware. On a simulated IBM device noise model (FakeFez), noise lifts identical states off zero, requiring calibrated thresholds."
+### Beat 6: Honest Limits & SHA-256 Baseline (2:30 – 2:45, 15s)
+* **Visual:** Scroll to **Circuits and noise** section of Results tab. Return to **Tab 3: Verify** showing the downloadable unsigned verification record PNG. Carbon end card: credits for Carbon Design System (Apache-2.0) and IBM Plex (SIL OFL 1.1).
+* **Narration:**  
+  > "Honest limit: on a simulated IBM device noise model (FakeFez), identical states start to fire, so real devices need thresholds. SHA-256 is still better in practice. What SwapPrint shows: the encoding decides what a SWAP test can see."
 
 ---
 
-### Beat 7: Wrap-up & 20-Second Pitch (2:30 – 2:50, 20s)
-* **Visual:** Scroll to top banner; show the downloadable verification record PNG: an unsigned record of this comparison.
-* **Narration (36 words):**  
-  > "SwapPrint explores how state encoding changes SWAP-test sensitivity and localizes detected edits to tiles. Its general fixed-code miss bound is heuristic, and SHA-256 per tile remains better in practice. Built by Team Sardines for IBM Qiskit Fall Fest 2026."
-
----
-
-### Automated Storyboard Mapping (`app/demo/storyboard.json`)
-The steps above directly map into `app/demo/storyboard.json` and `app/demo/storyboard_cards.json` for automated 1920×1080 capture with burned-in subtitles via Playwright.
+### Automated Storyboard Sync
+The script above is synchronized with:
+- `app/demo/storyboard.json` (clean run with Plex captions)
+- `app/demo/storyboard_cards.json` (broadcast run with Carbon title, section, and end cards)
+- Command to reproduce: `python app/demo/record_demo.py app/demo/storyboard_cards.json --url=http://localhost:8501 --out=demo_v2`

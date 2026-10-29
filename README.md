@@ -22,13 +22,14 @@
 
 ## The Demo
 
-An interactive web application built with Streamlit and styled with IBM's Carbon Design System lets users register artwork fingerprints, apply realistic digital tampering, run live SWAP tests shot by shot, and execute real 23-qubit circuits on Qiskit Aer.
+An interactive web application built with Streamlit and styled with IBM's Carbon Design System lets users register artwork fingerprints, apply realistic digital tampering, challenge a friend, run live SWAP tests shot by shot, and execute real 23-qubit circuits on Qiskit Aer.
 
 | Verification Heatmap & Live SWAP Test | Interactive Tampering Studio |
 |:---:|:---:|
 | ![Verification View](app/screenshots/verify_full.png) | ![Tamper Studio](app/screenshots/tamper.png) |
 
-- **Demo Video:** [Watch the Walkthrough Video on Google Drive](https://drive.google.com/file/d/1_lkx03H6wT7d16GV3oQNottb69TzxDWK/view?usp=sharing) *(Recorded by Ansh at 1920×1080 with burned-in subtitles; narration script detailed in [`docs/DEMO_SCRIPT.md`](docs/DEMO_SCRIPT.md) and storyboard in [`app/demo/storyboard.json`](app/demo/storyboard.json))*.
+- **Live Public App:** **[Launch SwapPrint on Streamlit Community Cloud](https://qffbitssardines-withoutthes.streamlit.app/)** *(No installation required; runs in any modern desktop browser)*.
+- **Demo Video:** [Watch the Walkthrough Video on Google Drive](https://drive.google.com/file/d/18DblHaZpW1hQR3vbmxkzonuY0GlAkSgy/view?usp=drive_link) *(2:45 walkthrough recorded at 1920×1080 with Carbon title/section/end cards and IBM Plex captions; narration script detailed in [`docs/DEMO_SCRIPT.md`](docs/DEMO_SCRIPT.md) and storyboard in [`app/demo/storyboard_cards.json`](app/demo/storyboard_cards.json))*.
 - **Live Local App:** `streamlit run app/streamlit_app.py --server.headless true` (opens at `http://localhost:8501`).
 
 ---
@@ -262,12 +263,12 @@ streamlit run app/streamlit_app.py --server.headless true
 # 3. Run the automated app test suite
 pytest -q app/tests
 ```
-Open `http://localhost:8501` in your browser.
+Open `http://localhost:8501` in your browser, or visit the live public deployment directly on **[Streamlit Community Cloud](https://qffbitssardines-withoutthes.streamlit.app/)**.
 
 | App Tab | Capability & Interactive Features |
 |---|---|
 | **1 · Fingerprint** | View the canonical 256×256 artwork, inspect the math of the $[2048, 384]$ code, and visualize the **Fingerprint Mosaic** (codeword bits mapped to RGB color tiles). Download registered fingerprints as `.npz` files. |
-| **2 · Tamper** | Interactive canvas studio: click any coordinate to apply single-pixel nudges, red patches, copy-moves, splices, text insertions, LSB watermarks, or JPEG re-saves. Includes Undo, Reset, and a **"Surprise Me"** button that hides an invisible 1-pixel edit for testing. |
+| **2 · Tamper** | Interactive canvas studio: click any coordinate to apply single-pixel nudges, red patches, copy-moves, splices, text insertions, LSB watermarks, or JPEG re-saves. Includes Undo, Reset, a **"Surprise Me"** button that hides an invisible 1-pixel edit for the game, and a **"Challenge a friend"** mode that hides your custom edits so someone else can test their eyes against the quantum verifier. |
 | **3 · Verify** | **Spot the Edit:** Guess where the tamper occurred, then run verification. Displays the verdict, total shots evaluated, a 64×64 **tamper heatmap** highlighting altered tiles, a zoomed inspection of the most suspicious tile, and a **Live SWAP Test** visualizer that plays shots one by one with a real-time Wilson interval. Includes **Compare Encodings** (Strict vs Perceptual vs FRQI) and a **"Run on Qiskit Aer"** button to execute true 23-qubit circuits. |
 | **How It Works** | Comprehensive educational walkthrough of the 5-step pipeline, circuit diagrams, mathematical derivations, and honest limitations. |
 | **Results** | Interactive gallery displaying all generated figures (F1–F7, ablation, noise) with captions from `captions.json` and `core_captions.json`. |
