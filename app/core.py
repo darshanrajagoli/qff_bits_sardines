@@ -5,6 +5,7 @@ Everything goes through swapprint's public API (docs/CONTRACT.md).
 
 from __future__ import annotations
 
+import base64
 import hashlib
 import io
 import math
@@ -214,6 +215,40 @@ def mosaic(fp: sp.Fingerprint) -> np.ndarray:
         bits = np.asarray(fp.data[:, :24], dtype=np.uint8)
         vals = np.packbits(bits, axis=1)  # 24 bits -> 3 bytes
     return vals.reshape(*fp.grid, 3)
+
+
+def step_visuals(img: np.ndarray, fp: sp.Fingerprint, row: int = 32, col: int = 32) -> dict[str, Image.Image]:
+    """Small pictures for the How it works steps, all from one real strict tile (row, col) of this artwork."""
+    canon_px = sp.config.CANON
+    tile = canon_px // fp.grid[1]  # 4 px in strict mode
+    purple, grey, layer = _rgb("#a56eff"), _rgb("#393939"), _rgb("#262626")
+    # a 16x16 window on the tile grid: 4x4 tiles, the chosen tile third from the top and from the left
+    y0, x0 = min(max(0, (row - 2) * tile), canon_px - 16), min(max(0, (col - 2) * tile), canon_px - 16)
+    canon = Image.fromarray(img).convert("RGB")
+    ImageDraw.Draw(canon).rectangle([x0 - 1, y0 - 1, x0 + 16, y0 + 16], outline=purple, width=2)
+    zoom = Image.fromarray(img[y0:y0 + 16, x0:x0 + 16]).resize((256, 256), Image.NEAREST)
+    d = ImageDraw.Draw(zoom)
+    for k in range(0, 257, 64):
+        d.line([(k, 0), (k, 256)], fill=layer, width=2)
+        d.line([(0, k), (256, k)], fill=layer, width=2)
+    ty, tx = (row * tile - y0) * 16, (col * tile - x0) * 16
+    d.rectangle([tx, ty, tx + 64, ty + 64], outline=purple, width=5)
+    bits = np.asarray(fp.data[row * fp.grid[1] + col], dtype=np.uint8)
+    code = np.where(bits.reshape(32, -1)[..., None] == 1, purple, grey).astype(np.uint8)
+    code = Image.fromarray(code).resize((code.shape[1] * 4, code.shape[0] * 4), Image.NEAREST)
+    signs = Image.new("RGB", (256, 128), layer)
+    d = ImageDraw.Draw(signs)
+    d.line([(0, 64), (256, 64)], fill=grey, width=1)
+    for i, b in enumerate(bits[:32]):  # amplitude i is +1/sqrt(m) for bit 0, -1/sqrt(m) for bit 1
+        x = i * 8 + 1
+        d.rectangle([x, 12, x + 5, 63] if b == 0 else [x, 65, x + 5, 116], fill=purple if b == 0 else _rgb("#6929c4"))
+    return {"canon": canon, "zoom": zoom, "code": code, "signs": signs}
+
+
+def data_uri(im: Image.Image) -> str:
+    buf = io.BytesIO()
+    im.save(buf, format="PNG")
+    return "data:image/png;base64," + base64.b64encode(buf.getvalue()).decode("ascii")
 
 
 def mosaic_image(fp: sp.Fingerprint, size: int = 512, changed: np.ndarray | None = None) -> Image.Image:

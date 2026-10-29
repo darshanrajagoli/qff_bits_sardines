@@ -56,6 +56,29 @@ def carbon_css() -> str:
   background-clip: text; color: transparent;}}
 .sp-sub {{color: var(--text-secondary, #c6c6c6); font-size: 1.25rem; line-height: 1.4; margin-bottom: var(--sp-05, 16px);}}
 .sp-credit {{color: var(--text-helper, #a8a8a8); font-size: 0.75rem; letter-spacing: 0.32px; line-height: 1.33;}}
+.sp-steps {{display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: var(--sp-04, 12px);
+  margin: var(--sp-03, 8px) 0 var(--sp-07, 32px) 0;}}
+.sp-step {{background: var(--layer-01, #262626); border-top: 4px solid {PURPLE}; padding: var(--sp-05, 16px);
+  display: flex; flex-direction: column; gap: var(--sp-03, 8px); transition: background 110ms;}}
+.sp-step:hover {{background: var(--layer-hover-01, #333333);}}
+.sp-step .num {{font: 600 2rem/1 var(--font-mono, "IBM Plex Mono"), monospace; color: #a56eff;}}
+.sp-step .viz {{height: 120px; display: flex; align-items: center; justify-content: center; background: #161616;}}
+.sp-step .viz img {{max-width: 100%; max-height: 120px; image-rendering: pixelated;}}
+.sp-step .ttl {{font-weight: 600; font-size: 1rem; line-height: 1.375; color: var(--text-primary, #f4f4f4);}}
+.sp-step .txt {{font-size: 0.875rem; line-height: 1.43; color: var(--text-secondary, #c6c6c6);}}
+.sp-step .viz .shots {{flex-direction: column; gap: 2px; margin: 0;}}
+@media (max-width: 1279px) {{.sp-steps {{grid-template-columns: repeat(3, minmax(0, 1fr));}}}}
+@media (max-width: 640px) {{.sp-steps {{grid-template-columns: 1fr;}}}}
+.sp-step .viz .shots div {{display: flex; gap: 3px; align-items: center;}}
+.sp-step .viz .shots .lab {{font-size: 0.75rem; color: var(--text-helper, #a8a8a8); margin-top: 4px;}}
+.sp-step .viz .shot {{width: 13px; height: 13px; font-size: 9px; flex: none;}}
+.sp-vs {{display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: var(--sp-05, 16px); margin: var(--sp-03, 8px) 0;}}
+.sp-stat {{background: var(--layer-01, #262626); padding: var(--sp-06, 24px); border-left: 4px solid var(--cds-gray-60, #6f6f6f);}}
+.sp-stat.win {{border-left-color: {PURPLE};}}
+.sp-stat .big {{font: 600 3rem/1.1 var(--font-mono, "IBM Plex Mono"), monospace; color: var(--text-primary, #f4f4f4); margin: var(--sp-03, 8px) 0;}}
+.sp-stat.win .big {{color: #a56eff;}}
+.sp-stat .lbl {{font-size: 0.875rem; font-weight: 600; letter-spacing: 0.16px; color: var(--text-secondary, #c6c6c6);}}
+.sp-stat .det {{font-size: 0.875rem; line-height: 1.43; color: var(--text-helper, #a8a8a8); margin-top: var(--sp-03, 8px);}}
 """
 
 
@@ -319,7 +342,7 @@ def tab_tamper():
             st.caption("Location hidden while the game runs.")
         else:
             st.caption(f"Chosen location: row {y}, column {x} (canonical pixels)")
-    with right:
+    with right.container(border=True):
         st.markdown("**Edit tools**")
         name = st.selectbox("Tool", list(core.TOOLS), format_func=lambda n: core.TOOLS[n][0], key="tool")
         step = None
@@ -364,7 +387,9 @@ def tab_tamper():
         elif name == "resize_roundtrip":
             step = {"name": "resize_roundtrip", "params": {"size": st.slider("Shrink to (px)", 32, 255, 128)}}
 
-        b1, b2, b3, b4, b5 = st.columns([1, 1.25, 1.25, 1, 1])
+        # two rows, so Carbon's wide button padding never truncates a label in a half-width column
+        b1, b4, b5 = st.columns([1.4, 1, 1])
+        b2, b3 = st.columns(2)
         if b1.button("Apply", type="primary", width="stretch", disabled=game_on):
             try:
                 core.apply_step(edited, step)  # validate before it enters the history
@@ -717,20 +742,40 @@ def check_a_file():
 @safe
 def tab_how():
     info = sp.code_info()
+    fs = frqi_vs_strict()
+    lo, hi = core.single_bit_flips()
+    v = {k: core.data_uri(im) for k, im in core.step_visuals(base, fp_of(base, "strict")).items()}
+    # step 5's "changed" row is a real draw at the one-pixel p1 below, seeded from the sidebar seed
+    draws = np.random.default_rng(seed).random(8) < fs["strict"]["p1"]
+    same = "".join('<span class="shot">0</span>' for _ in draws)
+    diff = "".join(f'<span class="shot{" one" if d else ""}">{int(d)}</span>' for d in draws)
+    steps = [
+        ("1", "Canonical image", f'<img src="{v["canon"]}" alt="canonical image">',
+         "Resize to 256×256 RGB, deterministically on every machine."),
+        ("2", "Tiles", f'<img src="{v["zoom"]}" alt="4x4 tiles">',
+         f"Cut into {sp.config.STRICT_GRID**2:,} tiles of 4×4 pixels: {info['n']} bits each. Shown: the outlined tile."),
+        ("3", "Error-correcting code", f'<img src="{v["code"]}" alt="codeword bits">',
+         f"A public linear code stretches {info['n']} bits to {info['m']:,} (shown: this tile's codeword). "
+         f"A single-bit change flips {lo}–{hi} of the {info['m']:,} signs."),
+        ("4", "Sign state", f'<img src="{v["signs"]}" alt="amplitude signs">',
+         f"Codeword bits become the signs of an {sp.config.STRICT_Q}-qubit state's {info['m']:,} amplitudes "
+         f"(shown: the first 32)."),
+        ("5", "SWAP test → decision",
+         f'<div class="shots"><span class="lab">same tile</span><div>{same}</div>'
+         f'<span class="lab">changed tile</span><div>{diff}</div></div>',
+         "Identical states never give a 1 in the noiseless model, so a tile that gives a 1 is flagged."),
+    ]
     st.markdown("### Five steps from artwork to verdict")
-    s = st.columns(5)
-    s[0].markdown("**1 · Canonical image**\n\nResize to 256×256 RGB, deterministically on every machine.")
-    s[1].markdown(f"**2 · Tiles**\n\nCut into {sp.config.STRICT_GRID**2:,} tiles of 4×4 pixels: {info['n']} bits each.")
-    s[2].markdown(f"**3 · Error-correcting code**\n\nA public linear code stretches {info['n']} bits to "
-                  f"{info['m']:,}. A single-bit change flips {core.single_bit_flips()[0]}–{core.single_bit_flips()[1]} of "
-                  f"the {info['m']:,} signs.")
-    s[3].markdown(f"**4 · Sign state**\n\nCodeword bits become the signs of an {sp.config.STRICT_Q}-qubit state's "
-                  f"{info['m']:,} amplitudes.")
-    s[4].markdown("**5 · SWAP test → decision**\n\nCompare with the original's state. Identical states never give a 1 in "
-                  "the noiseless model, so a tile that gives a 1 is flagged.")
+    st.caption("The pictures are live: they come from the artwork selected in the sidebar.")
+    st.markdown('<div class="sp-steps">' + "".join(
+        f'<div class="sp-step"><div class="num">{n}</div><div class="viz">{viz}</div>'
+        f'<div class="ttl">{t}</div><div class="txt">{txt}</div></div>' for n, t, viz, txt in steps) + "</div>",
+        unsafe_allow_html=True)
+    st.caption(f"Step 5: the “changed” row is {len(draws)} sampled shots at the one-pixel p1 = {fs['strict']['p1']:.3f} "
+               f"(seed {seed}); magenta marks a 1.")
 
     c1, c2 = st.columns(2, gap="large")
-    with c1:
+    with c1.container(border=True):
         st.markdown("**The sign state** of a bit string c of length m = 2^q:")
         st.latex(r"|h_c\rangle = \frac{1}{\sqrt{m}} \sum_{i=0}^{m-1} (-1)^{c_i} |i\rangle, \qquad "
                  r"\langle h_a | h_b \rangle = 1 - \frac{2\,d(a,b)}{m}")
@@ -741,29 +786,36 @@ def tab_how():
                     f"distance ≥ {info['d_min_guaranteed']} (heuristic bound), so overlap ≤ {info['overlap_max']:.3f} "
                     f"and p1 ≥ {info['p1_min']:.3f}: {sp.shots_needed(1e-3, info['p1_min'])} shots miss a changed tile "
                     f"with probability ≤ 10⁻³, {sp.shots_needed(1e-6, info['p1_min'])} shots ≤ 10⁻⁶.")
-    with c2:
+    with c2.container(border=True):
         st.markdown("**The SWAP-test circuit**, at 2 qubits per state (ours uses 11):")
         show_toy_circuit("ancilla")
 
     st.markdown("### Why the encoding matters")
-    fs = frqi_vs_strict()
+    st.markdown("Change one colour value of one pixel by 1 on the synthetic painting, then ask how many shots the same "
+                "SWAP test needs to catch it 99% of the time:")
     st.markdown(
-        f"Change one colour value of one pixel by 1 on the synthetic painting:\n\n"
-        f"- **FRQI, “pixels as angles”**: overlap {fs['frqi']['overlap']:.7f}, p1 = {fs['frqi']['p1']:.2e}. The first 1 "
-        f"comes after about **{fs['frqi']['first']:,.0f} shots** on average, and 99% detection needs "
-        f"**{fs['frqi']['need99']:,} shots**.\n"
-        f"- **SwapPrint strict**: overlap {fs['strict']['overlap']:.4f}, p1 = {fs['strict']['p1']:.3f}. The first 1 comes "
-        f"after about **{fs['strict']['first']:.1f} shots**; 99% detection needs **{fs['strict']['need99']} shots**.\n\n"
-        f"Same SWAP test, different encoding. The error-correcting code (Buhrman, Cleve, Watrous and de Wolf, 2001) is "
-        f"what makes a tiny edit visible.")
+        '<div class="sp-vs">'
+        f'<div class="sp-stat"><div class="lbl">FRQI, “pixels as angles”</div>'
+        f'<div class="big">{fs["frqi"]["need99"]:,}</div><div class="lbl">shots for 99% detection</div>'
+        f'<div class="det">overlap {fs["frqi"]["overlap"]:.7f}, p1 = {fs["frqi"]["p1"]:.2e}; the first 1 comes after '
+        f'about {fs["frqi"]["first"]:,.0f} shots on average.</div></div>'
+        f'<div class="sp-stat win"><div class="lbl">SwapPrint strict, error-correcting code</div>'
+        f'<div class="big">{fs["strict"]["need99"]}</div><div class="lbl">shots for 99% detection</div>'
+        f'<div class="det">overlap {fs["strict"]["overlap"]:.4f}, p1 = {fs["strict"]["p1"]:.3f}; the first 1 comes after '
+        f'about {fs["strict"]["first"]:.1f} shots on average.</div></div></div>',
+        unsafe_allow_html=True)
+    st.caption("Exact values from the two encodings, no sampling. Same SWAP test, different encoding: the "
+               "error-correcting code (Buhrman, Cleve, Watrous and de Wolf, 2001) is what makes a tiny edit visible.")
 
-    st.markdown("### Why quantum at all, honestly")
-    st.markdown("Buhrman et al. proved that in the simultaneous-message model without shared randomness, comparing n-bit "
-                "inputs needs only O(log n) qubits but Θ(√n) classical bits. That advantage holds only in that "
-                "communication model. **Our simulation has no advantage; in practice SHA-256 is better.** SwapPrint is an "
-                "exploration of encoding, measurement and tamper experiments.")
-    st.markdown(
-        '<div class="box"><b>What we don\'t claim</b><ul>'
+    q1, q2 = st.columns(2, gap="large")
+    with q1.container(border=True):
+        st.markdown("**Why quantum at all, honestly**")
+        st.markdown("Buhrman et al. proved that in the simultaneous-message model without shared randomness, comparing "
+                    "n-bit inputs needs only O(log n) qubits but Θ(√n) classical bits. That advantage holds only in "
+                    "that communication model. **Our simulation has no advantage; in practice SHA-256 is better.** "
+                    "SwapPrint is an exploration of encoding, measurement and tamper experiments.")
+    q2.markdown(
+        '<div class="cds-notice warning" style="margin-top:0"><b>What we don\'t claim</b><ul>'
         "<li>that it's a secure signature or watermark</li>"
         "<li>that it's a quantum advantage in our setting</li>"
         "<li>that it was run on hardware when it wasn't</li>"
