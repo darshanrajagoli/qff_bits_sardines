@@ -238,18 +238,19 @@ def heatmap(img: np.ndarray, cmp: sp.Comparison, size: int = 512, guess=None, tr
     tint = Image.new("RGBA", base.size, ACCENT + (255,))
     tint.putalpha(a)
     out = Image.alpha_composite(base, tint).convert("RGB")
-    _rings(out, cmp.flagged, cmp.grid, ACCENT + (), width=3)
+    _rings(out, cmp.flagged, cmp.grid, ACCENT + (), width=max(3, round(3 * size / 512)))
     d = ImageDraw.Draw(out)
     scale = size / sp.config.CANON
+    k = size / 512  # marker sizes are tuned for 512 px
     if truth is not None:
         ty, tx = truth
         cx, cy = (tx + 0.5) * scale, (ty + 0.5) * scale
-        d.rectangle([cx - 10, cy - 10, cx + 10, cy + 10], outline=(255, 255, 255), width=2)
+        d.rectangle([cx - 10 * k, cy - 10 * k, cx + 10 * k, cy + 10 * k], outline=(255, 255, 255), width=round(2 * k))
     if guess is not None:
         gy, gx = guess
         cx, cy = (gx + 0.5) * scale, (gy + 0.5) * scale
-        d.line([cx - 12, cy, cx + 12, cy], fill=(255, 210, 0), width=3)
-        d.line([cx, cy - 12, cx, cy + 12], fill=(255, 210, 0), width=3)
+        d.line([cx - 12 * k, cy, cx + 12 * k, cy], fill=(255, 210, 0), width=round(3 * k))
+        d.line([cx, cy - 12 * k, cx, cy + 12 * k], fill=(255, 210, 0), width=round(3 * k))
     return out
 
 

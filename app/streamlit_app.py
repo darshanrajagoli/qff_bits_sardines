@@ -91,7 +91,7 @@ def show_toy_circuit(kind: str) -> None:
     """sp.circuits.example_circuit(q=2, kind) pre-rendered by app/make_assets.py: no Qiskit circuit in this process."""
     png = ASSETS / f"swap_test_q2_{kind}.png"
     if png.exists():
-        st.image(str(png), output_format="PNG")
+        st.image(str(png), output_format="PNG", width="stretch")
     else:
         st.caption("Circuit drawing missing: run python app/make_assets.py")
 
@@ -231,7 +231,7 @@ def tab_fingerprint():
     info = sp.code_info()
     left, right = st.columns([1, 1], gap="large")
     with left:
-        st.image(core.upscale(base), caption=f"Canonical 256×256 image · {source_note}", output_format="PNG", width=512)
+        st.image(core.upscale(base, 768), caption=f"Canonical 256×256 image · {source_note}", output_format="PNG", width="stretch")
     with right:
         st.markdown("### What gets fingerprinted")
         st.markdown(
@@ -252,14 +252,14 @@ def tab_fingerprint():
     fa, fb = fp_of(base, "strict"), fp_of(edited, "strict")
     changed = (fa.data != fb.data).any(axis=1).reshape(fa.grid)
     c1, c2 = st.columns(2, gap="large")
-    c1.image(core.mosaic_image(fa, 420), caption="Original's mosaic", output_format="PNG")
+    c1.image(core.mosaic_image(fa, 420), caption="Original's mosaic", output_format="PNG", width="stretch")
     n_changed = int(changed.sum())
     if not ss.history:
         c2.info("Make an edit in **2 · Tamper** to see the edited image's mosaic here.")
     elif game_on:
         c2.info("Hidden while the spot-the-edit game runs: the mosaic would give the answer away.")
     else:
-        c2.image(core.mosaic_image(fb, 420, changed), output_format="PNG",
+        c2.image(core.mosaic_image(fb, 420, changed), output_format="PNG", width="stretch",
                  caption=f"Edited image's mosaic: {n_changed:,} of {changed.size:,} tiles have a different codeword"
                          + (" (ringed)" if 0 < n_changed <= 60 else ""))
 
@@ -285,7 +285,7 @@ def tab_tamper():
     left, right = st.columns([1, 1], gap="large")
     with left:
         st.markdown("**Click the image to choose where to edit**")
-        click = streamlit_image_coordinates(core.upscale(edited), key="tamper-click", width=512)
+        click = streamlit_image_coordinates(core.upscale(edited, 768), key="tamper-click", width="stretch")
         if new_click("tamper", click):
             ss.loc = click_to_canon(click)
         y, x = ss.loc
@@ -371,8 +371,8 @@ def tab_tamper():
 
     st.markdown("### Original and edited, side by side")
     c1, c2 = st.columns(2, gap="large")
-    c1.image(core.upscale(base, 420), caption="Original", output_format="PNG")
-    c2.image(core.upscale(edited, 420), caption="Edited" if ss.history else "Edited (no edits yet)", output_format="PNG")
+    c1.image(core.upscale(base, 768), caption="Original", output_format="PNG", width="stretch")
+    c2.image(core.upscale(edited, 768), caption="Edited" if ss.history else "Edited (no edits yet)", output_format="PNG", width="stretch")
     c2.download_button("Download the edited PNG", core.to_png(edited), file_name="swapprint_edited.png", mime="image/png",
                        disabled=not ss.history)
 
@@ -405,7 +405,7 @@ def tab_verify():
                     "then press Verify and let the SWAP test answer.")
         g1, g2 = st.columns([1, 1], gap="large")
         with g1:
-            click = streamlit_image_coordinates(core.upscale(edited), key="game-click", width=512)
+            click = streamlit_image_coordinates(core.upscale(edited, 768), key="game-click", width="stretch")
             if new_click("game", click):
                 ss.game = {**ss.game, "guess": click_to_canon(click)}
         with g2:
@@ -469,7 +469,7 @@ def tab_verify():
                     + " to inspect it below.")
         truth = g["truth"] if g and g["revealed"] else None
         guess = g["guess"] if g and g["revealed"] else None
-        click = streamlit_image_coordinates(core.heatmap(edited, cmp, 512, guess=guess, truth=truth), key="heat-click", width=512)
+        click = streamlit_image_coordinates(core.heatmap(edited, cmp, 768, guess=guess, truth=truth), key="heat-click", width="stretch")
         if new_click("heat", click):
             yy, xx = click_to_canon(click)
             fp = fp_of(base, mode)
@@ -484,8 +484,8 @@ def tab_verify():
                     f"p1 {cmp.p1.flat[unit]:.4f}, {int(cmp.ones.flat[unit])} ones in {cmp.shots:,} shots")
         za, zb = core.zoom_pair(base, edited, unit, cmp.grid, fp.unit_px, 230)
         z1, z2 = st.columns(2)
-        z1.image(za, caption="original", output_format="PNG")
-        z2.image(zb, caption="edited", output_format="PNG")
+        z1.image(za, caption="original", output_format="PNG", width="stretch")
+        z2.image(zb, caption="edited", output_format="PNG", width="stretch")
         st.caption(core.confidence_text(cmp))
 
     live_swap_test(cmp)
@@ -661,7 +661,7 @@ def check_a_file():
                     f'<div class="lead">{core.summary_line(cmp)}</div>'
                     f'<div class="fine">{core.MODE_LABEL[ref.mode]} · {cmp.shots:,} shots per unit · compared on the '
                     f'canonical 256×256 image{" · " + "; ".join(notes) if notes else ""}</div>', unsafe_allow_html=True)
-        st.image(core.heatmap(img, cmp, 420), output_format="PNG")
+        st.image(core.heatmap(img, cmp, 420), output_format="PNG", width="stretch")
 
 
 # ---------------------------------------------------------------- How it works
