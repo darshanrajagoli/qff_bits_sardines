@@ -75,7 +75,7 @@ for selected tiles (`backend="aer"`), which keeps the app interactive.
 **13. How did you validate that?**
 `python -m swapprint.validate` runs 50 unit pairs per SWAP-test kind on Aer at 2048 shots each, covering all three modes
 (identical, one-pixel, unrelated, and intermediate perceptual pairs), and checks each against the exact $p_1$ with a
-Wilson 95% interval. **[F7: pending C1 validation: "X of 100 intervals contain the exact p1", from `core_validation.csv`]**
+Wilson 95% interval. 97 of 100 contain it.
 
 **14. Who picks the tiles that run as circuits?**
 The classical overlaps (the most suspicious tiles first) or the user's click. So the Aer mode is a hybrid

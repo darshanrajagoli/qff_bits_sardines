@@ -32,7 +32,7 @@ the same $p_1$. It saves the ancilla and all the controlled-SWAPs, but it consum
 
 The Aer circuits in `swapprint.circuits` implement both. Validation (figure F7, `experiments/figures/core_validation.png`)
 compares 2048-shot Aer estimates with the exact $p_1$ on 50 unit pairs per kind:
-**[F7: pending C1 validation: "X of 100 Wilson 95% intervals contain the exact p1", from `experiments/results/core_validation.csv`, column `inside`]**.
+97 of 100 Wilson 95% intervals contain the exact $p_1$ (67 of the 70 runs with $p_1 > 10^{-3}$; the 3 misses are 2.3σ-scale fluctuations in both directions, as expected for 95% intervals). Source: `experiments/results/core_validation.csv`.
 
 ## 3. Strict mode: the [2048, 384] code
 
