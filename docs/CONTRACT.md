@@ -64,6 +64,7 @@ sp.save_fingerprint(fp, path)     # .npz
 fp  = sp.load_fingerprint(path)
 info = sp.code_info()             # dict: n, m, rate, seed, d_min_guaranteed, overlap_max, p1_min, failure_prob
 k   = sp.shots_needed(miss=1e-6, p1=info["p1_min"])
+bits = sp.encodings.perceptual(img, flat_sigma=None)  # (16, 64) hash bits; flat_sigma overrides PHASH_FLAT_SIGMA for sweeps
 ```
 
 `load_image` is deterministic on every machine. It applies EXIF transpose, converts to RGB, then resizes with
@@ -113,7 +114,7 @@ Unit index = row · cols + col, row-major.
 | `backend` | Status | What runs |
 |---|---|---|
 | `"exact"` | in v0.1 | exact SWAP-test statistics: p1 from the exact overlap, outcomes sampled with numpy. Identical in distribution to a noiseless circuit. |
-| `"aer"` | milestone C1 | as `exact`, but the traced units (and any listed in `circuit_tiles`) run as real SWAP-test circuits on Qiskit Aer |
+| `"aer"` | milestone C1 | as `exact`, but the traced units run as real SWAP-test circuits on Qiskit Aer (per-shot outcomes in `traces`); they are listed in `circuit_tiles`. Optional `kind="ancilla"\|"destructive"` |
 | `"aer-noisy:<FakeBackend>"` | milestone C2 | only for small "toy" fingerprints, through `sp.toy.run(...)`, because full-size circuits are far too deep for today's hardware |
 | `"ibm:<device>"` | milestone C3 | toy fingerprints on a real IBM device, with a mentor's approval |
 
@@ -149,7 +150,12 @@ new = sp.edits.apply(img, "patch", y=40, x=60, size=5)
 
 ## File formats
 
-* Experiment rows, in `experiments/results/<name>.csv`, one row per trial:
-  `image_id, edit, category, params_json, mode, backend, shots, rep, seed, n_units_changed, overlap_min, p1_max, detected, first_detection, flagged_units, seconds`
+* `experiments/manifest.json`: the frozen experiment design (artworks with their split, cases with full parameters).
+* `experiments/results/tamper_pairs.csv`, one row per (artwork, case, mode), exact probabilities, no sampling:
+  `artwork, split, case_id, category, mode, n_units, n_units_changed, overlap_min, p1_max, p_detect_k<k>..., shots_99_image, recall`
+  (`shots_99_image` is an integer, `never` or `>16384`)
+* `experiments/results/tamper_trials.csv`, one row per sampled trial:
+  `artwork, split, case_id, category, mode, shots, rep, n_units_changed, n_flagged, n_flagged_changed, detected`
+* Files written by the core (C1, C2) use the `core_` prefix: `experiments/results/core_*.csv`.
 * Figures: `experiments/figures/<name>.png` at 200 dpi, plus a matching `.csv` holding the plotted numbers.
 * Registered fingerprints: `.npz` written by `save_fingerprint`. Strict codewords are stored bit-packed.

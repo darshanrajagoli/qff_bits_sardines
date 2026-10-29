@@ -26,12 +26,14 @@ def strict(img: np.ndarray) -> np.ndarray:
     return encode(np.unpackbits(tile_values(img), axis=1))
 
 
-def perceptual(img: np.ndarray) -> np.ndarray:
+def perceptual(img: np.ndarray, flat_sigma: float | None = None) -> np.ndarray:
     """(16, 64) uint8 0/1 hash bits, one row per 64x64 region.
 
     Integer luminance Y = (299R + 587G + 114B + 500) // 1000 is averaged in 2x2 boxes to 32x32 float64.
     Take the top-left 8x8 of the orthonormal DCT-II, row-major. Bit 0 is fixed at zero; the 63 AC bits compare
-    strictly above their median. If sqrt(mean(AC**2)) < PHASH_FLAT_SIGMA, all bits are zero.
+    strictly above their median. If sqrt(mean(AC**2)) < flat_sigma (default PHASH_FLAT_SIGMA), all bits are zero.
+    Pass flat_sigma only for experiments such as the F4 sweep: fingerprints made with another value are not
+    comparable to registered ones, so compare those bits directly (overlap = 1 - 2 d / 64).
     """
     from scipy.fft import dctn  # imported lazily: scipy is slow to import
 
@@ -44,7 +46,8 @@ def perceptual(img: np.ndarray) -> np.ndarray:
     ac = coeffs[:, 1:]
     sigma = np.sqrt(np.mean(ac**2, axis=1))
     bits = np.zeros((g * g, 64), dtype=np.uint8)
-    bits[:, 1:] = (ac > np.median(ac, axis=1, keepdims=True)) & (sigma[:, None] >= PHASH_FLAT_SIGMA)
+    cutoff = PHASH_FLAT_SIGMA if flat_sigma is None else float(flat_sigma)
+    bits[:, 1:] = (ac > np.median(ac, axis=1, keepdims=True)) & (sigma[:, None] >= cutoff)
     return bits
 
 
