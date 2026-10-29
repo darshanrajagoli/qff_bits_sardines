@@ -5,6 +5,7 @@ __pycache__/
 venv/
 .ipynb_checkpoints/
 .pytest_cache/
+*.egg-info/
 
 # Node
 node_modules/
@@ -18,8 +19,14 @@ build/
 !.env.example
 qiskit-ibm.json
 
+# AI assistants' private working notes (queues, scratch)
+.ai/
+
 # OS / editor
 .DS_Store
 Thumbs.db
 .vscode/
 .idea/
+
+# Raw downloads (fetch_artworks.py caches here; only the canonical PNGs are committed)
+data/raw/
