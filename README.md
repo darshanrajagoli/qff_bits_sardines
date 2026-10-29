@@ -24,7 +24,7 @@ de Wolf, 2001).
 
 1. **Encode.** The image's bits go through an error-correcting code. The codeword sets the signs of the amplitudes of a
    q-qubit state, |h_x⟩ = (1/√m) Σᵢ (−1)^E(x)ᵢ |i⟩ with m = 2^q. The code spreads any change across the whole codeword,
-   so two different images give states with a small, provably bounded overlap, even when they differ by one pixel.
+   so two different images give states with a small overlap (bounded heuristically, and measured), even when they differ by one pixel.
 2. **Compare.** A SWAP test on two fingerprints (one ancilla, a Hadamard, controlled-SWAPs, a Hadamard) reads 0 with
    probability ½ + ½|⟨h_x|h_y⟩|². Identical images always read 0. Every 1 is evidence of tampering, and the code
    distance fixes how many shots it takes to catch an edit at a chosen confidence.
