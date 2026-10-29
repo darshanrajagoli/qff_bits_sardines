@@ -81,6 +81,7 @@ def compare(
     seed: int | None = None,
     threshold: float | None = None,
     trace_tiles: int = 4,
+    kind: str = "ancilla",
 ) -> Comparison:
     """SWAP-test every unit of `a` against `b` with `shots` shots each and judge which units changed.
 
@@ -91,8 +92,14 @@ def compare(
     backends); perceptual flags it if F = max(0, 1 - 2 ones / shots) < threshold (default PERCEPTUAL_F_THRESHOLD).
     shots=None uses the mode's budget: DEFAULT_SHOTS (32) for strict and frqi, PERCEPTUAL_SHOTS for perceptual.
     miss_bound applies only to strict mode with threshold=None (the default any-1 rule).
+    For backend="aer", traced units use real Aer memory; other units use the
+    binomial path. kind selects only Aer's SWAP test. Each traced unit uses
+    seed_simulator=seed_transpiler=(seed + unit) modulo 2**32, if seeded.
+    The default remains four traces (q=11 benchmark is below 20 seconds).
     """
     _check_backend(backend)
+    if backend == "aer" and kind not in ("ancilla", "destructive"):
+        raise ValueError("kind must be 'ancilla' or 'destructive'")
     if shots is None:
         shots = PERCEPTUAL_SHOTS if a.mode == "perceptual" else DEFAULT_SHOTS
     shots, trace_tiles = int(shots), int(trace_tiles)
@@ -108,7 +115,13 @@ def compare(
     traces: dict[int, list[int]] = {}
     first_detection: dict[int, int | None] = {}
     for u in traced:
-        outcomes = rng.random(shots) < flat_p1[u]
+        if backend == "aer":
+            from .circuits import _run_unit_memory
+
+            unit_seed = None if seed is None else (seed + u) % (2**32)
+            outcomes = _run_unit_memory(a, b, u, shots, kind, unit_seed)
+        else:
+            outcomes = rng.random(shots) < flat_p1[u]
         traces[u] = outcomes.astype(int).tolist()
         ones[u] = int(outcomes.sum())
         hits = np.flatnonzero(outcomes)
@@ -139,7 +152,7 @@ def compare(
         changed_fraction=float(flagged.mean()),
         traces=traces,
         first_detection=first_detection,
-        circuit_tiles=[],
+        circuit_tiles=traced if backend == "aer" else [],
         miss_bound=(1.0 - code_info()["p1_min"]) ** shots if a.mode == "strict" and threshold is None else None,
     )
 
@@ -152,10 +165,8 @@ def _most_suspicious(p1: np.ndarray, k: int) -> list[int]:
 
 
 def _check_backend(backend: str) -> None:
-    if backend == "exact":
+    if backend in ("exact", "aer"):
         return
-    if backend == "aer":
-        raise NotImplementedError("backend 'aer' arrives in milestone C1 (Darshan)")
     if backend.startswith("aer-noisy:"):
         raise NotImplementedError(f"backend {backend!r} runs toy fingerprints only, via sp.toy.run (milestone C2, Darshan)")
     if backend.startswith("ibm:"):

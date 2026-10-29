@@ -1,0 +1,107 @@
+{
+  "qiskit": "2.6.1",
+  "qiskit_aer": "0.18.2",
+  "seed": 2026,
+  "shots": 1024,
+  "hardware_basis": [
+    "cx",
+    "rz",
+    "sx",
+    "x"
+  ],
+  "optimization_level": 3,
+  "hardware": [
+    {
+      "mode": "strict",
+      "kind": "ancilla",
+      "q": 11,
+      "two_qubit_gates": 4167,
+      "depth": 4038,
+      "seconds": 3.1555655000265688,
+      "warm_seconds_median": 0.3045467999763787
+    },
+    {
+      "mode": "strict",
+      "kind": "destructive",
+      "q": 11,
+      "two_qubit_gates": 4101,
+      "depth": 4009,
+      "seconds": 0.3315061000175774,
+      "warm_seconds_median": 0.27707580011337996
+    },
+    {
+      "mode": "perceptual",
+      "kind": "ancilla",
+      "q": 6,
+      "two_qubit_gates": 166,
+      "depth": 152,
+      "seconds": 0.019353399984538555
+    },
+    {
+      "mode": "perceptual",
+      "kind": "destructive",
+      "q": 6,
+      "two_qubit_gates": 130,
+      "depth": 121,
+      "seconds": 0.020223999861627817
+    },
+    {
+      "mode": "frqi",
+      "kind": "ancilla",
+      "q": 7,
+      "two_qubit_gates": 177,
+      "depth": 345,
+      "seconds": 0.024595200084149837
+    },
+    {
+      "mode": "frqi",
+      "kind": "destructive",
+      "q": 7,
+      "two_qubit_gates": 135,
+      "depth": 286,
+      "seconds": 0.018750400049611926
+    }
+  ],
+  "q11": [
+    {
+      "kind": "ancilla",
+      "state_circuit_seconds": 0.003738999948836863,
+      "swap_test_seconds": 0.013118949951604009,
+      "run_swap_test_seconds": 0.30431500007398427,
+      "aer_seconds_last": 0.24595969985239208,
+      "cold_call_seconds": 1.6805412999819964,
+      "cold_aer_seconds": 0.2767403000034392
+    },
+    {
+      "kind": "destructive",
+      "state_circuit_seconds": 0.0041269001085311174,
+      "swap_test_seconds": 0.01378254999872297,
+      "run_swap_test_seconds": 0.2715088000986725,
+      "aer_seconds_last": 0.2659944000188261,
+      "cold_call_seconds": 1.9349893999751657,
+      "cold_aer_seconds": 0.19471660000272095
+    }
+  ],
+  "compare": [
+    {
+      "kind": "ancilla",
+      "seconds": 1.5673882998526096,
+      "circuit_tiles": [
+        27,
+        165,
+        227,
+        253
+      ]
+    },
+    {
+      "kind": "destructive",
+      "seconds": 1.410116600105539,
+      "circuit_tiles": [
+        27,
+        165,
+        227,
+        253
+      ]
+    }
+  ]
+}

@@ -281,23 +281,21 @@ def test_compare_refuses_old_encoding_versions(art, mode, old_version):
 
 
 def test_backends(fp_strict):
-    for backend, milestone in [("aer", "C1"), ("aer-noisy:FakeBrisbane", "C2"), ("ibm:ibm_torino", "C3")]:
+    # C1 now implements Aer; full image noisy/hardware runs remain toy-only.
+    cmp = sp.compare(fp_strict, fp_strict, backend="aer", seed=0)
+    assert cmp.circuit_tiles == [0, 1, 2, 3] and not cmp.tampered
+    assert sp.toy.run(2, backend="aer", seed=0)["ones"] == 0
+    for backend, milestone in [("aer-noisy:FakeBrisbane", "C2"), ("ibm:ibm_torino", "C3")]:
         with pytest.raises(NotImplementedError, match=milestone):
             sp.compare(fp_strict, fp_strict, backend=backend)
-        with pytest.raises(NotImplementedError, match=milestone):
-            sp.toy.run(2, backend=backend)
+    with pytest.raises(NotImplementedError, match="C3, needs a mentor's approval"):
+        sp.toy.run(2, backend="ibm:ibm_torino")
     with pytest.raises(ValueError):
         sp.compare(fp_strict, fp_strict, backend="qasm")
-    for stub in [
-        lambda: sp.circuits.state_circuit(fp_strict, 0),
-        lambda: sp.circuits.swap_test(fp_strict, fp_strict, 0),
-        lambda: sp.circuits.run_swap_test(fp_strict, fp_strict, 0),
-        lambda: sp.circuits.example_circuit(),
-        lambda: sp.circuits.example_circuit(q=3, kind="destructive"),
-        lambda: sp.toy.run(2),
-    ]:
-        with pytest.raises(NotImplementedError, match="C1"):
-            stub()
+    assert sp.circuits.state_circuit(fp_strict, 0).num_qubits == 11
+    assert sp.circuits.swap_test(fp_strict, fp_strict, 0).num_qubits == 23
+    assert sp.circuits.example_circuit().num_qubits == 5
+    assert sp.circuits.example_circuit(q=3, kind="destructive").num_qubits == 6
 
 
 # ---------------------------------------------------------------- perceptual and frqi modes
@@ -470,9 +468,9 @@ def test_shots_needed():
 
 
 def test_import_is_light_and_qiskit_free():
-    code = "import sys, swapprint; print('qiskit' in sys.modules, 'scipy' in sys.modules)"
+    code = "import sys, swapprint; print('qiskit' in sys.modules, 'scipy' in sys.modules, 'qiskit_aer' in sys.modules)"
     run = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True, check=True, cwd=REPO)
-    assert run.stdout.split() == ["False", "False"]
+    assert run.stdout.split() == ["False", "False", "False"]
 
 
 # ---------------------------------------------------------------- timing

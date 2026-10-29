@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "swapprint"
-version = "0.1.1"
+version = "0.2.0"
 description = "Detect tampering in digital artwork with quantum fingerprints and SWAP tests (IBM Qiskit Fall Fest 2026)."
 requires-python = ">=3.11"
 

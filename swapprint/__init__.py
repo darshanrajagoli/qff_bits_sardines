@@ -9,7 +9,7 @@
 The contract (names, shapes, file formats) is docs/CONTRACT.md.
 """
 
-__version__ = "0.1.1"
+__version__ = "0.2.0"
 
 from . import circuits, config, edits, synthetic, toy
 from .compare import Comparison, compare, overlaps
