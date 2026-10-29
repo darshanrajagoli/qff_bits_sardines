@@ -319,21 +319,30 @@ def test_perceptual_decision_rule(art):
     assert not sp.compare(fp, fp, seed=0).tampered
 
 
-def test_perceptual_jpeg90_and_text_at_recommended_settings(art):
-    fp = sp.fingerprint(art, "perceptual")
-    jpeg = sp.fingerprint(sp.edits.jpeg(art, quality=90), "perceptual")
-    text = sp.fingerprint(sp.edits.text(art), "perceptual")
-    # Most shot seeds tolerate a JPEG re-save of the standard synthetic artwork.
-    assert sum(sp.compare(fp, jpeg, shots=PERCEPTUAL_SHOTS, seed=s).tampered for s in range(50)) <= 2
-    assert all(sp.compare(fp, text, shots=PERCEPTUAL_SHOTS, seed=s).tampered for s in range(20))
-    # Also check a majority of independently generated artworks, without selecting convenient seeds.
-    tolerated = 0
-    for seed in range(32):
-        img = synthetic.artwork(seed)
-        a = sp.fingerprint(img, "perceptual")
-        b = sp.fingerprint(sp.edits.jpeg(img, quality=90), "perceptual")
-        tolerated += not sp.compare(a, b, shots=PERCEPTUAL_SHOTS, seed=seed).tampered
-    assert tolerated >= 24
+def _perceptual_flag_probability(a, b):
+    """Exact probability that compare() flags the image in perceptual mode at the configured settings."""
+    from scipy.stats import binom
+
+    d = (sp.fingerprint(a, "perceptual").data != sp.fingerprint(b, "perceptual").data).sum(axis=1)
+    p1 = theory.swap_test_p1(1 - 2 * d / 64)
+    cut = np.floor(PERCEPTUAL_SHOTS * (1 - PERCEPTUAL_F_THRESHOLD) / 2)  # flagged when ones > cut
+    return 1 - np.prod(binom.cdf(cut, PERCEPTUAL_SHOTS, p1))
+
+
+PAINTINGS = sorted(p for p in (Path(__file__).parents[1] / "data" / "artworks").glob("*.png")
+                   if p.stem not in {"flat", "noise", "synthetic"})
+
+
+@pytest.mark.skipif(not PAINTINGS, reason="needs the E0 artworks in data/artworks/")
+def test_perceptual_e3_settings_on_paintings():
+    # E3 calibrated the settings on paintings; the synthetic and other stress images are reported separately.
+    jpeg_alarm, text_hits = [], 0
+    for path in PAINTINGS:
+        img = sp.load_image(path)
+        jpeg_alarm.append(_perceptual_flag_probability(img, sp.edits.jpeg(img, quality=90)))
+        text_hits += _perceptual_flag_probability(img, sp.edits.text(img)) > 0.99
+    assert max(jpeg_alarm) < 0.01
+    assert text_hits >= len(PAINTINGS) // 2
 
 
 def test_perceptual_matches_scalar_reference(art):

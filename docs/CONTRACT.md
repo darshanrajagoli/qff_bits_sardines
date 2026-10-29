@@ -29,9 +29,9 @@ Edit only your own paths. To change someone else's, ask its owner first.
 | `CODE_SEED` | `"qff-sardines-2026"` | public seed of the error-correcting code |
 | `PERCEPTUAL_REGION` | 64 | perceptual mode works on 64×64-pixel regions: a 4×4 grid, 16 regions |
 | `PERCEPTUAL_Q` | 6 | qubits per perceptual fingerprint (64 hash bits) |
-| `PERCEPTUAL_F_THRESHOLD` | 0.52 | a region is flagged if its estimated F = overlap² is below this, i.e. 10 or more of its 64 hash bits changed (textured regions always hash to weight 31, so distances are even). Starting value from four Met paintings; recalibrated on held-out artworks (Rashida, E3), then fixed here (Darshan) |
+| `PERCEPTUAL_F_THRESHOLD` | 0.65 (E3) | a region is flagged if its estimated F = overlap² is below this, i.e. 10 or more of its 64 hash bits changed (textured regions always hash to weight 31, so distances are even). Starting value from four Met paintings; recalibrated on held-out artworks (Rashida, E3), then fixed here (Darshan) |
 | `PHASH_FLAT_SIGMA` | 25.0 | a region whose AC RMS (63 low-frequency DCT coefficients) is below this counts as flat: all its hash bits are 0 |
-| `PERCEPTUAL_SHOTS` | 4096 | `compare`'s default shots in perceptual mode: it estimates F against a threshold, so it needs many shots |
+| `PERCEPTUAL_SHOTS` | 2048 (E3) | `compare`'s default shots in perceptual mode: it estimates F against a threshold, so it needs many shots |
 | `DEFAULT_SHOTS` | 32 | `compare`'s default shots in strict and frqi mode: a single 1 decides, and 30 shots already give a 10⁻⁶ miss bound |
 
 ## The three encodings

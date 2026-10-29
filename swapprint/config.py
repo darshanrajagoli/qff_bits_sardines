@@ -11,9 +11,9 @@ STRICT_Q = 11  # qubits per strict fingerprint; code length m = 2**11 = 2048
 CODE_SEED = "qff-sardines-2026"  # public seed of the error-correcting code
 PERCEPTUAL_REGION = 64  # perceptual mode works on 64x64-pixel regions: a 4x4 grid, 16 regions
 PERCEPTUAL_Q = 6  # qubits per perceptual fingerprint (64 hash bits)
-PERCEPTUAL_F_THRESHOLD = 0.52  # calibrated on four public-domain Met artworks; compare squared overlap
+PERCEPTUAL_F_THRESHOLD = 0.65  # E3: calibrated on the 6 calibration paintings (experiments/calibrate_perceptual.py)
 PHASH_FLAT_SIGMA = 25.0  # AC RMS cutoff; also checked against JPEG 90 on 32 synthetic artworks
-PERCEPTUAL_SHOTS = 4096  # compare()'s default budget in perceptual mode: it estimates F, so it needs many shots
+PERCEPTUAL_SHOTS = 2048  # E3; compare()'s default budget in perceptual mode: it estimates F, so it needs many shots
 DEFAULT_SHOTS = 32  # compare()'s default budget in strict and frqi mode; 30 already gives a 1e-6 miss bound
 
 # Derived values, not free parameters.
