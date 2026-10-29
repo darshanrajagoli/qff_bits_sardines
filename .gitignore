@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.ipynb_checkpoints/
+.pytest_cache/
+
+# Node
+node_modules/
+.next/
+dist/
+build/
+
+# Secrets (IBM Quantum tokens and the like)
+.env
+.env.*
+!.env.example
+qiskit-ibm.json
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
