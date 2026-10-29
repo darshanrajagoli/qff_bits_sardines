@@ -1,6 +1,6 @@
 """Record a captioned SwapPrint demo video from a storyboard.
 
-Usage:  .venv/bin/python app/demo/record_demo.py [storyboard.json] [--url http://localhost:8601]
+Usage:  .venv/bin/python app/demo/record_demo.py [storyboard.json] [--url=http://localhost:8601] [--no-captions] [--steps=A-B] [--out=NAME]
 
 Each storyboard step: {"say": caption, "action": <name>, ...args, "hold": seconds, "check": optional name}
 Actions:
@@ -10,6 +10,8 @@ Actions:
   radio_sidebar   label, option  (sidebar radio label; option text, exact)
   click_image     x, y           (fractions 0..1 of the image; optional "index" among visible clickable images)
   scroll_to_text  text           (scrolls the first visible match near the top of the window)
+  card            kind, title, sub, kicker, num, foot  (full-screen title_card.html iframe; use "say": "")
+  card_off        (remove the card)
   wait            (nothing, just hold)
 "check": "name" saves out/check_<name>.png, a frame from the finished video at the end of that step.
 """
@@ -21,6 +23,7 @@ import subprocess
 import sys
 import time
 from pathlib import Path
+from urllib.parse import quote, urlencode
 
 from playwright.sync_api import Page, sync_playwright
 
@@ -38,7 +41,7 @@ CAPTION_JS = """
     Object.assign(bar.style, {
       position: 'fixed', left: '0', right: '0', bottom: '0', zIndex: '2147483647',
       padding: '22px 60px 26px', background: 'rgba(0,0,0,0.72)', color: '#fff',
-      font: '600 40px/1.25 -apple-system, "Segoe UI", Helvetica, Arial, sans-serif',
+      font: '600 40px/1.25 "IBM Plex Sans", "Helvetica Neue", Arial, sans-serif',
       textAlign: 'center', pointerEvents: 'none', textShadow: '0 2px 4px rgba(0,0,0,0.6)'
     });
     document.body.appendChild(bar);
@@ -47,6 +50,13 @@ CAPTION_JS = """
   bar.style.display = text ? 'block' : 'none';
 }
 """
+
+CARD_JS = """(src) => { let f = document.getElementById('demo-card');
+  if (!src) { if (f) f.remove(); return; }
+  if (!f) { f = document.createElement('iframe'); f.id = 'demo-card';
+    Object.assign(f.style, {position:'fixed', inset:'0', width:'100vw', height:'100vh', border:'0', zIndex:'2147483646', background:'transparent'});
+    document.body.appendChild(f); }
+  f.src = src; }"""
 
 IDLE_JS = """
 () => {
@@ -87,7 +97,7 @@ def visible(locator):
     return locator.filter(visible=True).first
 
 
-def do_step(page: Page, step: dict) -> None:
+def do_step(page: Page, step: dict, base_url: str = "http://localhost:8601") -> None:
     act = step.get("action", "wait")
     sidebar = page.locator('[data-testid="stSidebar"]')
     if act == "goto_tab":
@@ -128,6 +138,15 @@ def do_step(page: Page, step: dict) -> None:
         # leave a little room above the target
         page.evaluate("""() => { const m = document.querySelector('[data-testid="stMain"]');
                                  if (m) m.scrollBy({top: -90, behavior: 'instant'}); }""")
+    elif act == "card":  # {kind: title|section|lower|end, title, sub, kicker, num, foot, theme}
+        q = urlencode({k: step[k] for k in ("kind", "title", "sub", "kicker", "num", "foot", "theme") if k in step},
+                      quote_via=quote)
+        page.evaluate(CARD_JS, f"{base_url}/app/static/title_card.html?{q}")
+        page.wait_for_function("() => document.getElementById('demo-card')?.contentDocument?.documentElement?.dataset?.ready === '1'")
+        return
+    elif act == "card_off":
+        page.evaluate(CARD_JS, None)
+        return
     elif act == "wait":
         pass
     else:
@@ -141,10 +160,22 @@ def srt_time(t: float) -> str:
 
 
 def main() -> None:
-    args = [a for a in sys.argv[1:] if not a.startswith("--url")]
+    flags = [a for a in sys.argv[1:] if a.startswith("--")]
+    args = [a for a in sys.argv[1:] if not a.startswith("--")]
+    no_captions = "--no-captions" in flags
+    name = next((a.split("=", 1)[1] for a in flags if a.startswith("--out=")), "swapprint_demo")
+    rng = next((a.split("=", 1)[1] for a in flags if a.startswith("--steps=")), None)
     url = next((a.split("=", 1)[1] for a in sys.argv[1:] if a.startswith("--url=")), "http://localhost:8601")
     board_path = Path(args[0]) if args else HERE / "storyboard.json"
     steps = json.loads(board_path.read_text(encoding="utf-8"))
+    first, last = 1, len(steps)
+    if rng:
+        a, _, b = rng.partition("-")
+        first, last = int(a), int(b or a)
+        if not 1 <= first <= last <= len(steps):
+            sys.exit(f"--steps={rng} is outside 1-{len(steps)}")
+    cap = (lambda page, text: None) if no_captions else (lambda page, text: page.evaluate(CAPTION_JS, text))
+    trim = [None, None]  # video seconds of the start of step `first` and the end of step `last`
     OUT.mkdir(parents=True, exist_ok=True)
     raw_dir = OUT / "_raw"
     shutil.rmtree(raw_dir, ignore_errors=True)
@@ -163,49 +194,57 @@ def main() -> None:
                                   record_video_size={"width": W, "height": H})
         page = ctx.new_page()
         page.set_default_timeout(15_000)
-        t0 = time.monotonic()
+        t0 = time.monotonic()  # video time 0 is ~ here
         page.goto(url)
         page.get_by_role("tab", name="1 · Fingerprint").wait_for(timeout=120_000)
         wait_idle(page)
         for i, step in enumerate(steps, 1):
             say = step.get("say", "")
-            page.evaluate(CAPTION_JS, say)
+            cap(page, say)
             start = time.monotonic() - t0
+            if i == first:
+                trim[0] = start
             print(f"[{i:2d}/{len(steps)}] {start:6.1f}s {step.get('action', 'wait')}: {say}")
             try:
-                do_step(page, step)
+                do_step(page, step, url)
             except Exception as exc:  # keep recording; one failed step should not lose the take
                 print(f"  step {i} failed: {exc}", file=sys.stderr)
-            page.evaluate(CAPTION_JS, say)  # re-assert in case a rerun touched the DOM
+            cap(page, say)  # re-assert in case a rerun touched the DOM
             page.wait_for_timeout(int(float(step.get("hold", 3)) * 1000))
             end = time.monotonic() - t0
             cues.append((start, end, say))
+            if i == last:
+                trim[1] = end
             if step.get("check"):
                 checks.append((step["check"], end - 0.5))
                 page.screenshot(path=str(OUT / f"check_{step['check']}.png"))  # replaced by a video frame below
-        page.evaluate(CAPTION_JS, "")
+        cap(page, "")
         page.wait_for_timeout(500)
         video = Path(page.video.path())
         ctx.close()
         browser.close()
 
-    webm = OUT / "swapprint_demo.webm"
+    webm = OUT / f"{name}.webm"
     shutil.move(str(video), webm)
     shutil.rmtree(raw_dir, ignore_errors=True)
-    with open(OUT / "captions.srt", "w", encoding="utf-8") as f:
-        for n, (a, b, say) in enumerate(cues, 1):
-            f.write(f"{n}\n{srt_time(a)} --> {srt_time(b)}\n{say}\n\n")
-    print(f"wrote {webm} ({webm.stat().st_size / 1e6:.1f} MB), {OUT / 'captions.srt'}")
+    srt = OUT / ("captions.srt" if name == "swapprint_demo" else f"{name}.srt")
+    off = trim[0] if rng else 0.0
+    kept = [c for k, c in enumerate(cues, 1) if first <= k <= last and c[2]]
+    with open(srt, "w", encoding="utf-8") as f:
+        for n, (a, b, say) in enumerate(kept, 1):
+            f.write(f"{n}\n{srt_time(a - off)} --> {srt_time(b - off)}\n{say}\n\n")
+    print(f"wrote {webm} ({webm.stat().st_size / 1e6:.1f} MB; full take), {srt}")
 
     ffmpeg = shutil.which("ffmpeg")
     if ffmpeg:
-        mp4 = OUT / "swapprint_demo.mp4"
-        subprocess.run([ffmpeg, "-y", "-loglevel", "error", "-i", str(webm), "-c:v", "libx264", "-pix_fmt", "yuv420p",
+        mp4 = OUT / f"{name}.mp4"
+        cut = ["-ss", f"{trim[0]:.2f}", "-to", f"{trim[1]:.2f}"] if rng else []
+        subprocess.run([ffmpeg, "-y", "-loglevel", "error", *cut, "-i", str(webm), "-c:v", "libx264", "-pix_fmt", "yuv420p",
                         "-preset", "medium", "-crf", "20", "-movflags", "+faststart", "-an", str(mp4)], check=True)
         print(f"wrote {mp4} ({mp4.stat().st_size / 1e6:.1f} MB)")
-        for name, t in checks:  # real frames from the recorded video
-            subprocess.run([ffmpeg, "-y", "-loglevel", "error", "-ss", f"{t:.2f}", "-i", str(mp4), "-frames:v", "1",
-                            str(OUT / f"check_{name}.png")], check=True)
+        for cname, t in checks:  # real frames from the full recording
+            subprocess.run([ffmpeg, "-y", "-loglevel", "error", "-ss", f"{t:.2f}", "-i", str(webm), "-frames:v", "1",
+                            str(OUT / f"check_{cname}.png")], check=True)
     if checks:
         print("checks: " + ", ".join(str(OUT / f"check_{n}.png") for n, _ in checks))
 

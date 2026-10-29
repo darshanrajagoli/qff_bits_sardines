@@ -17,6 +17,7 @@ import io  # noqa: E402
 import logging  # noqa: E402
 import json  # noqa: E402
 import os  # noqa: E402
+import re  # noqa: E402
 import time  # noqa: E402
 from datetime import datetime, timedelta, timezone  # noqa: E402
 
@@ -29,33 +30,42 @@ import core  # noqa: E402
 from certificate import make_certificate  # noqa: E402
 import swapprint as sp  # noqa: E402
 
-st.set_page_config(page_title="SwapPrint", page_icon="🔍", layout="wide")
+st.set_page_config(page_title="SwapPrint", page_icon=":material/fingerprint:", layout="wide")
 
 AER_ENABLED = os.environ.get("SWAPPRINT_NO_AER", "") != "1"
-ACCENT_HEX = "#E841D6"
+from swapprint import style  # noqa: E402
+
+G100 = style.tokens("g100")
+PURPLE, ALERT = style.PURPLE, style.ALERT  # one accent; magenta only for "change detected"
 CANON = sp.config.CANON
 IST = timezone(timedelta(hours=5, minutes=30), "IST")
 LOG = logging.getLogger("swapprint.app")
 
-st.markdown(
-    f"""
-<style>
-.block-container {{padding-top: 2rem; max-width: 1280px;}}
-.verdict {{font-size: 2.6rem; font-weight: 800; letter-spacing: .02em; line-height: 1.1; margin: .2rem 0 .3rem 0;}}
-.verdict.hit {{color: {ACCENT_HEX};}}
-.verdict.miss {{color: #C9CDD6;}}
-.fine {{color: #9AA0AB; font-size: .85rem;}}
-.lead {{font-size: 1.1rem;}}
-.shots {{display: flex; flex-wrap: wrap; gap: 4px; margin: .4rem 0 .6rem 0;}}
-.shot {{width: 22px; height: 22px; border-radius: 4px; background: #3A3F4B; color: #C9CDD6; font-size: 11px;
-        display: flex; align-items: center; justify-content: center; font-family: monospace;}}
-.shot.one {{background: {ACCENT_HEX}; color: white; font-weight: 700;}}
-.shot.first {{outline: 3px solid white;}}
-.box {{border: 1px solid #3A3F4B; border-radius: 10px; padding: .9rem 1.1rem; background: #1A1D24;}}
-</style>
-""",
-    unsafe_allow_html=True,
-)
+
+@st.cache_resource(show_spinner=False)
+def carbon_css() -> str:
+    """Darshan's Carbon CSS (docs/style/carbon.css) plus the app's title gradient; empty if the file is missing."""
+    try:
+        css = (Path(__file__).resolve().parents[1] / "docs" / "style" / "carbon.css").read_text(encoding="utf-8")
+    except OSError:
+        css = ""
+    g = style.WEBSITE_GRADIENT  # the event site's .text-gradient, used for the page title only
+    return css + f"""
+.sp-title {{display: inline-block; font-size: 3rem; font-weight: 600; line-height: 1.15; margin: 0 0 var(--sp-03, 8px) 0;
+  background: linear-gradient(120deg, {g[0]} 0%, {g[1]} 42%, {g[2]} 100%); -webkit-background-clip: text;
+  background-clip: text; color: transparent;}}
+.sp-sub {{color: var(--text-secondary, #c6c6c6); font-size: 1.25rem; line-height: 1.4; margin-bottom: var(--sp-05, 16px);}}
+.sp-credit {{color: var(--text-helper, #a8a8a8); font-size: 0.75rem; letter-spacing: 0.32px; line-height: 1.33;}}
+"""
+
+
+def _one_line(css: str) -> str:
+    """Comments and blank lines end a <style> block in Streamlit's markdown, so inject the CSS as one line."""
+    css = re.sub(r"/\*.*?\*/", "", css, flags=re.S)
+    return re.sub(r"\s+", " ", css).strip()
+
+
+st.markdown(f"<style>{_one_line(carbon_css())}</style>", unsafe_allow_html=True)
 
 
 # ---------------------------------------------------------------- cached work
@@ -114,6 +124,11 @@ def frqi_vs_strict() -> dict:
     return out
 
 
+def notice(html: str, kind: str = "info") -> None:
+    """A Carbon inline notification (carbon.css .cds-notice): layer background, coloured bar on the left."""
+    st.markdown(f'<div class="cds-notice {kind}">{html}</div>', unsafe_allow_html=True)
+
+
 def safe(fn):
     """Run a UI section; show a friendly message instead of a traceback."""
     def wrapped(*a, **k):
@@ -132,7 +147,7 @@ def safe(fn):
 ss = st.session_state
 ss.setdefault("history", [])
 ss.setdefault("surprises", 0)
-ss.setdefault("game", None)  # {"truth": (y, x), "guess": (y, x) | None, "revealed": bool}
+ss.setdefault("game", None)  # {"kind": "surprise" | "challenge", "guess": (y, x) | None, "revealed": bool}
 ss.setdefault("loc", (128, 128))
 ss.setdefault("verify", None)
 ss.setdefault("aer", None)
@@ -215,13 +230,17 @@ with st.sidebar:
     st.divider()
     st.caption(f"swapprint {sp.__version__} · exact backend = analytical sampler, identical in distribution to a "
                f"noiseless SWAP-test circuit on each unit")
+    st.markdown('<div class="sp-credit">SwapPrint · team sardines. Type: IBM Plex (SIL OFL 1.1). Colours and spacing: '
+                'Carbon Design System (Apache-2.0). Not made or endorsed by IBM.</div>', unsafe_allow_html=True)
 
 edited = core.replay(base, ss.history)
 edited_sha = core.sha(edited)
 game = ss.game
 game_on = bool(game and not game["revealed"])
 
-st.markdown("# SwapPrint")
+st.markdown('<div class="sp-title">SwapPrint</div><br>'
+            '<div class="sp-sub">Quantum fingerprints for digital art, checked with a SWAP test</div>',
+            unsafe_allow_html=True)
 st.markdown('<div class="lead">Every 4×4 patch of an artwork gets an 11-qubit quantum fingerprint. A SWAP test '
             'compares fingerprints: an untouched patch never fires, a changed patch fires about half the time.</div>',
             unsafe_allow_html=True)
@@ -296,7 +315,10 @@ def tab_tamper():
         if new_click("tamper", click):
             ss.loc = click_to_canon(click)
         y, x = ss.loc
-        st.caption(f"Chosen location: row {y}, column {x} (canonical pixels)")
+        if game_on:
+            st.caption("Location hidden while the game runs.")
+        else:
+            st.caption(f"Chosen location: row {y}, column {x} (canonical pixels)")
     with right:
         st.markdown("**Edit tools**")
         name = st.selectbox("Tool", list(core.TOOLS), format_func=lambda n: core.TOOLS[n][0], key="tool")
@@ -342,7 +364,7 @@ def tab_tamper():
         elif name == "resize_roundtrip":
             step = {"name": "resize_roundtrip", "params": {"size": st.slider("Shrink to (px)", 32, 255, 128)}}
 
-        b1, b2, b3, b4 = st.columns(4)
+        b1, b2, b3, b4, b5 = st.columns([1, 1.25, 1.25, 1, 1])
         if b1.button("Apply", type="primary", width="stretch", disabled=game_on):
             try:
                 core.apply_step(edited, step)  # validate before it enters the history
@@ -356,20 +378,25 @@ def tab_tamper():
             s = core.surprise(seed, ss.surprises)
             ss.surprises += 1
             ss.history = [s]
-            ss.game = {"truth": (s["params"]["y"], s["params"]["x"]), "guess": None, "revealed": False}
+            ss.game = {"kind": "surprise", "guess": None, "revealed": False}
             ss.verify = ss.aer = None
             st.rerun()
-        if b3.button("Undo", width="stretch", disabled=not ss.history or game_on):
+        if b3.button("Challenge a friend", width="stretch", disabled=not ss.history or game_on,
+                     help="Hide your edits, then hand over: your friend guesses in 3 · Verify, against the SWAP test."):
+            ss.game = {"kind": "challenge", "guess": None, "revealed": False}
+            ss.verify = ss.aer = None
+            st.rerun()
+        if b4.button("Undo", width="stretch", disabled=not ss.history or game_on):
             ss.history = ss.history[:-1]
             ss.verify = ss.aer = ss.game = None
             st.rerun()
-        if b4.button("Reset", width="stretch", disabled=not ss.history):
+        if b5.button("Reset", width="stretch", disabled=not ss.history):
             reset_edits()
             st.rerun()
 
         st.markdown("**Edit history**")
         if game_on:
-            st.info("Hidden: a spot-the-edit game is running. Find the edit in **3 · Verify**.")
+            st.info("Hidden: a spot-the-edit game is running. Find the edit in **3 · Verify**. Reset ends the game.")
         elif not ss.history:
             st.caption("No edits yet.")
         else:
@@ -409,8 +436,12 @@ def tab_verify():
     key = (base_sha, edited_sha, mode, shots, seed)
     if game_on:
         st.markdown("### Spot the edit")
-        st.markdown("One pixel of this image changed by a single colour level. **Click where you think the edit is**, "
-                    "then press Verify and let the SWAP test answer.")
+        if ss.game["kind"] == "challenge":
+            st.markdown("Your friend edited this image somewhere. **Click where you think the edit is**, then press "
+                        "Verify and see whether you or the SWAP test found it.")
+        else:
+            st.markdown("One pixel of this image changed by a single colour level. **Click where you think the edit "
+                        "is**, then press Verify and let the SWAP test answer.")
         g1, g2 = st.columns([1, 1], gap="large")
         with g1:
             click = streamlit_image_coordinates(core.upscale(edited, 768), key="game-click", width="stretch")
@@ -449,8 +480,8 @@ def tab_verify():
                     unsafe_allow_html=True)
 
     g = ss.game
-    if g and g["revealed"]:
-        ty, tx = g["truth"]
+    box = core.changed_box(base, edited) if g and g["revealed"] else None
+    if g and g["revealed"] and box:
         first = cmp.first_detection.get(core.most_suspicious(cmp))
         if cmp.tampered and cmp.mode != "perceptual" and first:
             found = f"The SWAP test found it: first 1 on shot {first} of {cmp.shots}."
@@ -458,24 +489,24 @@ def tab_verify():
             found = "The SWAP test flagged a change."
         elif cmp.mode == "strict":
             found = f"The SWAP test missed it in {cmp.shots} shots: try more shots or another seed."
+        elif cmp.mode == "perceptual":
+            found = "Perceptual mode did not flag it, by design: it ignores small edits. Switch to strict."
         else:
-            found = (f"{core.MODE_LABEL[cmp.mode]} mode did not flag it"
-                     + (", by design: it ignores tiny edits." if cmp.mode == "perceptual" else
-                        ": one-level edits barely move FRQI states. Switch to strict."))
+            found = "FRQI did not flag it: small edits barely move FRQI states. Switch to strict."
+        where = core.describe_box(box)
         if g["guess"]:
-            gy, gx = g["guess"]
-            dist = float(np.hypot(gy - ty, gx - tx))
-            verdict_txt = "**Hit!**" if dist <= core.GAME_HIT_PX else "**Missed.**"
-            st.info(f"{verdict_txt} The edit was at row {ty}, column {tx} (white square); your guess (yellow cross) "
-                    f"was {dist:.0f} px away. {found}")
+            dist = core.guess_distance(base, edited, g["guess"])
+            verdict_txt = "<b>Hit!</b>" if dist <= core.GAME_HIT_PX else "<b>Missed.</b>"
+            notice(f"{verdict_txt} The edit was {where} (white box); your guess (yellow cross) was {dist:.0f} px "
+                   f"from the nearest changed pixel. {found}", "alert" if cmp.tampered else "info")
         else:
-            st.info(f"The edit was at row {ty}, column {tx} (white square). {found}")
+            notice(f"The edit was {where} (white box). {found}", "alert" if cmp.tampered else "info")
 
     left, right = st.columns([1, 1], gap="large")
     with left:
         st.markdown("**Where it changed**: flagged " + word + "s in magenta, stronger for larger p1. Click a " + word
                     + " to inspect it below.")
-        truth = g["truth"] if g and g["revealed"] else None
+        truth = box
         guess = g["guess"] if g and g["revealed"] else None
         click = streamlit_image_coordinates(core.heatmap(edited, cmp, 768, guess=guess, truth=truth), key="heat-click", width="stretch")
         if new_click("heat", click):
@@ -628,11 +659,13 @@ def compare_encodings():
     fig = go.Figure()
     xs = [core.MODE_LABEL[r["mode"]] for r in rows]
     ys = [r["expected_first"] if r["expected_first"] else None for r in rows]
-    fig.add_bar(x=xs, y=ys, marker_color=[ACCENT_HEX if r["mode"] == "strict" else "#7A808C" for r in rows],
+    fig.add_bar(x=xs, y=ys, marker_color=[PURPLE if r["mode"] == "strict" else G100["border-strong-01"]
+                                          for r in rows],
                 text=[core.fmt_shots(r["expected_first"], r["never"]) for r in rows], textposition="outside")
     fig.update_layout(yaxis_type="log", yaxis_title="expected shots to the first 1 (log scale)", height=340,
                       margin=dict(l=10, r=10, t=30, b=10), paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
-                      font_color="#C9CDD6", showlegend=False)
+                      font_color=G100["text-secondary"],
+                      font_family="IBM Plex Sans", showlegend=False)
     st.plotly_chart(fig, width="stretch")
     st.caption("Exact values (1/p1 from the exact overlap), no sampling, except the last column, which is one run at the "
                "seed above. Perceptual mode ignores tiny edits by design and decides by a threshold on overlap², not by "

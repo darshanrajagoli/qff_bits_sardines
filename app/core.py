@@ -20,6 +20,7 @@ from PIL import Image, ImageDraw, ImageOps
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 import swapprint as sp  # noqa: E402
+from swapprint import style as sp_style  # noqa: E402
 
 ART_DIR = ROOT / "data" / "artworks"
 FIG_DIR = ROOT / "experiments" / "figures"
@@ -28,7 +29,13 @@ MODES = ("strict", "perceptual", "frqi")
 MODE_LABEL = {"strict": "strict", "perceptual": "perceptual", "frqi": "frqi (baseline)"}
 UNIT_WORD = {"strict": "tile", "perceptual": "region", "frqi": "tile"}
 
-ACCENT = (232, 65, 214)  # magenta: the one accent colour, colour-blind safe against the greys
+def _rgb(hex_colour: str) -> tuple[int, int, int]:
+    h = hex_colour.lstrip("#")
+    return tuple(int(h[i:i + 2], 16) for i in (0, 2, 4))
+
+
+# Carbon tokens from swapprint.style: magenta marks "change detected", and only that (CVD-safe against the purple accent)
+ACCENT = _rgb(sp_style.ALERT)
 GAME_HIT_PX = 8  # a spot-the-edit guess within 8 canonical pixels counts as a hit
 MAX_UPLOAD_PIXELS = 40_000_000
 
@@ -229,6 +236,32 @@ def _rings(im: Image.Image, mask: np.ndarray, grid: tuple[int, int], colour, wid
         d.ellipse([x0, y0, x0 + cell + 2 * pad, y0 + cell + 2 * pad], outline=colour, width=width)
 
 
+def changed_box(a: np.ndarray, b: np.ndarray) -> tuple[int, int, int, int] | None:
+    """(y0, x0, y1, x1), end-exclusive, around every pixel that differs between two canonical images; None if none."""
+    idx = np.argwhere((a != b).any(axis=2))
+    if idx.size == 0:
+        return None
+    (y0, x0), (y1, x1) = idx.min(axis=0), idx.max(axis=0) + 1
+    return int(y0), int(x0), int(y1), int(x1)
+
+
+def guess_distance(a: np.ndarray, b: np.ndarray, guess: tuple[int, int]) -> float | None:
+    """Distance in canonical pixels from a guess to the nearest changed pixel (0 on it); None if nothing changed."""
+    idx = np.argwhere((a != b).any(axis=2))
+    if idx.size == 0:
+        return None
+    return float(np.sqrt(((idx - np.asarray(guess)) ** 2).sum(axis=1).min()))
+
+
+def describe_box(box: tuple[int, int, int, int]) -> str:
+    y0, x0, y1, x1 = box
+    if (y1 - y0) * (x1 - x0) > 0.5 * sp.config.CANON**2:
+        return "across most of the image (a global edit)"
+    if y1 - y0 == 1 and x1 - x0 == 1:
+        return f"at row {y0}, column {x0}"
+    return f"in a {y1 - y0}×{x1 - x0} px area at rows {y0}–{y1 - 1}, columns {x0}–{x1 - 1}"
+
+
 def heatmap(img: np.ndarray, cmp: sp.Comparison, size: int = 512, guess=None, truth=None) -> Image.Image:
     """Flagged units tinted magenta with opacity from p1, ringed when few, on a slightly dimmed copy of the image."""
     base = upscale(img, size).convert("RGBA")
@@ -243,10 +276,11 @@ def heatmap(img: np.ndarray, cmp: sp.Comparison, size: int = 512, guess=None, tr
     d = ImageDraw.Draw(out)
     scale = size / sp.config.CANON
     k = size / 512  # marker sizes are tuned for 512 px
-    if truth is not None:
-        ty, tx = truth
-        cx, cy = (tx + 0.5) * scale, (ty + 0.5) * scale
-        d.rectangle([cx - 10 * k, cy - 10 * k, cx + 10 * k, cy + 10 * k], outline=(255, 255, 255), width=round(2 * k))
+    if truth is not None:  # (y0, x0, y1, x1) box of the changed pixels, end-exclusive
+        y0, x0, y1, x1 = truth
+        pad = 8 * k
+        d.rectangle([x0 * scale - pad, y0 * scale - pad, x1 * scale + pad, y1 * scale + pad],
+                    outline=(255, 255, 255), width=round(2 * k))
     if guess is not None:
         gy, gx = guess
         cx, cy = (gx + 0.5) * scale, (gy + 0.5) * scale
