@@ -1,0 +1,24 @@
+{
+  "_note": "Pinned demo scenarios: app/tests/test_demo_scenarios.py asserts each verdict at seeds 0-19 and at perceptual thresholds 0.52 and 0.65, so a recalibration cannot silently break the demo.",
+  "scenarios": [
+    {"id": "one-pixel-strict", "artwork": "hokusai_great_wave.png", "mode": "strict", "seed": 0,
+     "edits": [{"name": "pixel", "params": {"y": 128, "x": 128, "channel": 0, "delta": 1}}], "expect_tampered": true},
+    {"id": "untouched-strict", "artwork": "hokusai_great_wave.png", "mode": "strict", "seed": 0,
+     "edits": [], "expect_tampered": false},
+    {"id": "one-pixel-frqi", "artwork": "hokusai_great_wave.png", "mode": "frqi", "seed": 0,
+     "edits": [{"name": "pixel", "params": {"y": 128, "x": 128, "channel": 0, "delta": 1}}], "expect_tampered": false},
+    {"id": "one-pixel-perceptual", "artwork": "hokusai_great_wave.png", "mode": "perceptual", "seed": 0,
+     "edits": [{"name": "pixel", "params": {"y": 128, "x": 128, "channel": 0, "delta": 1}}], "expect_tampered": false},
+    {"id": "jpeg-perceptual", "artwork": "hokusai_great_wave.png", "mode": "perceptual", "seed": 0,
+     "edits": [{"name": "jpeg", "params": {"quality": 90}}], "expect_tampered": false},
+    {"id": "jpeg-strict", "artwork": "hokusai_great_wave.png", "mode": "strict", "seed": 0,
+     "edits": [{"name": "jpeg", "params": {"quality": 90}}], "expect_tampered": true},
+    {"id": "resize-perceptual", "artwork": "hokusai_great_wave.png", "mode": "perceptual", "seed": 0,
+     "edits": [{"name": "resize_roundtrip", "params": {"size": 128}}], "expect_tampered": false},
+    {"id": "splice-perceptual", "artwork": "hokusai_great_wave.png", "mode": "perceptual", "seed": 0,
+     "edits": [{"name": "splice", "params": {"donor_file": "vangogh_bedroom.png", "y": 64, "x": 64, "size": 48}}], "expect_tampered": true},
+    {"id": "patch-perceptual", "artwork": "hokusai_great_wave.png", "mode": "perceptual", "seed": 0,
+     "edits": [{"name": "patch", "params": {"y": 100, "x": 100, "size": 12, "rgb": [255, 0, 0]}}], "expect_tampered": true}
+  ],
+  "game": {"artwork": "hokusai_great_wave.png", "seed": 0, "surprise_index": 0}
+}
