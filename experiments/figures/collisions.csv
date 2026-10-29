@@ -1,0 +1,12 @@
+metric,value
+strict_total_pairs,1000000
+strict_identical_content_pairs,0
+strict_distinct_pairs,1000000
+strict_mean_overlap,1.3638671875e-05
+strict_std_overlap,0.022103222208840118
+strict_max_abs_overlap,0.1083984375
+strict_overlap_bound_heuristic,0.5078125
+perceptual_identical_pixel_pairs,0
+perceptual_equal_hash_collisions,345
+perceptual_distinct_pairs,26880
+perceptual_mean_distinct_overlap,0.03232189360119048

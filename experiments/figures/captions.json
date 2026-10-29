@@ -1,0 +1,9 @@
+{
+  "detection_vs_shots.png": "Image detection probability versus SWAP-test shots per tile in strict mode across edit categories, comparing exact analytical curves with empirical binomial trials and Wilson 95% confidence intervals against single-tile reference bounds.",
+  "encodings_shots_needed.png": "Shots needed to reach 99% image detection probability across 22 tampering cases, comparing strict mode, perceptual mode, and the textbook FRQI baseline on held-out artworks.",
+  "collisions.png": "Empirical overlap distributions between tile pairs of distinct artworks: strict mode 11-qubit codewords closely follow the random-code Gaussian reference N(0, 1/2048) with zero false-alarm collisions, while perceptual mode separates identical content from unrelated imagery.",
+  "perceptual_roc.png": "Perceptual mode receiver operating characteristic (ROC) curves sweeping threshold t at 4,096 shots across flat-region cutoffs (sigma), highlighting the chosen operating point (sigma=25.0, t=0.65) and detection separation versus shot budget.",
+  "localisation.png": "Tamper localisation grid for four content edits (red patch, copy-move splice, donor splice, and text), demonstrating that SwapPrint's 64\u00d764 tile heatmap precisely pinpoints the altered pixels without reading the artwork.",
+  "core_validation.png": "Validation of the analytical exact SWAP-test sampler against full-circuit simulations on Qiskit Aer, confirming agreement across 100 seeded circuit runs within Wilson 95% confidence intervals.",
+  "core_noise.png": "Noise study on a simulated IBM device model (FakeFez), showing that environmental decoherence lifts identical states above p1 = 0, mandating threshold calibration for noisy physical hardware."
+}
