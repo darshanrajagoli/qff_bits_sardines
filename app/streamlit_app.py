@@ -135,7 +135,8 @@ st.markdown(f"<style>{_one_line(carbon_css())}</style>", unsafe_allow_html=True)
 st.markdown(f"<style>{_one_line(pixel_css(theme_mode()))}</style>", unsafe_allow_html=True)
 
 # Double-click or double-tap a picture to open (and close) it full screen: presses that picture's own Streamlit
-# full-screen button. Runs once per page from a hidden component (same origin as the app frame).
+# full-screen button. Tab names written as [2 · Tamper](#go-tamper) switch tabs. Runs once per page from a hidden
+# component (same origin as the app frame).
 FULLSCREEN_JS = """<script>
 const d = window.parent.document;
 if (!d.__spFullscreen) {
@@ -148,6 +149,20 @@ if (!d.__spFullscreen) {
     return false;
   };
   d.addEventListener('dblclick', (e) => { if (toggle(e.target)) e.preventDefault(); });
+  // in-text tab links: [2 · Tamper](#go-tamper) switches to that tab and scrolls to its top
+  const TABS = {start: 'start here', fingerprint: 'fingerprint', tamper: 'tamper', verify: 'verify',
+                how: 'how it works', results: 'results'};
+  d.addEventListener('click', (e) => {
+    const a = e.target && e.target.closest ? e.target.closest('a[href*="#go-"]') : null;
+    if (!a) return;
+    const want = TABS[a.getAttribute('href').split('#go-')[1]];
+    const tab = [...d.querySelectorAll('[role="tab"]')].find(t => t.innerText.toLowerCase().includes(want));
+    if (!tab) return;
+    e.preventDefault(); e.stopPropagation();
+    tab.click();
+    const main = d.querySelector('[data-testid="stMain"]') || d.querySelector('.stMain');
+    setTimeout(() => (main ? main.scrollTo({top: 0, behavior: 'smooth'}) : tab.scrollIntoView()), 50);
+  }, true);
   let lastTap = 0;
   d.addEventListener('touchend', (e) => {
     const now = Date.now();
@@ -382,9 +397,9 @@ def tab_start():
     with st.container(border=True):
         st.markdown(
             "1. **Sidebar:** keep any artwork and the encoding **strict**.\n"
-            "2. **2 · Tamper:** press **Surprise me**. It changes one colour value of one pixel by 1 (out of 255) "
+            "2. **[2 · Tamper](#go-tamper):** press **Surprise me**. It changes one colour value of one pixel by 1 (out of 255) "
             "at a hidden spot. Nobody can see that.\n"
-            "3. **3 · Verify:** click where you think the edit is, then press **Verify**.\n"
+            "3. **[3 · Verify](#go-verify):** click where you think the edit is, then press **Verify**.\n"
             f"4. **The result:** `CHANGE DETECTED`, and the heatmap marks the one changed patch out of {tiles:,}. "
             f"A changed patch makes the test fire about half the time (p1 = {p1:.2f} for this kind of edit), so the "
             f"first alarm usually comes within about {fs['strict']['first']:.0f} tries, and "
@@ -423,14 +438,14 @@ def tab_start():
         "is not. Small edits such as short text can be missed. |\n"
         f"| **Encoding: frqi** | Sidebar | The textbook way: pixels as angles, no code. The same one-pixel edit "
         f"then needs about {fs['frqi']['need99']:,} tries for 99% detection instead of {fs['strict']['need99']}. |\n"
-        "| **Other edit tools** | 2 · Tamper | Brightness or contrast changes many pixels, so strict flags most "
+        "| **Other edit tools** | [2 · Tamper](#go-tamper) | Brightness or contrast changes many pixels, so strict flags most "
         "patches; Patch, Text and Splice light up only where you edited. |\n"
-        "| **Compare encodings** | 3 · Verify | The same edit through all three encodings, side by side. |\n"
-        "| **Run on Qiskit Aer** | 3 · Verify | Builds the actual SWAP-test circuit for one patch and simulates it; "
+        "| **Compare encodings** | [3 · Verify](#go-verify) | The same edit through all three encodings, side by side. |\n"
+        "| **Run on Qiskit Aer** | [3 · Verify](#go-verify) | Builds the actual SWAP-test circuit for one patch and simulates it; "
         "its estimate should match the exact prediction within its error bar. |\n"
-        "| **Register / Check a file** | 3 · Verify | Save the original's fingerprint, then check a copy against "
+        "| **Register / Check a file** | [3 · Verify](#go-verify) | Save the original's fingerprint, then check a copy against "
         "it without the original image. |\n"
-        "| **Challenge a friend** | 2 · Tamper | Hide your own edit and let a friend race the SWAP test. |")
+        "| **Challenge a friend** | [2 · Tamper](#go-tamper) | Hide your own edit and let a friend race the SWAP test. |")
 
     st.markdown("#### Words you will see")
     with st.container(border=True):
@@ -480,7 +495,7 @@ def tab_start():
             "- Garcia-Escartin and Chamorro-Posada, *SWAP test and Hong-Ou-Mandel effect are equivalent* (2013): "
             "[arXiv:1303.6814](https://arxiv.org/abs/1303.6814)\n"
             "- [Qiskit](https://github.com/Qiskit/qiskit), the toolkit we use\n"
-            "- In this app: **How it works** for the maths, **Results** for every experiment and figure.")
+            "- In this app: **[How it works](#go-how)** for the maths, **[Results](#go-results)** for every experiment and figure.")
 
 
 # ---------------------------------------------------------------- 1 · Fingerprint
@@ -517,7 +532,7 @@ def tab_fingerprint():
     c1.image(core.mosaic_image(fa, 420), caption="Original's mosaic", output_format="PNG", width="stretch")
     n_changed = int(changed.sum())
     if not ss.history:
-        c2.info("Make an edit in **2 · Tamper** to see the edited image's mosaic here.")
+        c2.info("Make an edit in **[2 · Tamper](#go-tamper)** to see the edited image's mosaic here.")
     elif game_on:
         c2.info("Hidden while the spot-the-edit game runs: the mosaic would give the answer away.")
     else:
@@ -532,7 +547,7 @@ def tab_fingerprint():
                        file_name=f"swapprint_{mode}_{base_sha[:8]}.npz", mime="application/octet-stream")
     if mode == "strict":
         st.caption("Integrity, not secrecy: the strict code has full rank, so anyone holding this file can decode the "
-                   "canonical image from it. Check a file against it in **3 · Verify**, without the original.")
+                   "canonical image from it. Check a file against it in **[3 · Verify](#go-verify)**, without the original.")
     elif mode == "perceptual":
         st.caption("A perceptual fingerprint reveals only a coarse 64-bit hash per region.")
     else:
@@ -634,7 +649,7 @@ def tab_tamper():
 
         st.markdown("**Edit history**")
         if game_on:
-            st.info("Hidden: a spot-the-edit game is running. Find the edit in **3 · Verify**. Reset ends the game.")
+            st.info("Hidden: a spot-the-edit game is running. Find the edit in **[3 · Verify](#go-verify)**. Reset ends the game.")
         elif not ss.history:
             st.caption("No edits yet.")
         else:
@@ -707,7 +722,7 @@ def tab_verify():
     v = ss.verify
     if v is None:
         top[1].markdown("Compare the edited image with the original, tile by tile, with SWAP tests. "
-                        + ("" if ss.history else "_No edits yet: Verify the untouched image, or make an edit in 2 · Tamper._"))
+                        + ("" if ss.history else "_No edits yet: Verify the untouched image, or make an edit in [2 · Tamper](#go-tamper)._"))
         return
     if v["key"] != key:
         top[1].warning("The image or settings changed since the last check: press Verify again.")
