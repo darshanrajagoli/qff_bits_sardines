@@ -1,5 +1,7 @@
 # SwapPrint · Quantum Fingerprinting for Creative Integrity and Tamper Detection
 
+![SwapPrint Hero Banner](docs/media/hero.png)
+
 **IBM Qiskit Fall Fest 2026 · BITS Pilani K.K. Birla Goa Campus**  
 **Track:** Beginner Track · **Problem 5:** *Quantum Fingerprint: creative integrity and tamper detection*  
 **Team:** **sardines** · **Team Code:** `TEAM-P6GK23`  
@@ -24,12 +26,15 @@
 
 An interactive web application built with Streamlit and styled with the open-source Carbon Design System lets users register artwork fingerprints, apply realistic digital tampering, challenge a friend, run live SWAP tests shot by shot, and execute real 23-qubit circuits on Qiskit Aer.
 
+![SwapPrint Teaser Animation](docs/media/teaser.gif)
+
 | Verification Heatmap & Live SWAP Test | Interactive Tampering Studio |
 |:---:|:---:|
 | ![Verification View](app/screenshots/verify_full.png) | ![Tamper Studio](app/screenshots/tamper.png) |
 
 - **Live Public App:** **[Launch SwapPrint on Streamlit Community Cloud](https://qffbitssardines-withoutthes.streamlit.app/)** *(No installation required; runs in any modern desktop browser)*.
-- **Demo Video:** [Watch the Walkthrough Video on Google Drive](https://drive.google.com/file/d/18DblHaZpW1hQR3vbmxkzonuY0GlAkSgy/view?usp=drive_link) *(2:45 walkthrough recorded at 1920×1080 with Carbon title/section/end cards and IBM Plex captions; narration script detailed in [`docs/DEMO_SCRIPT.md`](docs/DEMO_SCRIPT.md) and storyboard in [`app/demo/storyboard_cards.json`](app/demo/storyboard_cards.json))*.
+- **Keynote Video Walkthrough:** [Watch the Keynote Presentation on Google Drive](https://drive.google.com/file/d/1MgQzH2eoaSqJfYkz7lAx7c88kPXjNzxP/view) *(2:41 story-first keynote presentation, 1080p30, Carbon title/section/end cards, synchronized shot-two reveal, real Heron r2 hardware run on ibm_marrakesh, and honest limits; script in [`video/narration.md`](video/narration.md) and [`docs/DEMO_SCRIPT.md`](docs/DEMO_SCRIPT.md))*.
+- **Interactive App Walkthrough:** [Watch the UI Demo on Google Drive](https://drive.google.com/file/d/18DblHaZpW1hQR3vbmxkzonuY0GlAkSgy/view?usp=drive_link) *(2:45 walkthrough of the live Streamlit app recorded by Ansh)*.
 - **Live Local App:** `streamlit run app/streamlit_app.py --server.headless true` (opens at `http://localhost:8501`).
 
 ---
