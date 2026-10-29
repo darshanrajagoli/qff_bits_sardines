@@ -14,6 +14,7 @@ import matplotlib  # noqa: E402
 matplotlib.use("Agg")  # Streamlit runs scripts off the main thread; the macOS GUI backend crashes there
 
 import io  # noqa: E402
+import logging  # noqa: E402
 import json  # noqa: E402
 import os  # noqa: E402
 import time  # noqa: E402
@@ -34,6 +35,7 @@ AER_ENABLED = os.environ.get("SWAPPRINT_NO_AER", "") != "1"
 ACCENT_HEX = "#E841D6"
 CANON = sp.config.CANON
 IST = timezone(timedelta(hours=5, minutes=30), "IST")
+LOG = logging.getLogger("swapprint.app")
 
 st.markdown(
     f"""
@@ -118,6 +120,7 @@ def safe(fn):
         try:
             return fn(*a, **k)
         except Exception as exc:  # noqa: BLE001
+            LOG.exception("UI section %s failed", fn.__name__)  # full traceback in the server log, never on screen
             st.error(f"Something went wrong here ({type(exc).__name__}). Try Reset, or another artwork.")
             if os.environ.get("SWAPPRINT_DEBUG"):
                 st.exception(exc)
