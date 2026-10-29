@@ -1,9 +1,11 @@
-numpy>=1.26,<3
-scipy>=1.12,<2
-pillow>=10,<14
-qiskit>=2.0,<3
-qiskit-aer>=0.17,<1
-qiskit-ibm-runtime>=0.40,<1
-matplotlib>=3.8,<4
-pytest>=8
-pylatexenc>=2.10  # qc.draw("mpl") for circuit pictures
+# Experiment environment verified on Python 3.12, 29 Oct 2026.
+# Pillow is pinned because its JPEG output affects the tamper cases.
+numpy==2.5.4
+scipy==1.18.1
+pillow==13.0.0
+qiskit==2.6.1
+qiskit-aer==0.18.2
+qiskit-ibm-runtime==0.51.0
+matplotlib==3.11.2
+pytest==9.2.0
+pylatexenc==2.11  # qc.draw("mpl") for circuit pictures
