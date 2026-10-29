@@ -20,7 +20,7 @@ Change detected.
 
 ## 05 — shots
 
-These are the SWAP-test shots for the suspicious tile. In a noiseless test, identical states can never give a one And there it is, on shot two.
+These are the SWAP-test shots for the suspicious tile. In a noiseless test, identical states can never give a one. And there it is, on shot two.
 
 ## 06 — heatmap
 
@@ -28,7 +28,7 @@ The heatmap lands on the exact four-by-four tile. Across held-out paintings, sev
 
 ## 07 — frqi
 
-Why does this work? The textbook encoding stores pixels as angles. A one-shade change barely moves that state: its overlap stays at zero point nine nine nine nine nine nine seven and the test sees nothing.
+Why does this work? The textbook encoding stores pixels as angles. A one-shade change barely moves that state: its overlap stays at zero point nine nine nine nine nine nine seven, and the test sees nothing.
 
 ## 08 — bars
 
