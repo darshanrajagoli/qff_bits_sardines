@@ -56,6 +56,11 @@ def carbon_css() -> str:
   background-clip: text; color: transparent;}}
 .sp-sub {{color: var(--text-secondary, #c6c6c6); font-size: 1.25rem; line-height: 1.4; margin-bottom: var(--sp-05, 16px);}}
 .sp-credit {{color: var(--text-helper, #a8a8a8); font-size: 0.75rem; letter-spacing: 0.32px; line-height: 1.33;}}
+.stButton > button:disabled, .stDownloadButton > button:disabled, [data-testid^="stBaseButton"]:disabled,
+.stButton > button:disabled:hover, [data-testid^="stBaseButton"]:disabled:hover {{
+  background: transparent; border: 1px solid #525252; color: #8d8d8d; cursor: not-allowed;}}
+.stButton > button[kind="primary"]:disabled, [data-testid="stBaseButton-primary"]:disabled,
+[data-testid="stBaseButton-primary"]:disabled:hover {{background: #525252; border-color: transparent; color: #8d8d8d;}}
 .sp-steps {{display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: var(--sp-04, 12px);
   margin: var(--sp-03, 8px) 0 var(--sp-07, 32px) 0;}}
 .sp-step {{background: var(--layer-01, #262626); border-top: 4px solid {PURPLE}; padding: var(--sp-05, 16px);
