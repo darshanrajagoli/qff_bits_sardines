@@ -121,7 +121,7 @@ def run_local(qc, shots=4000, backend=None, seed=None, readout_cal=False, memory
     Ideal Aer uses Qiskit's built-in, seeded native-basis translation stage.
     Device simulators follow the reference's full level-3 preset dispatch.
     Calibration circuits measure exactly the physical wires selected by the transpiler,
-    in the same job as the test. Real IBM dispatch is deliberately excluded in C1.
+    in the same job as the test. IBM execution uses the separate runtime helpers.
     """
     from qiskit.transpiler import generate_preset_pass_manager
     from qiskit_aer import AerSimulator
@@ -161,6 +161,158 @@ def run_local(qc, shots=4000, backend=None, seed=None, readout_cal=False, memory
                          [result.get_counts(1), result.get_counts(2)] if readout_cal else None,
                          "physical_qubits": _measured_physical_qubits(isa)})
     return output
+
+
+def runtime_backend(backend, service=None):
+    """Resolve an IBM selector; BackendV2 objects activate Runtime local testing.
+
+    The service loads its saved default account. Never inspect or log credentials.
+    """
+    if not isinstance(backend, str):
+        return backend
+    if not backend.startswith("ibm:") or not backend[4:]:
+        raise ValueError("expected 'ibm:<device>', 'ibm:least_busy', or a BackendV2")
+    if service is None:
+        from qiskit_ibm_runtime import QiskitRuntimeService
+        service = QiskitRuntimeService()
+    if backend == "ibm:least_busy":
+        return service.least_busy(operational=True, simulator=False)
+    return service.backend(backend[4:])
+
+
+def prepare_runtime_batch(circuits, specs, backend):
+    """Compile all tests at level 3 and share calibration PUBs by physical wiring.
+
+    Returns ISA PUB circuits and JSON-safe manifests, sufficient to decode a
+    recovered job without transpiling again. Calibration uses a fixed identity
+    layout: optimizing/remapping it would calibrate the wrong physical wires.
+    """
+    from qiskit.transpiler import generate_preset_pass_manager
+
+    pubs, manifests, shared = [], [], {}
+    for qc, spec in zip(circuits, specs, strict=True):
+        pm = generate_preset_pass_manager(backend=backend, optimization_level=3,
+                                         seed_transpiler=spec["transpile_seed"])
+        isa = pm.run(qc)
+        physical = _measured_physical_qubits(isa)
+        manifest = dict(spec, pub_index=len(pubs), physical_qubits=physical,
+                        qubits=qc.num_qubits, depth=isa.depth(),
+                        two_qubit_gates=sum(i.operation.num_qubits == 2 for i in isa.data),
+                        calibration_indices=None)
+        pubs.append(isa)
+        if spec["readout_cal"]:
+            key = tuple(physical)
+            if key not in shared:
+                cal_pm = generate_preset_pass_manager(
+                    backend=backend, optimization_level=0,
+                    initial_layout=list(range(isa.num_qubits)),
+                    seed_transpiler=spec["transpile_seed"])
+                cals = cal_pm.run(_calibration_circuits(isa))
+                if any(_measured_physical_qubits(c) != physical for c in cals):
+                    raise RuntimeError("calibration compilation changed physical wires")
+                shared[key] = [len(pubs), len(pubs) + 1]
+                pubs.extend(cals)
+            manifest["calibration_indices"] = shared[key]
+        manifests.append(manifest)
+    return pubs, manifests
+
+
+def estimate_runtime_seconds(pubs, backend, shots):
+    """Conservative local planning estimate, not an IBM billing prediction.
+
+    Sum instruction durations (no parallelism), default repetition delay, reset,
+    and 2 seconds per PUB rather than per sub-job. Unknown durations fail closed.
+    Source: IBM's estimate-job-run-time guide. No error suppression is enabled.
+    """
+    config = backend.configuration()
+    rep_delay = getattr(config, "default_rep_delay", None)
+    if rep_delay is None:
+        rep_delay = 250e-6
+    durations = []
+    for qc in pubs:
+        duration = 0.0
+        used = set()
+        for item in qc.data:
+            if item.operation.name == "barrier":
+                continue
+            wires = tuple(qc.find_bit(q).index for q in item.qubits)
+            used.update(wires)
+            prop = backend.target[item.operation.name].get(wires)
+            if prop is None or prop.duration is None:
+                raise ValueError(f"unknown duration for {item.operation.name} on {wires}")
+            duration += prop.duration
+        resets = backend.target.get("reset", {})
+        reset = max((getattr(resets.get((q,)), "duration", None) or 0 for q in used), default=0)
+        durations.append(duration + reset + rep_delay)
+    return float(2 * len(pubs) + shots * sum(durations))
+
+
+def submit_runtime_batch(pubs, backend, shots, *, max_execution_time=179,
+                         simulator_seed=None):
+    """One client-side Sampler call = one executor job containing all PUBs.
+
+    Runtime 0.51 deprecates the top-level SamplerV2. Disable both twirling
+    paths and DD so returned bitstrings are raw and calibration is explicit.
+    """
+    from qiskit_ibm_runtime.executor_sampler import Sampler
+
+    options = dict(max_execution_time=max_execution_time,
+                   twirling=dict(enable_gates=False, enable_measure=False),
+                   dynamical_decoupling=dict(enable=False))
+    if simulator_seed is not None:
+        options["simulator"] = dict(seed_simulator=simulator_seed)
+    sampler = Sampler(mode=backend, options=options)
+    from qiskit.qpy import QPY_VERSION
+    from qiskit_ibm_runtime import __version__ as runtime_version
+    if runtime_version == "0.51.0" and QPY_VERSION > 17:
+        # Runtime 0.51.0's v2.0 converter emits the newest local QPY, while
+        # IBM's service currently accepts at most QPY 17 (observed job failure
+        # dbhlkqmne4hc73bd5a2g). Its built-in v1.1 converter explicitly caps at
+        # 17. Keep the client-side Sampler preprocessing/decoder and select that
+        # transport on this Executor INSTANCE only; do not patch SDK globals.
+        from qiskit_ibm_runtime import Executor
+        from qiskit_ibm_runtime.executor_sampler.prepare import prepare
+
+        program, executor_options = prepare(
+            pubs, sampler.options, shots, add_tags=sampler._service.is_local, backend=backend)
+        program._semantic_role = "sampler_v2"
+        executor = Executor(mode=backend, options=executor_options)
+        executor._SCHEMA_VERSION = "v1.1"
+        return executor.run(program)
+    return sampler.run(pubs, shots=shots)
+
+
+def decode_runtime_batch(result, manifests, *, job_id, device, date, seconds=None):
+    """Decode named BitArray registers, keeping all counts and calibration data."""
+    rows = []
+
+    def counts_at(index):
+        # join_data preserves the circuit's classical-register order.
+        return result[index].join_data().get_counts()
+
+    for spec in manifests:
+        counts = counts_at(spec["pub_index"])
+        q, kind = spec["q"], spec["kind"]
+        shots = sum(counts.values())
+        if shots != spec["shots"]:
+            raise ValueError("returned shots differ from requested shots")
+        raw = p1_from_counts(counts, kind, q)
+        cals = ([counts_at(i) for i in spec["calibration_indices"]]
+                if spec["calibration_indices"] is not None else None)
+        row = dict(spec, ones=sum(n for k, n in counts.items() if outcome_bit(k, kind, q)),
+                   p1_est=raw, p1_raw=raw, p1_exact=spec["p1_ideal"],
+                   counts=counts, raw_counts=counts, job_id=job_id, device=device,
+                   date=date, seconds=seconds)
+        if cals is not None:
+            cal = _confusion(*cals, 1 if kind == "ancilla" else 2*q)
+            row["p1_est_cal"] = row["p1_cal"] = p1_from_counts(counts, kind, q, cal)
+        if spec["bootstrap_resamples"]:
+            row.update(bootstrap_p1(counts, kind, q, cals,
+                                    resamples=spec["bootstrap_resamples"], seed=spec["seed"]))
+        row["sampling_details"] = dict(counts=counts, calibration_counts=cals,
+                                       physical_qubits=spec["physical_qubits"])
+        rows.append(row)
+    return rows
 
 
 def bootstrap_p1(counts, kind, q, calibration_counts=None, *, resamples=2000, seed=0):

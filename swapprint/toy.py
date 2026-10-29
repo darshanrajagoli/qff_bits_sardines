@@ -69,7 +69,7 @@ def run(
     q: int,
     pair: Literal["same", "orthogonal", "near"] = "same",
     shots: int = 4000,
-    backend: str = "aer",
+    backend = "aer",
     kind: Literal["ancilla", "destructive"] = "ancilla",
     family: str = "random",
     method: str = "diagonal",
@@ -80,7 +80,7 @@ def run(
     simulator_seed: int | None = None,
     bootstrap_resamples: int = 0,
 ) -> dict:
-    """Run the reference toy pairs on ideal Aer or a fake IBM device's noise model.
+    """Run toy pairs on Aer, fake IBM noise, or IBM hardware / Runtime local mode.
 
     Costs describe the actual circuit transpiled for the selected backend:
     native-basis translation for ideal Aer, optimization_level=3 with routing
@@ -92,8 +92,11 @@ def run(
     Explicit transpile_seed/simulator_seed vary routing/sampling independently.
     bootstrap_resamples > 0 adds 95% intervals and auditable measurement counts.
     """
-    if backend.startswith("ibm:"):
-        raise NotImplementedError("milestone C3, needs a mentor's approval")
+    if not isinstance(backend, str) or backend.startswith("ibm:"):
+        return run_batch([dict(q=q, pair=pair, shots=shots, kind=kind, family=family,
+                               method=method, readout_cal=readout_cal, seed=seed,
+                               transpile_seed=transpile_seed, simulator_seed=simulator_seed,
+                               bootstrap_resamples=bootstrap_resamples)], backend)[0]
     if backend != "aer" and not backend.startswith("aer-noisy:"):
         raise ValueError(f"unknown backend {backend!r}; expected 'aer', 'aer-noisy:<FakeBackend>' or 'ibm:<device>'")
     if not isinstance(q, (int, np.integer)) or q < 1:
@@ -125,3 +128,69 @@ def run(
                                    resamples=bootstrap_resamples, seed=simulator_seed if simulator_seed is not None else seed))
         result["sampling_details"] = details
     return result
+
+
+def _runtime_specs(specs, backend):
+    """Validate the whole batch before contacting IBM or submitting anything."""
+    normalized, circuits = [], []
+    defaults = dict(pair="same", shots=4000, kind="ancilla", family="random",
+                    method="diagonal", readout_cal=True, seed=None,
+                    transpile_seed=None, simulator_seed=None, bootstrap_resamples=2000)
+    for given in specs:
+        unknown = set(given) - (set(defaults) | {"q"})
+        if unknown:
+            raise ValueError(f"unknown toy options: {sorted(unknown)}")
+        s = dict(defaults, **given)
+        for key, minimum in (("q", 1), ("shots", 1), ("bootstrap_resamples", 0)):
+            value = s.get(key)
+            if isinstance(value, bool) or not isinstance(value, (int, np.integer)) or value < minimum:
+                raise ValueError(f"{key} must be an integer >= {minimum}")
+            s[key] = int(value)
+        if s["transpile_seed"] is None:
+            s["transpile_seed"] = s["seed"]
+        ca, cb = _toy_codewords(s["q"], s["pair"], s["family"], s["seed"])
+        circuits.append(_swap_prepared(_sign_state_circuit(ca, s["method"]),
+                                        _sign_state_circuit(cb, s["method"]), s["kind"]))
+        s["p1_ideal"] = float((1 - (1 - 2*np.count_nonzero(ca != cb)/len(ca))**2)/2)
+        s["backend"] = backend if isinstance(backend, str) else backend.name
+        normalized.append(s)
+    if not normalized:
+        raise ValueError("specs must contain at least one toy circuit")
+    if len({s["shots"] for s in normalized}) != 1:
+        raise ValueError("one Runtime job requires the same shots for every spec")
+    if len({s["simulator_seed"] for s in normalized}) != 1:
+        raise ValueError("one Runtime job requires a common simulator_seed")
+    return circuits, normalized
+
+
+def run_batch(specs, backend, *, service=None, on_submitted=None, max_execution_time=179):
+    """Run many toys and physical-wire readout calibrations in ONE Runtime job.
+
+    Each spec is a dict of run() options except backend. Defaults match run(),
+    except readout_cal=True and bootstrap_resamples=2000. All shots must match.
+    backend accepts 'ibm:<device>', 'ibm:least_busy', or a BackendV2 (including
+    FakeFez for offline local testing). on_submitted(job, manifest) runs BEFORE
+    waiting for results, for durable job-ID storage. Its manifest contains PUB
+    indices, physical wires and compiled costs for recovery without recompiling.
+    The caller owns status polling when using that callback. No session is opened.
+    """
+    from datetime import datetime, timezone
+    from time import perf_counter
+    from ._execution import (runtime_backend, prepare_runtime_batch,
+                             submit_runtime_batch, decode_runtime_batch)
+
+    circuits, normalized = _runtime_specs(specs, backend)
+    target = runtime_backend(backend, service)
+    start = perf_counter()
+    pubs, manifests = prepare_runtime_batch(circuits, normalized, target)
+    job = submit_runtime_batch(pubs, target, normalized[0]["shots"],
+                               max_execution_time=max_execution_time,
+                               simulator_seed=normalized[0]["simulator_seed"])
+    manifest = dict(job_id=job.job_id(), device=target.name,
+                    date=datetime.now(timezone.utc).isoformat(),
+                    circuits=manifests, pub_count=len(pubs))
+    if on_submitted is not None:
+        on_submitted(job, manifest)
+    return decode_runtime_batch(job.result(), manifests, job_id=manifest["job_id"],
+                                device=target.name, date=manifest["date"],
+                                seconds=perf_counter()-start)

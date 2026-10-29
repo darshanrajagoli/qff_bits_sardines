@@ -127,9 +127,9 @@ Unit index = row · cols + col, row-major.
 | `"exact"` | in v0.1 | exact SWAP-test statistics: p1 from the exact overlap, outcomes sampled with numpy. Identical in distribution to a noiseless circuit. |
 | `"aer"` | milestone C1 | as `exact`, but the traced units run as real SWAP-test circuits on Qiskit Aer (per-shot outcomes in `traces`); they are listed in `circuit_tiles`. Optional `kind="ancilla"\|"destructive"` |
 | `"aer-noisy:<FakeBackend>"` | milestone C2 | only for small "toy" fingerprints, through `sp.toy.run(...)`, because full-size circuits are far too deep for today's hardware |
-| `"ibm:<device>"` | unimplemented | dispatch raises `NotImplementedError`; no physical IBM Quantum hardware was used |
+| `"ibm:<device>"`, `"ibm:least_busy"` | milestone C3 | toy-only client-side Runtime Sampler, level-3 ISA compilation; `run_batch` combines tests and physical-wire calibrations in one job |
 
-Noise was simulated in Aer using IBM device noise models FakeFez and FakeBrisbane on toy states with q=1–3. No physical IBM Quantum hardware was used.
+F8 reports toy states on ibm_marrakesh, a real IBM Heron r2 processor, on 2026-10-29 (job `dbhlpatep8hs73amdun0`): 18 toy comparisons at 4000 shots per PUB with 14 shared readout-calibration PUBs in one job. For the q=2 random same-pair ancilla test, 309/4000 outcomes were one: raw p1=0.07725 [0.06899, 0.08550]; readout-corrected p1=0.07166 [0.06272, 0.08048]. These are 95% percentile parametric-bootstrap intervals from 2000 joint test/calibration resamples, conditional on this run. Reported QPU usage was 36 seconds. Noise breaks the one-sided error guarantee; a threshold is needed. Readout correction leaves residual circuit error. This toy-state run establishes no full-image hardware performance: q = 11 remains far beyond today's hardware. Sources: `experiments/results/core_hardware.json` and `experiments/figures/core_hardware.png`.
 
 ### Circuits (`swapprint/circuits.py`, milestone C1)
 
@@ -143,6 +143,8 @@ qc = sp.circuits.example_circuit(q=2, kind="ancilla")           # a small SWAP t
 
 `python -m swapprint.validate` checks the exact statistics against Aer and writes `experiments/results/core_validation.csv`.
 Toy runs (`swapprint/toy.py`): `sp.toy.run(q, pair="same"|"orthogonal"|"near", shots=4000, backend=..., kind=...) -> dict`.
+
+C3 adds `sp.toy.run_batch(specs, backend) -> list[dict]`: each spec is a `toy.run` keyword dict without backend; common shots are required, readout calibration defaults on, and 2000 bootstrap resamples are the batch default. Pass a FakeFez backend object for offline Runtime local testing. IBM selectors load `QiskitRuntimeService()` from the saved default account. Results retain the run fields and add `kind`, `job_id`, `device`, UTC `date`, `raw_counts`, `p1_raw`, `p1_cal` (when calibrated), interval endpoints and physical-wire/calibration details. `on_submitted(job, manifest)` can persist the job ID before waiting; the manifest supports decoding a recovered job. IBM execution uses `qiskit_ibm_runtime.executor_sampler.Sampler` in Runtime 0.51; the deprecated top-level SamplerV2 is not used. Full-image IBM dispatch remains excluded.
 
 ## Image edits (`swapprint/edits.py`, owner Rashida)
 

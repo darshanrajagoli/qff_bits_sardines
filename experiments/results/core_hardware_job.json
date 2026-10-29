@@ -1,0 +1,547 @@
+{
+  "job_id": "dbhlpatep8hs73amdun0",
+  "device": "ibm_marrakesh",
+  "date": "2026-10-29T14:48:09.279609+00:00",
+  "circuits": [
+    {
+      "pair": "same",
+      "shots": 4000,
+      "kind": "ancilla",
+      "family": "random",
+      "method": "diagonal",
+      "readout_cal": true,
+      "seed": 2026,
+      "transpile_seed": 7,
+      "simulator_seed": null,
+      "bootstrap_resamples": 2000,
+      "q": 1,
+      "p1_ideal": 0.0,
+      "backend": "ibm:ibm_marrakesh",
+      "pub_index": 0,
+      "physical_qubits": [
+        148
+      ],
+      "qubits": 3,
+      "depth": 36,
+      "two_qubit_gates": 10,
+      "calibration_indices": [
+        1,
+        2
+      ]
+    },
+    {
+      "pair": "same",
+      "shots": 4000,
+      "kind": "destructive",
+      "family": "random",
+      "method": "diagonal",
+      "readout_cal": true,
+      "seed": 2026,
+      "transpile_seed": 7,
+      "simulator_seed": null,
+      "bootstrap_resamples": 2000,
+      "q": 1,
+      "p1_ideal": 0.0,
+      "backend": "ibm:ibm_marrakesh",
+      "pub_index": 3,
+      "physical_qubits": [
+        6,
+        5
+      ],
+      "qubits": 2,
+      "depth": 8,
+      "two_qubit_gates": 1,
+      "calibration_indices": [
+        4,
+        5
+      ]
+    },
+    {
+      "pair": "orthogonal",
+      "shots": 4000,
+      "kind": "ancilla",
+      "family": "random",
+      "method": "diagonal",
+      "readout_cal": true,
+      "seed": 2026,
+      "transpile_seed": 7,
+      "simulator_seed": null,
+      "bootstrap_resamples": 2000,
+      "q": 1,
+      "p1_ideal": 0.5,
+      "backend": "ibm:ibm_marrakesh",
+      "pub_index": 6,
+      "physical_qubits": [
+        148
+      ],
+      "qubits": 3,
+      "depth": 36,
+      "two_qubit_gates": 10,
+      "calibration_indices": [
+        1,
+        2
+      ]
+    },
+    {
+      "pair": "orthogonal",
+      "shots": 4000,
+      "kind": "destructive",
+      "family": "random",
+      "method": "diagonal",
+      "readout_cal": true,
+      "seed": 2026,
+      "transpile_seed": 7,
+      "simulator_seed": null,
+      "bootstrap_resamples": 2000,
+      "q": 1,
+      "p1_ideal": 0.5,
+      "backend": "ibm:ibm_marrakesh",
+      "pub_index": 7,
+      "physical_qubits": [
+        6,
+        5
+      ],
+      "qubits": 2,
+      "depth": 7,
+      "two_qubit_gates": 1,
+      "calibration_indices": [
+        4,
+        5
+      ]
+    },
+    {
+      "pair": "same",
+      "shots": 4000,
+      "kind": "ancilla",
+      "family": "random",
+      "method": "diagonal",
+      "readout_cal": true,
+      "seed": 2026,
+      "transpile_seed": 7,
+      "simulator_seed": null,
+      "bootstrap_resamples": 2000,
+      "q": 2,
+      "p1_ideal": 0.0,
+      "backend": "ibm:ibm_marrakesh",
+      "pub_index": 8,
+      "physical_qubits": [
+        12
+      ],
+      "qubits": 5,
+      "depth": 75,
+      "two_qubit_gates": 29,
+      "calibration_indices": [
+        9,
+        10
+      ]
+    },
+    {
+      "pair": "same",
+      "shots": 4000,
+      "kind": "destructive",
+      "family": "random",
+      "method": "diagonal",
+      "readout_cal": true,
+      "seed": 2026,
+      "transpile_seed": 7,
+      "simulator_seed": null,
+      "bootstrap_resamples": 2000,
+      "q": 2,
+      "p1_ideal": 0.0,
+      "backend": "ibm:ibm_marrakesh",
+      "pub_index": 11,
+      "physical_qubits": [
+        86,
+        97,
+        87,
+        107
+      ],
+      "qubits": 4,
+      "depth": 18,
+      "two_qubit_gates": 7,
+      "calibration_indices": [
+        12,
+        13
+      ]
+    },
+    {
+      "pair": "near",
+      "shots": 4000,
+      "kind": "ancilla",
+      "family": "random",
+      "method": "diagonal",
+      "readout_cal": true,
+      "seed": 2026,
+      "transpile_seed": 7,
+      "simulator_seed": null,
+      "bootstrap_resamples": 2000,
+      "q": 2,
+      "p1_ideal": 0.375,
+      "backend": "ibm:ibm_marrakesh",
+      "pub_index": 14,
+      "physical_qubits": [
+        12
+      ],
+      "qubits": 5,
+      "depth": 67,
+      "two_qubit_gates": 24,
+      "calibration_indices": [
+        9,
+        10
+      ]
+    },
+    {
+      "pair": "near",
+      "shots": 4000,
+      "kind": "destructive",
+      "family": "random",
+      "method": "diagonal",
+      "readout_cal": true,
+      "seed": 2026,
+      "transpile_seed": 7,
+      "simulator_seed": null,
+      "bootstrap_resamples": 2000,
+      "q": 2,
+      "p1_ideal": 0.375,
+      "backend": "ibm:ibm_marrakesh",
+      "pub_index": 15,
+      "physical_qubits": [
+        107,
+        87,
+        97,
+        86
+      ],
+      "qubits": 4,
+      "depth": 17,
+      "two_qubit_gates": 6,
+      "calibration_indices": [
+        16,
+        17
+      ]
+    },
+    {
+      "pair": "orthogonal",
+      "shots": 4000,
+      "kind": "ancilla",
+      "family": "random",
+      "method": "diagonal",
+      "readout_cal": true,
+      "seed": 2026,
+      "transpile_seed": 7,
+      "simulator_seed": null,
+      "bootstrap_resamples": 2000,
+      "q": 2,
+      "p1_ideal": 0.5,
+      "backend": "ibm:ibm_marrakesh",
+      "pub_index": 18,
+      "physical_qubits": [
+        12
+      ],
+      "qubits": 5,
+      "depth": 75,
+      "two_qubit_gates": 29,
+      "calibration_indices": [
+        9,
+        10
+      ]
+    },
+    {
+      "pair": "orthogonal",
+      "shots": 4000,
+      "kind": "destructive",
+      "family": "random",
+      "method": "diagonal",
+      "readout_cal": true,
+      "seed": 2026,
+      "transpile_seed": 7,
+      "simulator_seed": null,
+      "bootstrap_resamples": 2000,
+      "q": 2,
+      "p1_ideal": 0.5,
+      "backend": "ibm:ibm_marrakesh",
+      "pub_index": 19,
+      "physical_qubits": [
+        86,
+        97,
+        87,
+        107
+      ],
+      "qubits": 4,
+      "depth": 18,
+      "two_qubit_gates": 7,
+      "calibration_indices": [
+        12,
+        13
+      ]
+    },
+    {
+      "pair": "orthogonal",
+      "shots": 4000,
+      "kind": "ancilla",
+      "family": "hadamard",
+      "method": "diagonal",
+      "readout_cal": true,
+      "seed": 2026,
+      "transpile_seed": 7,
+      "simulator_seed": null,
+      "bootstrap_resamples": 2000,
+      "q": 2,
+      "p1_ideal": 0.5,
+      "backend": "ibm:ibm_marrakesh",
+      "pub_index": 20,
+      "physical_qubits": [
+        12
+      ],
+      "qubits": 5,
+      "depth": 64,
+      "two_qubit_gates": 23,
+      "calibration_indices": [
+        9,
+        10
+      ]
+    },
+    {
+      "pair": "orthogonal",
+      "shots": 4000,
+      "kind": "destructive",
+      "family": "hadamard",
+      "method": "diagonal",
+      "readout_cal": true,
+      "seed": 2026,
+      "transpile_seed": 7,
+      "simulator_seed": null,
+      "bootstrap_resamples": 2000,
+      "q": 2,
+      "p1_ideal": 0.5,
+      "backend": "ibm:ibm_marrakesh",
+      "pub_index": 21,
+      "physical_qubits": [
+        86,
+        97,
+        87,
+        107
+      ],
+      "qubits": 4,
+      "depth": 15,
+      "two_qubit_gates": 5,
+      "calibration_indices": [
+        12,
+        13
+      ]
+    },
+    {
+      "pair": "same",
+      "shots": 4000,
+      "kind": "ancilla",
+      "family": "random",
+      "method": "diagonal",
+      "readout_cal": true,
+      "seed": 2026,
+      "transpile_seed": 7,
+      "simulator_seed": null,
+      "bootstrap_resamples": 2000,
+      "q": 3,
+      "p1_ideal": 0.0,
+      "backend": "ibm:ibm_marrakesh",
+      "pub_index": 22,
+      "physical_qubits": [
+        148
+      ],
+      "qubits": 7,
+      "depth": 143,
+      "two_qubit_gates": 58,
+      "calibration_indices": [
+        1,
+        2
+      ]
+    },
+    {
+      "pair": "same",
+      "shots": 4000,
+      "kind": "destructive",
+      "family": "random",
+      "method": "diagonal",
+      "readout_cal": true,
+      "seed": 2026,
+      "transpile_seed": 7,
+      "simulator_seed": null,
+      "bootstrap_resamples": 2000,
+      "q": 3,
+      "p1_ideal": 0.0,
+      "backend": "ibm:ibm_marrakesh",
+      "pub_index": 23,
+      "physical_qubits": [
+        104,
+        107,
+        105,
+        108,
+        97,
+        106
+      ],
+      "qubits": 6,
+      "depth": 54,
+      "two_qubit_gates": 30,
+      "calibration_indices": [
+        24,
+        25
+      ]
+    },
+    {
+      "pair": "near",
+      "shots": 4000,
+      "kind": "ancilla",
+      "family": "random",
+      "method": "diagonal",
+      "readout_cal": true,
+      "seed": 2026,
+      "transpile_seed": 7,
+      "simulator_seed": null,
+      "bootstrap_resamples": 2000,
+      "q": 3,
+      "p1_ideal": 0.21875,
+      "backend": "ibm:ibm_marrakesh",
+      "pub_index": 26,
+      "physical_qubits": [
+        148
+      ],
+      "qubits": 7,
+      "depth": 135,
+      "two_qubit_gates": 57,
+      "calibration_indices": [
+        1,
+        2
+      ]
+    },
+    {
+      "pair": "near",
+      "shots": 4000,
+      "kind": "destructive",
+      "family": "random",
+      "method": "diagonal",
+      "readout_cal": true,
+      "seed": 2026,
+      "transpile_seed": 7,
+      "simulator_seed": null,
+      "bootstrap_resamples": 2000,
+      "q": 3,
+      "p1_ideal": 0.21875,
+      "backend": "ibm:ibm_marrakesh",
+      "pub_index": 27,
+      "physical_qubits": [
+        104,
+        107,
+        105,
+        97,
+        108,
+        106
+      ],
+      "qubits": 6,
+      "depth": 52,
+      "two_qubit_gates": 29,
+      "calibration_indices": [
+        28,
+        29
+      ]
+    },
+    {
+      "pair": "orthogonal",
+      "shots": 4000,
+      "kind": "ancilla",
+      "family": "random",
+      "method": "diagonal",
+      "readout_cal": true,
+      "seed": 2026,
+      "transpile_seed": 7,
+      "simulator_seed": null,
+      "bootstrap_resamples": 2000,
+      "q": 3,
+      "p1_ideal": 0.5,
+      "backend": "ibm:ibm_marrakesh",
+      "pub_index": 30,
+      "physical_qubits": [
+        148
+      ],
+      "qubits": 7,
+      "depth": 142,
+      "two_qubit_gates": 58,
+      "calibration_indices": [
+        1,
+        2
+      ]
+    },
+    {
+      "pair": "orthogonal",
+      "shots": 4000,
+      "kind": "destructive",
+      "family": "random",
+      "method": "diagonal",
+      "readout_cal": true,
+      "seed": 2026,
+      "transpile_seed": 7,
+      "simulator_seed": null,
+      "bootstrap_resamples": 2000,
+      "q": 3,
+      "p1_ideal": 0.5,
+      "backend": "ibm:ibm_marrakesh",
+      "pub_index": 31,
+      "physical_qubits": [
+        104,
+        107,
+        105,
+        108,
+        97,
+        106
+      ],
+      "qubits": 6,
+      "depth": 54,
+      "two_qubit_gates": 30,
+      "calibration_indices": [
+        24,
+        25
+      ]
+    }
+  ],
+  "pub_count": 32,
+  "shots": 4000,
+  "estimated_qpu_seconds": 97.60510400000001,
+  "max_execution_time": 179,
+  "backend_properties": {
+    "date": "2026-10-29T20:01:36+05:30",
+    "median_readout_error": 0.019775390625,
+    "median_two_qubit_error": 0.0028853838689741063,
+    "readout_error_count": 156,
+    "two_qubit_error_count": 704
+  },
+  "runtime_version": "0.51.0",
+  "sampler": "qiskit_ibm_runtime.executor_sampler.Sampler",
+  "estimation_method": "sum instruction durations + reset + default rep_delay; 2s overhead per PUB",
+  "options": {
+    "twirling": false,
+    "dynamical_decoupling": false
+  },
+  "transport_schema": "v1.1 (QPY <=17 compatibility for Runtime 0.51.0)",
+  "replaces_failed_job": "dbhlkqmne4hc73bd5a2g",
+  "status": "DONE",
+  "usage": {
+    "qpu_charge_time_seconds": 36,
+    "value": 0.596927,
+    "unit": "resource_units",
+    "status": "complete",
+    "details": [
+      {
+        "value": 0.596927,
+        "unit": "resource_units",
+        "metric": {
+          "id": "caffe3ca-729c-5750-8777-df63bbf8bfd9",
+          "value": 36
+        }
+      }
+    ]
+  },
+  "qpu_seconds": 36,
+  "timestamps": {
+    "created": "2026-10-29T14:48:11.853611Z",
+    "finished": "2026-10-29T14:48:58.489855Z",
+    "running": "2026-10-29T14:48:12.997571Z"
+  }
+}

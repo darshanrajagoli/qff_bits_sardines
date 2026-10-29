@@ -290,8 +290,6 @@ def test_backends(fp_strict):
     for backend, milestone in [("aer-noisy:FakeBrisbane", "C2"), ("ibm:ibm_torino", "C3")]:
         with pytest.raises(NotImplementedError, match=milestone):
             sp.compare(fp_strict, fp_strict, backend=backend)
-    with pytest.raises(NotImplementedError, match="C3, needs a mentor's approval"):
-        sp.toy.run(2, backend="ibm:ibm_torino")
     with pytest.raises(ValueError):
         sp.compare(fp_strict, fp_strict, backend="qasm")
     assert sp.circuits.state_circuit(fp_strict, 0).num_qubits == 11

@@ -127,7 +127,7 @@ What it does **not** mean for us:
 * **Our setting is not that model.** The verifier holds the registered fingerprint, and the code is public, so it could
   compare classically. With shared public randomness, classical equality has constant communication at fixed error.
   SHA-256 is our practical stored-reference baseline; its fixed digest is not an unconditional worst-case equality theorem.
-* **Our run is a classical simulation**, which computes the overlap exactly. Sampling it adds noise and no power.
+* **Our image experiment uses classical simulation**, which computes the overlap exactly. Sampling it adds noise and no power. F8 separately tests small toy states on a real IBM QPU.
 * **At our sizes the asymptotics say little.** Per tile, $n = 384$, so $\sqrt n \approx 19.6$ bits against 11 qubits,
   and the theorem fixes no constants. A whole-image fingerprint at the same code rate ($n = 1{,}572{,}864$) would take
   $q = 23$ qubits against $\sqrt n \approx 1254$ bits, but a 47-qubit SWAP test cannot be simulated as a statevector.
@@ -155,7 +155,7 @@ The table reports one state preparation from `experiments/results/core_gate_cost
 
 For F6's q=11 random-near ancilla circuit, the recorded all-to-all compilation has 4,180 two-qubit gates and depth 4,110; FakeFez compilation has 10,129 and depth 12,112. One preparation has 2,046 gates all-to-all and 3,757 on FakeFez, with routed depth 11,772. These are compilation results, not QPU executions. Source: `experiments/results/core_gate_costs.csv`.
 
-Noise was simulated in Aer using IBM device noise models FakeFez and FakeBrisbane on toy states with q=1–3. No physical IBM Quantum hardware was used. Full-size hardware performance was not established.
+Noise was simulated in Aer using IBM device noise models FakeFez and FakeBrisbane on toy states with q=1–3. F8 reports toy states on ibm_marrakesh, a real IBM Heron r2 processor, on 2026-10-29 (job `dbhlpatep8hs73amdun0`): 18 toy comparisons at 4000 shots per PUB with 14 shared readout-calibration PUBs in one job. For the q=2 random same-pair ancilla test, 309/4000 outcomes were one: raw p1=0.07725 [0.06899, 0.08550]; readout-corrected p1=0.07166 [0.06272, 0.08048]. These are 95% percentile parametric-bootstrap intervals from 2000 joint test/calibration resamples, conditional on this run. Reported QPU usage was 36 seconds. Noise breaks the one-sided error guarantee; a threshold is needed. Readout correction leaves residual circuit error. This toy-state run establishes no full-image hardware performance: q = 11 remains far beyond today's hardware. Sources: `experiments/results/core_hardware.json` and `experiments/figures/core_hardware.png`.
 
 ## Reproduce the numbers
 

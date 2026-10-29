@@ -1,7 +1,7 @@
 # SwapPrint: judge Q&A
 
 Numbers come from `swapprint` and the CSVs in `experiments/`; the derivations are in `docs/THEORY.md`.
-All reported runs are classical simulations; data sources are named below.
+Image experiments and F6 use classical simulation; F8 separately measures toy states on a real IBM QPU. Data sources are named below.
 
 ## The 20-second pitch
 
@@ -16,7 +16,7 @@ All reported runs are classical simulations; data sources are named below.
 **1. Why quantum at all?**
 Problem 5 asks for a circuit-based fingerprint and a verification experiment, and the textbook quantum one exists:
 Buhrman et al. (2001). We use it to study how encoding and measurement decide what a quantum comparison can detect.
-We claim no advantage: our setting is not the model where their advantage holds, and we simulate it classically.
+We claim no advantage: our setting is not the model where their advantage holds, and our full-image experiment is classically simulated. F8 separately measures small toy states on a real IBM QPU.
 
 **2. Isn't this just a hash? How does it compare with SHA-256?**
 Classically, strict mode is an injective linear code: closer to a checksum than to a cryptographic hash. SHA-256 per
@@ -94,7 +94,7 @@ For the q=2 random identical-state ancilla circuit on simulated FakeFez at trans
 Under independent tile decisions, image false-alarm probability is $1-(1-f)^{4096}$. A 1% image target requires $f\le2.4536923\times10^{-6}$; without independence, $f\le0.01/4096$ is sufficient by the union bound. The threshold table targets ≤1% false alarm and ≥99% power per toy unit using conditional plug-in binomial calculations, not validated image-level guarantees. The image target is extrapolated and unresolved by 4000 shots.
 
 **17. Did you use hardware?**
-Noise was simulated in Aer using IBM device noise models FakeFez and FakeBrisbane on toy states with q=1–3. No physical IBM Quantum hardware was used. IBM dispatch raises `NotImplementedError`; full-size hardware performance was not established.
+F8 reports toy states on ibm_marrakesh, a real IBM Heron r2 processor, on 2026-10-29 (job `dbhlpatep8hs73amdun0`): 18 toy comparisons at 4000 shots per PUB with 14 shared readout-calibration PUBs in one job. For the q=2 random same-pair ancilla test, 309/4000 outcomes were one: raw p1=0.07725 [0.06899, 0.08550]; readout-corrected p1=0.07166 [0.06272, 0.08048]. These are 95% percentile parametric-bootstrap intervals from 2000 joint test/calibration resamples, conditional on this run. Reported QPU usage was 36 seconds. Noise breaks the one-sided error guarantee; a threshold is needed. Readout correction leaves residual circuit error. This toy-state run establishes no full-image hardware performance: q = 11 remains far beyond today's hardware. Sources: `experiments/results/core_hardware.json` and `experiments/figures/core_hardware.png`.
 
 **18. How would it work for real?**
 Each independent shot needs a fresh copy of both states. A 4,096-tile, 32-shot check uses 131,072 reference states and 131,072 candidate states. Unknown states cannot be cloned; copies must be prepared or supplied. Known classical codewords allow repeated preparation, and copies may be processed sequentially. Quantum memory can store supplied copies but cannot create them.
@@ -104,7 +104,7 @@ For F6's q=11 random-near ancilla circuit, the recorded all-to-all compilation h
 **19. What are the limitations?**
 No advantage over SHA-256, which is better in practice. The 30-shot bound is heuristic. Fingerprints are public and
 decodable, so they are not secret. Noise breaks the one-sided test, full-size circuits are far too deep for today's
-hardware, and perceptual mode misses small edits by design. Everything is classically simulated.
+hardware, and perceptual mode misses small edits by design. The image experiments are classically simulated; F8 separately measures small toy states on a real IBM QPU.
 
 **20. What would you do next?**
 Run the referee protocol, where Alice and Bob each send a fingerprint and the referee only SWAP-tests, which is the
