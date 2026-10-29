@@ -1,4 +1,4 @@
-# SwapPrint core contract (v0.2)
+# SwapPrint core contract (v0.3)
 
 Everything that crosses a folder boundary is defined here: function names, inputs, outputs, file formats.
 Change it only after agreeing the change with the team, and bump `swapprint.__version__`.
@@ -29,21 +29,23 @@ Edit only your own paths. To change someone else's, ask its owner first.
 | `CODE_SEED` | `"qff-sardines-2026"` | public seed of the error-correcting code |
 | `PERCEPTUAL_REGION` | 64 | perceptual mode works on 64×64-pixel regions: a 4×4 grid, 16 regions |
 | `PERCEPTUAL_Q` | 6 | qubits per perceptual fingerprint (64 hash bits) |
-| `PERCEPTUAL_F_THRESHOLD` | 0.65 (E3) | a region is flagged if its estimated F = overlap² is below this, i.e. 10 or more of its 64 hash bits changed (textured regions always hash to weight 31, so distances are even). Starting value from four Met paintings; recalibrated on held-out artworks (Rashida, E3), then fixed here (Darshan) |
-| `PHASH_FLAT_SIGMA` | 25.0 | a region whose AC RMS (63 low-frequency DCT coefficients) is below this counts as flat: all its hash bits are 0 |
-| `PERCEPTUAL_SHOTS` | 2048 (E3) | `compare`'s default shots in perceptual mode: it estimates F against a threshold, so it needs many shots |
-| `DEFAULT_SHOTS` | 32 | `compare`'s default shots in strict and frqi mode: a single 1 decides, and 30 shots already give a 10⁻⁶ miss bound |
+| `PERCEPTUAL_RULE` | `"median"` | default v0.2 rule; `"deadzone"` is an ablation option |
+| `PERCEPTUAL_F_THRESHOLD` | 0.65 (E3) | flag estimated F = overlap² below this; 359 or more ones in 2048 shots; ideal distance interval 7–57 |
+| `PHASH_AC_FLOOR` | 10.0 | ablation only: per-coefficient dead-zone floor (`experiments/core_perceptual_v3.py`) |
+| `PHASH_FLAT_SIGMA` | 25.0 | default median-rule AC RMS cutoff; below this, all hash bits are zero |
+| `PERCEPTUAL_SHOTS` | 2048 (E3) | default shots per perceptual region, calibrated on six paintings before held-out evaluation |
+| `DEFAULT_SHOTS` | 32 | `compare`'s default shots in strict and frqi mode: a single 1 flags a unit; 30 shots give a heuristic upper bound of 10⁻⁶ on P(no detection \| changed) |
 
 ## The three encodings
 
 Every encoding turns one unit of the image into a quantum state. Two states are compared with a SWAP test, whose
-ancilla reads 1 with probability **p1 = (1 − overlap²) / 2**. Identical states give p1 = 0, so a single 1 proves the
-inputs differ. Orthogonal states give p1 = ½.
+ancilla reads 1 with probability **p1 = (1 − overlap²) / 2**. In the ideal noiseless model, identical inputs have zero probability of producing a 1;
+we flag a tile when a 1 is observed. Orthogonal states give p1 = ½.
 
 | Mode | Unit | Input per unit | State | Qubits | Overlap | Meant to detect |
 |---|---|---|---|---|---|---|
 | `strict` | 4×4 tile | 384 bits x | (1/√2048) Σᵢ (−1)^E(x)ᵢ \|i⟩, where E is a pseudo-random linear [2048, 384] code | 11 | 1 − 2·d(E(x), E(y))/2048 | any change at all, even one bit |
-| `perceptual` | 64×64 region | 64-bit DCT hash b (pHash: region averaged down to 32×32, the 63 lowest-frequency AC coefficients vs their median, plus a fixed padding bit; flat regions hash to all zeros) | (1/8) Σᵢ (−1)^bᵢ \|i⟩ | 6 | 1 − 2·d(b, b′)/64 | visible content changes, while tolerating re-saves; it deliberately ignores tiny edits, which strict mode catches |
+| `perceptual` | 64×64 region | 64-bit DCT hash b (pHash: region averaged down to 32×32, the 63 AC coefficients in the top-left 8×8 DCT block compared strictly above their median, plus bit 0 fixed at zero; all bits zero below AC RMS 25) | (1/8) Σᵢ (−1)^bᵢ \|i⟩ | 6 | 1 − 2·d(b, b′)/64 | visible content changes, while tolerating re-saves; it deliberately ignores tiny edits, which strict mode catches |
 | `frqi` (baseline) | 4×4 tile | 48 channel values v in positions 0–47; positions 48–63 padded with θ = 0 | FRQI: (1/8) Σᵢ (cos θᵢ\|0⟩ + sin θᵢ\|1⟩)\|i⟩, θ = (π/2)·v/255, prepared by Hadamards on the 6 position qubits and uniformly controlled RY(2θᵢ) on the colour qubit | 6 + 1 | mean over the 64 positions of cos(θᵢ − θ′ᵢ) | the "pixels as angles" approach, which barely detects small edits |
 
 d(·,·) is Hamming distance. `strict` follows the construction of Buhrman, Cleve, Watrous and de Wolf (2001), with
@@ -64,8 +66,17 @@ sp.save_fingerprint(fp, path)     # .npz
 fp  = sp.load_fingerprint(path)
 info = sp.code_info()             # dict: n, m, rate, seed, d_min_guaranteed, overlap_max, p1_min, failure_prob
 k   = sp.shots_needed(miss=1e-6, p1=info["p1_min"])
-bits = sp.encodings.perceptual(img, flat_sigma=None)  # (16, 64) hash bits; flat_sigma overrides PHASH_FLAT_SIGMA for sweeps
+bits = sp.encodings.perceptual(img, rule=None, ac_floor=None, flat_sigma=None)  # keyword-only overrides; (16, 64)
+ablation = sp.encodings.perceptual(img, rule="deadzone")  # AC > 10; ablation only
 ```
+
+`rule=None` selects `PERCEPTUAL_RULE`, currently `"median"`; `flat_sigma=None` uses
+`PHASH_FLAT_SIGMA`. Explicit `rule="deadzone"` uses `PHASH_AC_FLOOR` when `ac_floor=None`.
+Each override affects only its rule. Compare experimental bits directly at matching settings.
+Default perceptual bits and version `swapprint-0.1/perceptual/q6/r64/flat25.0` are identical to
+v0.2.1. A configured dead-zone fingerprint uses `swapprint-0.3/perceptual/q6/r64/deadzone10`;
+`overlaps` and `compare` reject mismatched versions. The package stays at 0.3.0 for the rule option
+and style module. Strict and FRQI version strings remain unchanged.
 
 `load_image` is deterministic on every machine. It applies EXIF transpose, converts to RGB, then resizes with
 integer-only box averaging written in numpy, with no Pillow resampling. A 256×256 input passes through unchanged.
@@ -116,7 +127,9 @@ Unit index = row · cols + col, row-major.
 | `"exact"` | in v0.1 | exact SWAP-test statistics: p1 from the exact overlap, outcomes sampled with numpy. Identical in distribution to a noiseless circuit. |
 | `"aer"` | milestone C1 | as `exact`, but the traced units run as real SWAP-test circuits on Qiskit Aer (per-shot outcomes in `traces`); they are listed in `circuit_tiles`. Optional `kind="ancilla"\|"destructive"` |
 | `"aer-noisy:<FakeBackend>"` | milestone C2 | only for small "toy" fingerprints, through `sp.toy.run(...)`, because full-size circuits are far too deep for today's hardware |
-| `"ibm:<device>"` | milestone C3 | toy fingerprints on a real IBM device, with a mentor's approval |
+| `"ibm:<device>"` | unimplemented | dispatch raises `NotImplementedError`; no physical IBM Quantum hardware was used |
+
+Noise was simulated in Aer using IBM device noise models FakeFez and FakeBrisbane on toy states with q=1–3. No physical IBM Quantum hardware was used.
 
 ### Circuits (`swapprint/circuits.py`, milestone C1)
 

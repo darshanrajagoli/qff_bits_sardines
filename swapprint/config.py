@@ -16,7 +16,7 @@ PERCEPTUAL_F_THRESHOLD = 0.65  # E3: experiments/calibrate_perceptual.py
 PHASH_AC_FLOOR = 10.0  # ablation only: experiments/core_perceptual_v3.py
 PHASH_FLAT_SIGMA = 25.0  # default median-rule AC RMS cutoff (v0.2)
 PERCEPTUAL_SHOTS = 2048  # E3; compare() estimates F against a threshold
-DEFAULT_SHOTS = 32  # compare()'s default budget in strict and frqi mode; 30 already gives a 1e-6 miss bound
+DEFAULT_SHOTS = 32  # compare()'s default budget in strict and frqi mode; 30 shots give a heuristic upper bound of 1e-6 on P(no detection | changed)
 
 # Derived values, not free parameters.
 STRICT_M = 2**STRICT_Q  # 2048 code bits, one sign per amplitude of the strict state

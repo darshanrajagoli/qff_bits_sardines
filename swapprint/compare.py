@@ -1,7 +1,7 @@
 """Compare two fingerprints unit by unit with SWAP tests.
 
-For each unit the SWAP test's ancilla reads 1 with probability p1 = (1 - overlap^2) / 2. Identical units give p1 = 0
-and never read 1, so in strict mode a single 1 proves that the unit changed. The "exact" backend computes the overlap
+For each unit the SWAP test's ancilla reads 1 with probability p1 = (1 - overlap^2) / 2. In the ideal noiseless model, identical inputs have zero probability of producing a 1;
+in strict mode we flag a unit when a 1 is observed. The "exact" backend computes the overlap
 exactly from the fingerprints and samples the shot outcomes with numpy, which is identical in distribution to running
 noiseless SWAP-test circuits.
 """

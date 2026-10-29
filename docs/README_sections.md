@@ -1,8 +1,7 @@
 # README sections from the quantum core (C4)
 
 For Rashida to paste into `README.md`: three sections, "Design", "Encodings and measurement" and "Noise and
-hardware". Figure paths are relative to the repo root. Bold bracketed items are placeholders. Each one says which
-number goes there and where it comes from; fill them in before E6, or delete the sentence if the result never arrives.
+hardware". Figure paths are relative to the repo root. Reported results name their data sources below.
 Every other number was produced by `swapprint` v0.2.0; `docs/THEORY.md` has the derivations and the calls.
 
 ---
@@ -29,24 +28,21 @@ moves the state far away.
 tile flips 955 to 1080 of its 2048 code bits (all 384 single-bit changes, computed exactly), which gives $p_1 \ge 0.4977$.
 A union bound over random codes gives $p_1 \ge 0.371$ for *every* changed tile, so 15 shots miss a changed tile with
 probability at most $10^{-3}$, and 30 shots at most $10^{-6}$. That bound holds for all but a $10^{-6}$ fraction of
-random matrices. Ours is one fixed matrix, so the bound is a **heuristic**, which we check by measurement: the largest
-overlap between tiles of different artworks is **[F3: pending: largest |overlap| among N distinct-content tile pairs, from `experiments/figures/collisions.png`]**,
-against the bound's 0.508.
+random matrices. Ours is one fixed matrix, so the bound is a **heuristic**. Among 1,000,000 sampled distinct-content strict tile pairs, maximum absolute overlap was 0.1083984375; no identical-content pairs were set aside. This supports, but does not certify, the fixed-code heuristic. Perceptual hashes matched for 345/26,880 distinct-content pairs: 1.283% (95% Wilson interval: 1.156%–1.425%). Source: `experiments/figures/collisions.csv`.
 
 **What the verdict means.** By default, `compare` uses 32 shots per tile. "Tampered" means at least one SWAP test read
-1, which on a noiseless test proves that tile changed. "No change detected" is **not** proof that nothing changed: the
-reported miss bound, $3.6\times10^{-7}$ at 32 shots, is P(no detection | a tile changed), not P(unchanged | no detection).
+1. In the ideal noiseless model, identical inputs have zero probability of producing a 1; we flag a tile when a 1 is observed. "No change detected" is **not** proof that nothing changed: the
+reported miss bound, $3.6\times10^{-7}$ at 32 shots, is a heuristic upper bound on P(no detection | a tile changed), not P(unchanged | no detection).
 
 **What it is not.** The code is public and injective, so a strict fingerprint can be decoded back to the image. It is
-an integrity check, not a secret, a signature or a watermark. Simulating it gives no advantage over SHA-256 per tile,
+an integrity check, not a secret, a signature or a watermark. The heatmap displays flagged 4×4 tiles. Finite-shot checks can miss changed tiles; unchanged tiles have exactly zero flag probability in the ideal model. The original image file need not be uploaded, but the stored strict fingerprint contains enough information to reconstruct the canonical image. Simulating it gives no advantage over SHA-256 per tile,
 which is better in practice (table T1). Buhrman et al.'s quantum advantage, $O(\log n)$ qubits against $\Theta(\sqrt n)$
 classical bits, holds in the simultaneous-message model without shared randomness. Our verifier holds the reference,
 so our setting is not that model. See `docs/THEORY.md` §6.
 
-**Two backends.** `backend="exact"` is an analytical sampler: it computes each tile's overlap exactly and samples
-its SWAP-test outcomes, identical in distribution to a noiseless circuit. `backend="aer"` runs real Qiskit SWAP-test
-circuits for up to four selected tiles and uses the exact path for the rest. The tiles are picked by their classical
-overlaps or by the user's click, so the Aer mode is a hybrid demonstration, not a purely quantum verifier.
+**Two backends.** `backend="exact"` computes overlaps and samples the ideal SWAP-test distribution analytically.
+App Verify uses the analytical sampler. The Aer button separately executes one classically selected unit.
+Library `compare(backend="aer")` executes selected traced units—four by default—and samples the remainder analytically, making it a hybrid.
 
 ## Encodings and measurement
 
@@ -55,21 +51,25 @@ The same SWAP test, three encodings, three meanings of "same":
 | Mode | Unit | Qubits | What it encodes | Overlap | Flags a unit when |
 |---|---|---|---|---|---|
 | `strict` | 4×4 tile (4096) | 11 | codeword of a [2048, 384] code | $1 - 2d/2048$ | any shot reads 1 (32 shots) |
-| `perceptual` | 64×64 region (16) | 6 | 64-bit DCT hash (pHash) | $1 - d/32$ | estimated overlap² < 0.52 (4096 shots) |
+| `perceptual` | 64×64 region (16) | 6 | 64-bit median DCT hash (flat cut-off 25) | $1 - d/32$ | estimated overlap² < 0.65 (2048 shots) |
 | `frqi` (baseline) | 4×4 tile (4096) | 7 | pixel values as angles | mean of $\cos(\theta_i - \theta'_i)$ | any shot reads 1 (32 shots) |
 
-**Strict** catches any change, down to one bit. **Perceptual** asks whether the visible content changed: a JPEG re-save
-flips a few hash bits and passes, while a splice or a pasted object flips many and is flagged. Two hashes of textured
-regions differ in an even number of bits, so the threshold falls between 8 and 10 changed bits. At 4096 shots, 8 changed
-bits are flagged with probability $5.3\times10^{-4}$ and 10 with probability 0.9997 (exact). Small edits, such as a short
-caption, can pass by design; strict mode catches those. Calibrated on held-out artworks:
-**[E3: pending: final threshold, benign false-alarm rate and content detection rate with N, from F4 `experiments/figures/perceptual_roc.png`]**.
+**Strict** offers probabilistic sensitivity to canonical pixel changes, down to one bit. **Perceptual** remains the v0.2 median rule at E3 settings:
+compare the 63 AC coefficients in the top-left 8×8 DCT block strictly above their median, fix bit 0 at zero,
+and zero the entire hash when AC RMS is below 25. At t=0.65 and 2048 shots, flag a region at 359 ones.
+Small edits can pass by design. On six held-out paintings (84 conditions), benign false alarm is
+**2.78% [95% CI 0.00%, 8.33%]** and content detection is **65.14% [95% CI 59.45%, 70.83%]**. N = six held-out paintings (48 content and 36 benign conditions); intervals use an artwork bootstrap. Source: `experiments/results/perceptual_calibration.json`.
+The default bits and perceptual version string remain identical to v0.2.1. The README, app and video
+continue to use the v0.2 numbers.
 
-**FRQI**, the standard "pixels as angles" encoding, is our baseline. A one-level change in one channel value gives
-$p_1 = 2.96\times10^{-7}$ (exact), so the first 1 arrives after about 3.37 million shots on average, and 99% detection
-needs 15,534,513 shots. The same edit in strict mode gives $p_1 \approx 0.5$. The encoding, not the measurement, decides
+**Ablation: a dead-zone hash.** A per-coefficient dead zone removes the flat-region cliff: synthetic stress benign false alarm falls from 37.78% to 0.157%, and mean JPEG 90 false alarm across 16 synthetic seeds from 62.93% to 0.059%. But at its E3-calibrated point (AC floor 10, t = 0.80, 4096 shots), held-out painting benign false alarm rises from 2.78% [95% CI 0.00%, 8.33%] to 14.09% [5.84%, 22.37%], while content detection rises from 65.14% [59.45%, 70.83%] to 72.95% [66.74%, 79.18%]. Intervals are 95% artwork bootstrap intervals (2000 resamples, seed 42). This did not generalise, so we kept v0.2 as the default and retained `rule="deadzone"` only as an ablation. Source: `experiments/results/core_perceptual_v3.json` / `.csv`; figure: `experiments/figures/core_perceptual_ablation.png`.
+
+**FRQI**, the standard "pixels as angles" encoding, is our baseline. Its overlap averages $\cos(\theta_i-\theta_i^\prime)$ over 64 positions, including 16 padding positions; a one-channel one-level edit gives overlap ≈0.999999703552. A one-level change in one channel value gives
+$p_1 \approx 2.964476322\times10^{-7}$ (rounded from the exact expression), so the first 1 arrives after about 3.37 million shots on average, and 99% detection
+needs 15,534,513 shots. In strict mode, for the tested one-channel edits, the median exact budget for 99% detection across six held-out paintings is seven shots (`experiments/results/tamper_pairs.csv`). The encoding, not the measurement, decides
 what the SWAP test can see. Figure F2 (`experiments/figures/encodings_shots_needed.png`) shows shots needed per edit
-and per mode; F1 (`experiments/figures/detection_vs_shots.png`) shows strict detection against shots.
+and per mode; its perceptual results use the historical median hash at t=0.52, separate from E3's t=0.65 default calibration.
+F1 (`experiments/figures/detection_vs_shots.png`) shows strict detection against shots.
 
 **Two SWAP tests.** The ancilla SWAP test uses $2q+1$ qubits (Hadamard, controlled-SWAPs, Hadamard, measure the
 ancilla). The destructive SWAP test (Garcia-Escartin & Chamorro-Posada, *PRA* 87, 052330, 2013) uses $2q$ qubits: a
@@ -85,25 +85,16 @@ See `experiments/figures/core_validation.png`.
 
 ## Noise and hardware
 
-**Full-size fingerprints cannot run on today's hardware.** Preparing an arbitrary $q$-qubit sign state takes about
-$2^q$ two-qubit gates. At $q = 11$, that is 2046 two-qubit gates all-to-all, and 3951 (depth 10,680) after routing on
-FakeFez, a model of IBM's 156-qubit Heron r2 device. A whole strict SWAP test is 4167 two-qubit gates all-to-all. Panel
-2 of F6 shows the growth from $q = 1$ to 11. So every noisy and hardware result here is a **measurement demonstration
-on toy states** ($q \le 3$), not a full-size fingerprint.
+**Compilation costs (F6).** Preparing a generic sign state costs about $2^q$ two-qubit gates.
+For F6's q=11 random-near ancilla circuit, the recorded all-to-all compilation has 4,180 two-qubit gates and depth 4,110; FakeFez compilation has 10,129 and depth 12,112. One preparation has 2,046 gates all-to-all and 3,757 on FakeFez, with routed depth 11,772. These are compilation results, not QPU executions. Source: `experiments/results/core_gate_costs.csv`.
 
-**Noise study (F6, `experiments/figures/core_noise.png`).** Toy pairs at $q = 1, 2, 3$: identical (overlap 1),
-orthogonal (overlap 0) and near (one sign flipped, overlap $1 - 2/2^q$), both SWAP-test kinds, 4000 shots, on Qiskit
-Aer with the FakeFez noise model, `optimization_level=3` and a fixed transpiler seed.
-**[F6: pending C2: p1 for identical and orthogonal pairs at each q and kind, with Wilson 95% intervals, two-qubit gate counts and depth, from the C2 results CSV (`experiments/results/core_*.csv`); one sentence on whether readout correction helped]**.
-Noise lifts identical pairs off $p_1 = 0$, so a single 1 no longer proves a change, and a noisy run needs a threshold
-(`compare(..., threshold=...)`). Over 4096 tiles, small per-tile false-alarm rates add up. In an independence model, a
-1% whole-image false-alarm rate needs a per-tile rate below $2.45\times10^{-6}$ (union bound: $2.44\times10^{-6}$). That
-is far below what 4000 shots can measure, so F6 marks that region as extrapolated.
+**Noise study (F6, `experiments/figures/core_noise.png`).**
+Noise was simulated in Aer using IBM device noise models FakeFez and FakeBrisbane on toy states with q=1–3. No physical IBM Quantum hardware was used.
+Both SWAP-test kinds were sampled at 4000 shots per circuit and transpiler seeds 7, 23 and 91.
+For the q=2 random identical-state ancilla circuit on simulated FakeFez at transpiler seed 23, 216/4,000 outcomes were one: raw $\hat p_1=0.0540$ [0.04725, 0.06100]; readout-corrected $\hat p_1=0.04975$ [0.04268, 0.05693]. These are 95% percentile parametric-bootstrap intervals from 2,000 joint test/calibration resamples, conditional on the simulated model. Readout correction leaves residual circuit error; this experiment does not identify its dominant mechanism. Source: `experiments/results/core_noise.csv` and `core_noise_run.json`.
 
-**Hardware (F8).**
-**[F8: pending C3. If it ran: "We ran toy SWAP tests (q = 1, 2; identical and orthogonal; both kinds; 4000 shots) on <device> on <date>, job ids in `experiments/results/core_hardware.json`. F8 (`experiments/figures/core_hardware.png`) shows them beside the FakeFez prediction: <one-line result>." If not: "Noise was simulated on FakeFez; we did not get hardware time."]**
+Under independent tile decisions, image false-alarm probability is $1-(1-f)^{4096}$. A 1% image target requires $f\le2.4536923\times10^{-6}$; without independence, $f\le0.01/4096$ is sufficient by the union bound. The threshold table targets ≤1% false alarm and ≥99% power per toy unit using conditional plug-in binomial calculations, not validated image-level guarantees. The image target is extrapolated and unresolved by 4000 shots.
 
-**Copies.** Each shot consumes a copy of both states, and unknown quantum states cannot be cloned. A real deployment
-would need a registrar to issue $k$ copies of every tile's state, 131,072 states for a 32-shot strict check, or a
-quantum memory to hold them. Our simulator re-prepares states from the classical codeword for free, which is one more
-reason it holds no advantage over a classical check.
+**Hardware (F8).** No physical IBM Quantum hardware was used; there is no QPU result or hardware figure to report. IBM dispatch raises `NotImplementedError`.
+
+**Copies.** Each independent shot needs a fresh copy of both states. A 4,096-tile, 32-shot check uses 131,072 reference states and 131,072 candidate states. Unknown states cannot be cloned; copies must be prepared or supplied. Known classical codewords allow repeated preparation, and copies may be processed sequentially. Quantum memory can store supplied copies but cannot create them.
