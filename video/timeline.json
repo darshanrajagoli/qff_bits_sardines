@@ -20,8 +20,8 @@
      "title": "SwapPrint", "sub": "Quantum fingerprints for digital art"},
 
     {"type": "diagram", "id": "idea", "dur": 23.0,
-     "vo": "Digital art is copied and edited endlessly. SwapPrint gives every 4×4 patch an 11-qubit quantum fingerprint, built from an error-correcting code, after Buhrman and colleagues, 2001. A SWAP test compares two fingerprints. In an ideal test, identical patches never read one. A changed patch reads one about half the time.",
-     "tts": "Digital art is copied, and edited, endlessly. SwapPrint gives every four-by-four patch an eleven-qubit quantum fingerprint, built from an error-correcting code, after Buhrman and colleagues, 2001. A SWAP test compares two fingerprints. In an ideal test, identical patches never read one. A changed patch reads one about half the time.",
+     "vo": "Digital art is copied and edited endlessly. SwapPrint gives every 4×4 patch an 11-qubit quantum fingerprint, built from an error-correcting code, using the published quantum fingerprinting protocol of 2001. A SWAP test compares two fingerprints. In an ideal test, identical patches never read one. A changed patch reads one about half the time.",
+     "tts": "Digital art is copied and edited endlessly. SwapPrint gives every four-by-four patch an eleven-qubit quantum fingerprint, built from an error-correcting code, using the published quantum fingerprinting protocol of 2001. A SWAP test compares two fingerprints. In an ideal test, identical patches never read one. A changed patch reads one about half the time.",
      "vo_at": 0.5},
 
     {"type": "app", "id": "setup", "show": false,
@@ -108,7 +108,7 @@
      "tts": "To be clear: in practice, a classical SHA-two-fifty-six hash is the better integrity check today, and full circuits are far beyond current hardware. What SwapPrint shows... is how the encoding decides what a quantum measurement can see.",
      "targets": {"top": [{"text_block": "CHANGE DETECTED"}, {"iframe": 0}]},
      "camera": [{"at": 0.0, "target": "top", "dur": 9.0, "scale": 1.25}],
-     "lower": {"title": "SHA-256 per tile: 5.82 ms", "sub": "The classical baseline wins on practicality (README, Table T1)", "at": 1.0, "dur": 5.6}},
+     "lower": {"title": "SHA-256 per tile", "sub": "The classical baseline is better in practice (Table T1)", "at": 1.0, "dur": 5.6}},
 
     {"type": "end", "id": "end", "dur": 6.5,
      "vo": "SwapPrint. By team sardines.", "vo_at": 0.5,
