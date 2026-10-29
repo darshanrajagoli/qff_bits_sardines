@@ -1,11 +1,14 @@
-# The app's own dependencies, plus swapprint's (bounds from the root requirements.txt), so a deploy installs everything.
-streamlit>=1.66
-streamlit-image-coordinates>=0.4.1
-plotly>=5
-numpy>=1.26,<3
-scipy>=1.12,<2
-pillow>=10,<14
-qiskit>=2.0,<3
-qiskit-aer>=0.17,<1
-matplotlib>=3.8,<4
-pylatexenc>=2.10
+# The app's own dependencies, plus swapprint's, so a deploy installs everything.
+# Core packages use the exact pins from the root requirements.txt (Python 3.12, verified 29 Oct 2026);
+# Pillow matters because its JPEG output affects the tamper cases.
+# App-only packages are pinned to the versions the app and its tests were verified on.
+streamlit==1.66.1
+streamlit-image-coordinates==0.4.1
+plotly==7.1.0
+numpy==2.5.4
+scipy==1.18.1
+pillow==13.0.0
+qiskit==2.6.1
+qiskit-aer==0.18.2
+matplotlib==3.11.2
+pylatexenc==2.11
