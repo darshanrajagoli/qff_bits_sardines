@@ -20,6 +20,7 @@ from PIL import Image, ImageDraw, ImageOps
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 import swapprint as sp  # noqa: E402
+from swapprint import style as sp_style  # noqa: E402
 
 ART_DIR = ROOT / "data" / "artworks"
 FIG_DIR = ROOT / "experiments" / "figures"
@@ -28,7 +29,13 @@ MODES = ("strict", "perceptual", "frqi")
 MODE_LABEL = {"strict": "strict", "perceptual": "perceptual", "frqi": "frqi (baseline)"}
 UNIT_WORD = {"strict": "tile", "perceptual": "region", "frqi": "tile"}
 
-ACCENT = (232, 65, 214)  # magenta: the one accent colour, colour-blind safe against the greys
+def _rgb(hex_colour: str) -> tuple[int, int, int]:
+    h = hex_colour.lstrip("#")
+    return tuple(int(h[i:i + 2], 16) for i in (0, 2, 4))
+
+
+# Carbon tokens from swapprint.style: magenta marks "change detected", and only that (CVD-safe against the purple accent)
+ACCENT = _rgb(sp_style.ALERT)
 GAME_HIT_PX = 8  # a spot-the-edit guess within 8 canonical pixels counts as a hit
 MAX_UPLOAD_PIXELS = 40_000_000
 

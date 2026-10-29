@@ -17,6 +17,7 @@ import io  # noqa: E402
 import logging  # noqa: E402
 import json  # noqa: E402
 import os  # noqa: E402
+import re  # noqa: E402
 import time  # noqa: E402
 from datetime import datetime, timedelta, timezone  # noqa: E402
 
@@ -29,33 +30,42 @@ import core  # noqa: E402
 from certificate import make_certificate  # noqa: E402
 import swapprint as sp  # noqa: E402
 
-st.set_page_config(page_title="SwapPrint", page_icon="🔍", layout="wide")
+st.set_page_config(page_title="SwapPrint", page_icon=":material/fingerprint:", layout="wide")
 
 AER_ENABLED = os.environ.get("SWAPPRINT_NO_AER", "") != "1"
-ACCENT_HEX = "#E841D6"
+from swapprint import style  # noqa: E402
+
+G100 = style.tokens("g100")
+PURPLE, ALERT = style.PURPLE, style.ALERT  # one accent; magenta only for "change detected"
 CANON = sp.config.CANON
 IST = timezone(timedelta(hours=5, minutes=30), "IST")
 LOG = logging.getLogger("swapprint.app")
 
-st.markdown(
-    f"""
-<style>
-.block-container {{padding-top: 2rem; max-width: 1280px;}}
-.verdict {{font-size: 2.6rem; font-weight: 800; letter-spacing: .02em; line-height: 1.1; margin: .2rem 0 .3rem 0;}}
-.verdict.hit {{color: {ACCENT_HEX};}}
-.verdict.miss {{color: #C9CDD6;}}
-.fine {{color: #9AA0AB; font-size: .85rem;}}
-.lead {{font-size: 1.1rem;}}
-.shots {{display: flex; flex-wrap: wrap; gap: 4px; margin: .4rem 0 .6rem 0;}}
-.shot {{width: 22px; height: 22px; border-radius: 4px; background: #3A3F4B; color: #C9CDD6; font-size: 11px;
-        display: flex; align-items: center; justify-content: center; font-family: monospace;}}
-.shot.one {{background: {ACCENT_HEX}; color: white; font-weight: 700;}}
-.shot.first {{outline: 3px solid white;}}
-.box {{border: 1px solid #3A3F4B; border-radius: 10px; padding: .9rem 1.1rem; background: #1A1D24;}}
-</style>
-""",
-    unsafe_allow_html=True,
-)
+
+@st.cache_resource(show_spinner=False)
+def carbon_css() -> str:
+    """Darshan's Carbon CSS (docs/style/carbon.css) plus the app's title gradient; empty if the file is missing."""
+    try:
+        css = (Path(__file__).resolve().parents[1] / "docs" / "style" / "carbon.css").read_text(encoding="utf-8")
+    except OSError:
+        css = ""
+    g = style.WEBSITE_GRADIENT  # the event site's .text-gradient, used for the page title only
+    return css + f"""
+.sp-title {{display: inline-block; font-size: 3rem; font-weight: 600; line-height: 1.15; margin: 0 0 var(--sp-03, 8px) 0;
+  background: linear-gradient(120deg, {g[0]} 0%, {g[1]} 42%, {g[2]} 100%); -webkit-background-clip: text;
+  background-clip: text; color: transparent;}}
+.sp-sub {{color: var(--text-secondary, #c6c6c6); font-size: 1.25rem; line-height: 1.4; margin-bottom: var(--sp-05, 16px);}}
+.sp-credit {{color: var(--text-helper, #a8a8a8); font-size: 0.75rem; letter-spacing: 0.32px; line-height: 1.33;}}
+"""
+
+
+def _one_line(css: str) -> str:
+    """Comments and blank lines end a <style> block in Streamlit's markdown, so inject the CSS as one line."""
+    css = re.sub(r"/\*.*?\*/", "", css, flags=re.S)
+    return re.sub(r"\s+", " ", css).strip()
+
+
+st.markdown(f"<style>{_one_line(carbon_css())}</style>", unsafe_allow_html=True)
 
 
 # ---------------------------------------------------------------- cached work
@@ -112,6 +122,11 @@ def frqi_vs_strict() -> dict:
         p1 = float(((1 - ov**2) / 2).max())
         out[mode] = dict(overlap=float(ov.min()), p1=p1, first=1 / p1, need99=sp.shots_needed(0.01, p1))
     return out
+
+
+def notice(html: str, kind: str = "info") -> None:
+    """A Carbon inline notification (carbon.css .cds-notice): layer background, coloured bar on the left."""
+    st.markdown(f'<div class="cds-notice {kind}">{html}</div>', unsafe_allow_html=True)
 
 
 def safe(fn):
@@ -215,13 +230,17 @@ with st.sidebar:
     st.divider()
     st.caption(f"swapprint {sp.__version__} · exact backend = analytical sampler, identical in distribution to a "
                f"noiseless SWAP-test circuit on each unit")
+    st.markdown('<div class="sp-credit">SwapPrint · team sardines. Type: IBM Plex (SIL OFL 1.1). Colours and spacing: '
+                'Carbon Design System (Apache-2.0). Not made or endorsed by IBM.</div>', unsafe_allow_html=True)
 
 edited = core.replay(base, ss.history)
 edited_sha = core.sha(edited)
 game = ss.game
 game_on = bool(game and not game["revealed"])
 
-st.markdown("# SwapPrint")
+st.markdown('<div class="sp-title">SwapPrint</div><br>'
+            '<div class="sp-sub">Quantum fingerprints for digital art, checked with a SWAP test</div>',
+            unsafe_allow_html=True)
 st.markdown('<div class="lead">Every 4×4 patch of an artwork gets an 11-qubit quantum fingerprint. A SWAP test '
             'compares fingerprints: an untouched patch never fires, a changed patch fires about half the time.</div>',
             unsafe_allow_html=True)
@@ -465,11 +484,11 @@ def tab_verify():
         if g["guess"]:
             gy, gx = g["guess"]
             dist = float(np.hypot(gy - ty, gx - tx))
-            verdict_txt = "**Hit!**" if dist <= core.GAME_HIT_PX else "**Missed.**"
-            st.info(f"{verdict_txt} The edit was at row {ty}, column {tx} (white square); your guess (yellow cross) "
-                    f"was {dist:.0f} px away. {found}")
+            verdict_txt = "<b>Hit!</b>" if dist <= core.GAME_HIT_PX else "<b>Missed.</b>"
+            notice(f"{verdict_txt} The edit was at row {ty}, column {tx} (white square); your guess (yellow cross) "
+                   f"was {dist:.0f} px away. {found}", "alert" if cmp.tampered else "info")
         else:
-            st.info(f"The edit was at row {ty}, column {tx} (white square). {found}")
+            notice(f"The edit was at row {ty}, column {tx} (white square). {found}", "alert" if cmp.tampered else "info")
 
     left, right = st.columns([1, 1], gap="large")
     with left:
@@ -628,11 +647,13 @@ def compare_encodings():
     fig = go.Figure()
     xs = [core.MODE_LABEL[r["mode"]] for r in rows]
     ys = [r["expected_first"] if r["expected_first"] else None for r in rows]
-    fig.add_bar(x=xs, y=ys, marker_color=[ACCENT_HEX if r["mode"] == "strict" else "#7A808C" for r in rows],
+    fig.add_bar(x=xs, y=ys, marker_color=[PURPLE if r["mode"] == "strict" else G100["border-strong-01"]
+                                          for r in rows],
                 text=[core.fmt_shots(r["expected_first"], r["never"]) for r in rows], textposition="outside")
     fig.update_layout(yaxis_type="log", yaxis_title="expected shots to the first 1 (log scale)", height=340,
                       margin=dict(l=10, r=10, t=30, b=10), paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
-                      font_color="#C9CDD6", showlegend=False)
+                      font_color=G100["text-secondary"],
+                      font_family="IBM Plex Sans", showlegend=False)
     st.plotly_chart(fig, width="stretch")
     st.caption("Exact values (1/p1 from the exact overlap), no sampling, except the last column, which is one run at the "
                "seed above. Perceptual mode ignores tiny edits by design and decides by a threshold on overlap², not by "

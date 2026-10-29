@@ -8,12 +8,13 @@ from pathlib import Path
 
 import numpy as np
 import pytest
-from PIL import Image
+from PIL import Image, ImageColor, ImageFont
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from certificate import make_certificate  # noqa: E402
+from certificate import _font, make_certificate  # noqa: E402
 
 import swapprint as sp  # noqa: E402
+from swapprint import style  # noqa: E402
 
 
 @pytest.fixture(scope="module")
@@ -27,7 +28,23 @@ def assert_png(data):
         assert image.format == "PNG"
         assert image.size == (1200, 675)
         image.load()
-        assert image.getpixel((0, 0)) == (17, 19, 24)
+        assert image.getpixel((0, 0)) == ImageColor.getrgb(style.tokens("g100")["background"])
+
+
+def test_plex_fonts_and_carbon_background(artwork):
+    for face in ("IBMPlexSans-SemiBold", "IBMPlexSans-Regular", "IBMPlexMono-Regular"):
+        path = style.font_paths()[face]
+        assert path.is_file()
+        font = _font(16, face)
+        assert isinstance(font, ImageFont.FreeTypeFont)
+        assert Path(font.path) == path
+
+    fingerprint = sp.fingerprint(artwork, "strict")
+    assert_png(make_certificate(
+        artwork, artwork, sp.compare(fingerprint, fingerprint, seed=0),
+        artwork_title="Carbon verification record",
+        when=datetime(2026, 10, 29, 16, 30),
+    ))
 
 
 @pytest.mark.parametrize("mode", ["strict", "perceptual", "frqi"])
