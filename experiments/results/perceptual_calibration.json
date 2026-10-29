@@ -1,0 +1,57 @@
+{
+  "chosen": {
+    "flat_sigma": 25.0,
+    "threshold": 0.65,
+    "shots": 2048
+  },
+  "calibration": {
+    "mean_content": 0.6361268154739047,
+    "min_content": 0.5000000000000022,
+    "mean_benign": 0.0074178898907427395,
+    "max_benign": 0.04450733934444181,
+    "artworks": [
+      "hokusai_great_wave",
+      "vangogh_straw_hat",
+      "vangogh_wheat_field",
+      "seurat_grande_jatte",
+      "hiroshige_plum_tree",
+      "rembrandt_self_portrait"
+    ]
+  },
+  "heldout": {
+    "mean_content": 0.6513967217080805,
+    "ci_content_95": [
+      0.5944601294450327,
+      0.7083333236522313
+    ],
+    "mean_benign": 0.027777777777780954,
+    "ci_benign_95": [
+      1.4626631902249999e-15,
+      0.08333333333333749
+    ],
+    "artworks": [
+      "vangogh_bedroom",
+      "monet_water_lilies",
+      "caillebotte_paris_street",
+      "hiroshige_sudden_shower",
+      "vermeer_water_pitcher",
+      "turner_venice"
+    ],
+    "per_case_mean": {
+      "jpeg95": 6.873448225684969e-72,
+      "jpeg75": 7.313315951125037e-15,
+      "bright_p1": 0.0,
+      "bright_p5": 3.6176043293078785e-73,
+      "contrast105": 0.16666666666666666,
+      "resize128": 1.1701305521800012e-14,
+      "set_pixel": 3.6176043293078785e-73,
+      "patch2": 1.4626631902250127e-15,
+      "patch6": 0.499999922551182,
+      "patch12": 0.9999998451023552,
+      "copy_move24": 1.0,
+      "copy_move48": 1.0,
+      "splice48": 1.0,
+      "text": 0.711174006011106
+    }
+  }
+}
