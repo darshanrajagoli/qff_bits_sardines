@@ -1,0 +1,775 @@
+{
+  "version": "1.0",
+  "description": "Frozen experimental design for SwapPrint tampering experiment (E1)",
+  "splits": {
+    "calibration": [
+      "hokusai_great_wave",
+      "vangogh_straw_hat",
+      "vangogh_wheat_field",
+      "seurat_grande_jatte",
+      "hiroshige_plum_tree",
+      "rembrandt_self_portrait"
+    ],
+    "heldout": [
+      "vangogh_bedroom",
+      "monet_water_lilies",
+      "caillebotte_paris_street",
+      "hiroshige_sudden_shower",
+      "vermeer_water_pitcher",
+      "turner_venice"
+    ],
+    "stress": [
+      "synthetic",
+      "flat",
+      "noise"
+    ]
+  },
+  "artworks": [
+    {
+      "artwork_index": 0,
+      "slug": "hokusai_great_wave",
+      "split": "calibration",
+      "donor": "rembrandt_self_portrait",
+      "other": "rembrandt_self_portrait",
+      "pixel_positions": [
+        {
+          "y": 52,
+          "x": 120
+        },
+        {
+          "y": 133,
+          "x": 53
+        },
+        {
+          "y": 217,
+          "x": 52
+        },
+        {
+          "y": 154,
+          "x": 128
+        },
+        {
+          "y": 209,
+          "x": 135
+        }
+      ]
+    },
+    {
+      "artwork_index": 1,
+      "slug": "vangogh_straw_hat",
+      "split": "calibration",
+      "donor": "vangogh_wheat_field",
+      "other": "vangogh_wheat_field",
+      "pixel_positions": [
+        {
+          "y": 231,
+          "x": 48
+        },
+        {
+          "y": 156,
+          "x": 196
+        },
+        {
+          "y": 209,
+          "x": 219
+        },
+        {
+          "y": 4,
+          "x": 46
+        },
+        {
+          "y": 130,
+          "x": 19
+        }
+      ]
+    },
+    {
+      "artwork_index": 2,
+      "slug": "vangogh_wheat_field",
+      "split": "calibration",
+      "donor": "hiroshige_plum_tree",
+      "other": "hiroshige_plum_tree",
+      "pixel_positions": [
+        {
+          "y": 154,
+          "x": 191
+        },
+        {
+          "y": 97,
+          "x": 156
+        },
+        {
+          "y": 198,
+          "x": 99
+        },
+        {
+          "y": 91,
+          "x": 196
+        },
+        {
+          "y": 229,
+          "x": 86
+        }
+      ]
+    },
+    {
+      "artwork_index": 3,
+      "slug": "seurat_grande_jatte",
+      "split": "calibration",
+      "donor": "vangogh_straw_hat",
+      "other": "vangogh_straw_hat",
+      "pixel_positions": [
+        {
+          "y": 75,
+          "x": 126
+        },
+        {
+          "y": 48,
+          "x": 222
+        },
+        {
+          "y": 149,
+          "x": 169
+        },
+        {
+          "y": 65,
+          "x": 204
+        },
+        {
+          "y": 72,
+          "x": 192
+        }
+      ]
+    },
+    {
+      "artwork_index": 4,
+      "slug": "hiroshige_plum_tree",
+      "split": "calibration",
+      "donor": "hokusai_great_wave",
+      "other": "hokusai_great_wave",
+      "pixel_positions": [
+        {
+          "y": 186,
+          "x": 35
+        },
+        {
+          "y": 0,
+          "x": 194
+        },
+        {
+          "y": 30,
+          "x": 97
+        },
+        {
+          "y": 33,
+          "x": 89
+        },
+        {
+          "y": 49,
+          "x": 158
+        }
+      ]
+    },
+    {
+      "artwork_index": 5,
+      "slug": "rembrandt_self_portrait",
+      "split": "calibration",
+      "donor": "seurat_grande_jatte",
+      "other": "seurat_grande_jatte",
+      "pixel_positions": [
+        {
+          "y": 110,
+          "x": 73
+        },
+        {
+          "y": 21,
+          "x": 108
+        },
+        {
+          "y": 245,
+          "x": 163
+        },
+        {
+          "y": 238,
+          "x": 219
+        },
+        {
+          "y": 128,
+          "x": 213
+        }
+      ]
+    },
+    {
+      "artwork_index": 6,
+      "slug": "vangogh_bedroom",
+      "split": "heldout",
+      "donor": "vermeer_water_pitcher",
+      "other": "vermeer_water_pitcher",
+      "pixel_positions": [
+        {
+          "y": 132,
+          "x": 76
+        },
+        {
+          "y": 86,
+          "x": 101
+        },
+        {
+          "y": 49,
+          "x": 60
+        },
+        {
+          "y": 153,
+          "x": 142
+        },
+        {
+          "y": 176,
+          "x": 204
+        }
+      ]
+    },
+    {
+      "artwork_index": 7,
+      "slug": "monet_water_lilies",
+      "split": "heldout",
+      "donor": "turner_venice",
+      "other": "turner_venice",
+      "pixel_positions": [
+        {
+          "y": 13,
+          "x": 164
+        },
+        {
+          "y": 18,
+          "x": 21
+        },
+        {
+          "y": 183,
+          "x": 50
+        },
+        {
+          "y": 208,
+          "x": 108
+        },
+        {
+          "y": 166,
+          "x": 150
+        }
+      ]
+    },
+    {
+      "artwork_index": 8,
+      "slug": "caillebotte_paris_street",
+      "split": "heldout",
+      "donor": "hiroshige_sudden_shower",
+      "other": "hiroshige_sudden_shower",
+      "pixel_positions": [
+        {
+          "y": 91,
+          "x": 55
+        },
+        {
+          "y": 42,
+          "x": 23
+        },
+        {
+          "y": 123,
+          "x": 251
+        },
+        {
+          "y": 208,
+          "x": 65
+        },
+        {
+          "y": 141,
+          "x": 251
+        }
+      ]
+    },
+    {
+      "artwork_index": 9,
+      "slug": "hiroshige_sudden_shower",
+      "split": "heldout",
+      "donor": "monet_water_lilies",
+      "other": "monet_water_lilies",
+      "pixel_positions": [
+        {
+          "y": 186,
+          "x": 12
+        },
+        {
+          "y": 14,
+          "x": 164
+        },
+        {
+          "y": 155,
+          "x": 72
+        },
+        {
+          "y": 83,
+          "x": 211
+        },
+        {
+          "y": 67,
+          "x": 211
+        }
+      ]
+    },
+    {
+      "artwork_index": 10,
+      "slug": "vermeer_water_pitcher",
+      "split": "heldout",
+      "donor": "caillebotte_paris_street",
+      "other": "caillebotte_paris_street",
+      "pixel_positions": [
+        {
+          "y": 177,
+          "x": 234
+        },
+        {
+          "y": 24,
+          "x": 30
+        },
+        {
+          "y": 171,
+          "x": 251
+        },
+        {
+          "y": 137,
+          "x": 214
+        },
+        {
+          "y": 5,
+          "x": 217
+        }
+      ]
+    },
+    {
+      "artwork_index": 11,
+      "slug": "turner_venice",
+      "split": "heldout",
+      "donor": "vangogh_bedroom",
+      "other": "vangogh_bedroom",
+      "pixel_positions": [
+        {
+          "y": 73,
+          "x": 54
+        },
+        {
+          "y": 72,
+          "x": 160
+        },
+        {
+          "y": 20,
+          "x": 21
+        },
+        {
+          "y": 144,
+          "x": 70
+        },
+        {
+          "y": 118,
+          "x": 26
+        }
+      ]
+    },
+    {
+      "artwork_index": 12,
+      "slug": "synthetic",
+      "split": "stress",
+      "donor": "flat",
+      "other": "flat",
+      "pixel_positions": [
+        {
+          "y": 190,
+          "x": 61
+        },
+        {
+          "y": 78,
+          "x": 120
+        },
+        {
+          "y": 34,
+          "x": 220
+        },
+        {
+          "y": 199,
+          "x": 241
+        },
+        {
+          "y": 40,
+          "x": 126
+        }
+      ]
+    },
+    {
+      "artwork_index": 13,
+      "slug": "flat",
+      "split": "stress",
+      "donor": "noise",
+      "other": "noise",
+      "pixel_positions": [
+        {
+          "y": 36,
+          "x": 172
+        },
+        {
+          "y": 203,
+          "x": 238
+        },
+        {
+          "y": 119,
+          "x": 114
+        },
+        {
+          "y": 20,
+          "x": 164
+        },
+        {
+          "y": 245,
+          "x": 182
+        }
+      ]
+    },
+    {
+      "artwork_index": 14,
+      "slug": "noise",
+      "split": "stress",
+      "donor": "synthetic",
+      "other": "synthetic",
+      "pixel_positions": [
+        {
+          "y": 151,
+          "x": 229
+        },
+        {
+          "y": 111,
+          "x": 60
+        },
+        {
+          "y": 117,
+          "x": 254
+        },
+        {
+          "y": 149,
+          "x": 44
+        },
+        {
+          "y": 245,
+          "x": 130
+        }
+      ]
+    }
+  ],
+  "cases": [
+    {
+      "case_id": "identity",
+      "category": "control",
+      "edit": "identity",
+      "params": {}
+    },
+    {
+      "case_id": "pixel_1",
+      "category": "imperceptible",
+      "edit": "pixel",
+      "pixel_index": 0,
+      "channel": 1,
+      "delta": 1,
+      "params": {
+        "channel": 1,
+        "delta": 1
+      }
+    },
+    {
+      "case_id": "pixel_2",
+      "category": "imperceptible",
+      "edit": "pixel",
+      "pixel_index": 1,
+      "channel": 2,
+      "delta": 1,
+      "params": {
+        "channel": 2,
+        "delta": 1
+      }
+    },
+    {
+      "case_id": "pixel_3",
+      "category": "imperceptible",
+      "edit": "pixel",
+      "pixel_index": 2,
+      "channel": 0,
+      "delta": 1,
+      "params": {
+        "channel": 0,
+        "delta": 1
+      }
+    },
+    {
+      "case_id": "pixel_4",
+      "category": "imperceptible",
+      "edit": "pixel",
+      "pixel_index": 3,
+      "channel": 1,
+      "delta": 1,
+      "params": {
+        "channel": 1,
+        "delta": 1
+      }
+    },
+    {
+      "case_id": "pixel_5",
+      "category": "imperceptible",
+      "edit": "pixel",
+      "pixel_index": 4,
+      "channel": 2,
+      "delta": 1,
+      "params": {
+        "channel": 2,
+        "delta": 1
+      }
+    },
+    {
+      "case_id": "lsb",
+      "category": "imperceptible",
+      "edit": "lsb",
+      "params": {
+        "payload": "QFF",
+        "channel": 2
+      }
+    },
+    {
+      "case_id": "jpeg95",
+      "category": "benign",
+      "edit": "jpeg",
+      "params": {
+        "quality": 95
+      }
+    },
+    {
+      "case_id": "jpeg75",
+      "category": "benign",
+      "edit": "jpeg",
+      "params": {
+        "quality": 75
+      }
+    },
+    {
+      "case_id": "bright_p1",
+      "category": "benign",
+      "edit": "brightness",
+      "params": {
+        "delta": 1
+      }
+    },
+    {
+      "case_id": "bright_p5",
+      "category": "benign",
+      "edit": "brightness",
+      "params": {
+        "delta": 5
+      }
+    },
+    {
+      "case_id": "contrast105",
+      "category": "benign",
+      "edit": "contrast",
+      "params": {
+        "factor": 1.05
+      }
+    },
+    {
+      "case_id": "resize128",
+      "category": "benign",
+      "edit": "resize_roundtrip",
+      "params": {
+        "size": 128
+      }
+    },
+    {
+      "case_id": "set_pixel",
+      "category": "content",
+      "edit": "set_pixel",
+      "pixel_index": 0,
+      "params": {
+        "rgb": [
+          255,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "case_id": "patch2",
+      "category": "content",
+      "edit": "patch",
+      "params": {
+        "y": 100,
+        "x": 100,
+        "size": 2,
+        "rgb": [
+          255,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "case_id": "patch6",
+      "category": "content",
+      "edit": "patch",
+      "params": {
+        "y": 100,
+        "x": 100,
+        "size": 6,
+        "rgb": [
+          255,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "case_id": "patch12",
+      "category": "content",
+      "edit": "patch",
+      "params": {
+        "y": 100,
+        "x": 100,
+        "size": 12,
+        "rgb": [
+          255,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "case_id": "copy_move24",
+      "category": "content",
+      "edit": "copy_move",
+      "params": {
+        "src": [
+          20,
+          20
+        ],
+        "dst": [
+          150,
+          150
+        ],
+        "size": 24
+      }
+    },
+    {
+      "case_id": "copy_move48",
+      "category": "content",
+      "edit": "copy_move",
+      "params": {
+        "src": [
+          20,
+          20
+        ],
+        "dst": [
+          150,
+          150
+        ],
+        "size": 48
+      }
+    },
+    {
+      "case_id": "splice48",
+      "category": "content",
+      "edit": "splice",
+      "params": {
+        "y": 64,
+        "x": 64,
+        "size": 48,
+        "donor": "<cyclic_donor>"
+      }
+    },
+    {
+      "case_id": "text",
+      "category": "content",
+      "edit": "text",
+      "params": {
+        "s": "FAKE",
+        "y": 200,
+        "x": 10
+      }
+    },
+    {
+      "case_id": "different",
+      "category": "different",
+      "edit": "different",
+      "params": {
+        "other": "<cyclic_other>"
+      }
+    }
+  ],
+  "modes": [
+    "strict",
+    "perceptual",
+    "frqi"
+  ],
+  "exact_k_grids": {
+    "strict_frqi": [
+      1,
+      2,
+      4,
+      8,
+      16,
+      32,
+      64,
+      128,
+      256
+    ],
+    "perceptual": [
+      64,
+      128,
+      256,
+      512,
+      1024,
+      2048,
+      4096,
+      8192,
+      16384
+    ]
+  },
+  "sampled_shots": {
+    "strict_frqi": [
+      1,
+      2,
+      4,
+      8,
+      16,
+      32,
+      64,
+      128,
+      256
+    ],
+    "perceptual": [
+      256,
+      1024,
+      4096
+    ],
+    "reps": 10
+  },
+  "quick_subset": {
+    "artworks": [
+      "synthetic",
+      "hokusai_great_wave"
+    ],
+    "cases": [
+      "identity",
+      "pixel_1",
+      "jpeg75",
+      "patch12",
+      "splice48"
+    ],
+    "modes": [
+      "strict",
+      "perceptual",
+      "frqi"
+    ],
+    "reps": 5
+  }
+}
