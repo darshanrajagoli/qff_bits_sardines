@@ -1,6 +1,6 @@
 {
   "label": "toy states on a simulated IBM device noise model",
-  "seconds": 7.39388810005039,
+  "seconds": 8.436590999830514,
   "measured_circuit_seconds": 378.1837586008478,
   "measured_transpilation_seconds": 37.46439210046083,
   "cache_policy": "Cached measurements and QPY transpilations retain their original measured times; seconds is this invocation's wall time.",

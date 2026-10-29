@@ -21,6 +21,8 @@ from .config import (
     PERCEPTUAL_GRID,
     PERCEPTUAL_Q,
     PERCEPTUAL_REGION,
+    PERCEPTUAL_RULE,
+    PHASH_AC_FLOOR,
     PHASH_FLAT_SIGMA,
     STRICT_GRID,
     STRICT_Q,
@@ -42,7 +44,9 @@ _MODES: dict[str, tuple[int, tuple[int, int], int, str, Callable[[np.ndarray], n
         PERCEPTUAL_Q,
         (PERCEPTUAL_GRID, PERCEPTUAL_GRID),
         PERCEPTUAL_REGION,
-        f"{FORMAT}/perceptual/q{PERCEPTUAL_Q}/r{PERCEPTUAL_REGION}/flat{PHASH_FLAT_SIGMA}",
+        (f"{FORMAT}/perceptual/q{PERCEPTUAL_Q}/r{PERCEPTUAL_REGION}/flat{PHASH_FLAT_SIGMA}"
+         if PERCEPTUAL_RULE == "median" else
+         f"swapprint-0.3/perceptual/q{PERCEPTUAL_Q}/r{PERCEPTUAL_REGION}/deadzone{PHASH_AC_FLOOR:g}"),
         encodings.perceptual,
     ),
     "frqi": (FRQI_Q, (STRICT_GRID, STRICT_GRID), STRICT_TILE, f"{FORMAT}/frqi/q{FRQI_Q}/n{FRQI_POSITIONS}", encodings.frqi),

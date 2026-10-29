@@ -12,7 +12,7 @@ from __future__ import annotations
 import numpy as np
 
 from .codes import encode
-from .config import FRQI_POSITIONS, FRQI_VALUES, PERCEPTUAL_GRID, PERCEPTUAL_REGION, PHASH_FLAT_SIGMA, STRICT_GRID, STRICT_TILE
+from .config import FRQI_POSITIONS, FRQI_VALUES, PERCEPTUAL_GRID, PERCEPTUAL_REGION, PERCEPTUAL_RULE, PHASH_AC_FLOOR, PHASH_FLAT_SIGMA, STRICT_GRID, STRICT_TILE
 
 
 def tile_values(img: np.ndarray) -> np.ndarray:
@@ -26,17 +26,25 @@ def strict(img: np.ndarray) -> np.ndarray:
     return encode(np.unpackbits(tile_values(img), axis=1))
 
 
-def perceptual(img: np.ndarray, flat_sigma: float | None = None) -> np.ndarray:
+def perceptual(
+    img: np.ndarray, *, rule: str | None = None, ac_floor: float | None = None, flat_sigma: float | None = None
+) -> np.ndarray:
     """(16, 64) uint8 0/1 hash bits, one row per 64x64 region.
 
     Integer luminance Y = (299R + 587G + 114B + 500) // 1000 is averaged in 2x2 boxes to 32x32 float64.
-    Take the top-left 8x8 of the orthonormal DCT-II, row-major. Bit 0 is fixed at zero; the 63 AC bits compare
-    strictly above their median. If sqrt(mean(AC**2)) < flat_sigma (default PHASH_FLAT_SIGMA), all bits are zero.
-    Pass flat_sigma only for experiments such as the F4 sweep: fingerprints made with another value are not
-    comparable to registered ones, so compare those bits directly (overlap = 1 - 2 d / 64).
+    Take the top-left 8x8 of the orthonormal DCT-II, row-major. Bit 0 is fixed at zero.
+    The default rule comes from PERCEPTUAL_RULE ("median"). The ablation "deadzone"
+    sets each AC bit iff AC > ac_floor (default PHASH_AC_FLOOR).
+    The "median" rule reproduces v0.2: AC > median(AC), with all bits zero when the
+    AC RMS is below flat_sigma (default PHASH_FLAT_SIGMA). flat_sigma is used only
+    by "median"; ac_floor only by "deadzone". Overrides are for ablations: compare
+    these bits directly (overlap = 1 - 2 d / 64), not against registered fingerprints.
     """
     from scipy.fft import dctn  # imported lazily: scipy is slow to import
 
+    rule = PERCEPTUAL_RULE if rule is None else rule
+    if rule not in ("deadzone", "median"):
+        raise ValueError(f"unknown perceptual rule {rule!r}; choose 'deadzone' or 'median'")
     rgb = img.astype(np.int64)
     y = (299 * rgb[..., 0] + 587 * rgb[..., 1] + 114 * rgb[..., 2] + 500) // 1000
     g, r = PERCEPTUAL_GRID, PERCEPTUAL_REGION
@@ -44,10 +52,13 @@ def perceptual(img: np.ndarray, flat_sigma: float | None = None) -> np.ndarray:
     regions = regions.mean(axis=(2, 4), dtype=np.float64)
     coeffs = dctn(regions, type=2, norm="ortho", axes=(1, 2))[:, :8, :8].reshape(g * g, 64)
     ac = coeffs[:, 1:]
-    sigma = np.sqrt(np.mean(ac**2, axis=1))
     bits = np.zeros((g * g, 64), dtype=np.uint8)
-    cutoff = PHASH_FLAT_SIGMA if flat_sigma is None else float(flat_sigma)
-    bits[:, 1:] = (ac > np.median(ac, axis=1, keepdims=True)) & (sigma[:, None] >= cutoff)
+    if rule == "deadzone":
+        bits[:, 1:] = ac > (PHASH_AC_FLOOR if ac_floor is None else float(ac_floor))
+    else:
+        sigma = np.sqrt(np.mean(ac**2, axis=1))
+        cutoff = PHASH_FLAT_SIGMA if flat_sigma is None else float(flat_sigma)
+        bits[:, 1:] = (ac > np.median(ac, axis=1, keepdims=True)) & (sigma[:, None] >= cutoff)
     return bits
 
 

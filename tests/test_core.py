@@ -18,7 +18,7 @@ from PIL import Image
 
 import swapprint as sp
 from swapprint import codes, encodings, synthetic, theory
-from swapprint.config import CANON, PERCEPTUAL_F_THRESHOLD, PERCEPTUAL_SHOTS, PHASH_FLAT_SIGMA, STRICT_BITS, STRICT_M
+from swapprint.config import CANON, PERCEPTUAL_F_THRESHOLD, PERCEPTUAL_SHOTS, PERCEPTUAL_RULE, PHASH_AC_FLOOR, PHASH_FLAT_SIGMA, STRICT_BITS, STRICT_M
 
 REPO = Path(__file__).resolve().parents[1]
 CHANGED_TILE = (128 // 4) * 64 + 128 // 4  # the strict/frqi unit holding pixel (128, 128)
@@ -131,7 +131,7 @@ def test_load_image_rejects_bad_input():
     "mode, q, grid, unit_px, shape, dtype, version",
     [
         ("strict", 11, (64, 64), 4, (4096, 2048), np.uint8, "swapprint-0.1/strict/q11/qff-sardines-2026"),
-        ("perceptual", 6, (4, 4), 64, (16, 64), np.uint8, f"swapprint-0.1/perceptual/q6/r64/flat{PHASH_FLAT_SIGMA}"),
+        ("perceptual", 6, (4, 4), 64, (16, 64), np.uint8, "swapprint-0.1/perceptual/q6/r64/flat25.0"),
         ("frqi", 7, (64, 64), 4, (4096, 64), np.float64, "swapprint-0.1/frqi/q7/n64"),
     ],
 )
@@ -272,6 +272,8 @@ def test_compare_refuses_mismatched_fingerprints(art, fp_strict):
 
 @pytest.mark.parametrize("mode, old_version", [
     ("perceptual", "swapprint-0.1/perceptual/q6/dz2.0"),
+    ("perceptual", "swapprint-0.3/perceptual/q6/r64/deadzone10"),
+    ("perceptual", "swapprint-0.3/perceptual/q6/r64/deadzone8"),
     ("frqi", "swapprint-0.1/frqi/q7"),
 ])
 def test_compare_refuses_old_encoding_versions(art, mode, old_version):
@@ -326,7 +328,10 @@ def _perceptual_flag_probability(a, b):
     d = (sp.fingerprint(a, "perceptual").data != sp.fingerprint(b, "perceptual").data).sum(axis=1)
     p1 = theory.swap_test_p1(1 - 2 * d / 64)
     cut = np.floor(PERCEPTUAL_SHOTS * (1 - PERCEPTUAL_F_THRESHOLD) / 2)  # flagged when ones > cut
-    return 1 - np.prod(binom.cdf(cut, PERCEPTUAL_SHOTS, p1))
+    p = binom.sf(cut, PERCEPTUAL_SHOTS, p1)
+    if np.any(p == 1):
+        return 1.0
+    return -np.expm1(np.log1p(-p).sum())
 
 
 PAINTINGS = sorted(p for p in (Path(__file__).parents[1] / "data" / "artworks").glob("*.png")
@@ -335,7 +340,8 @@ PAINTINGS = sorted(p for p in (Path(__file__).parents[1] / "data" / "artworks").
 
 @pytest.mark.skipif(not PAINTINGS, reason="needs the E0 artworks in data/artworks/")
 def test_perceptual_e3_settings_on_paintings():
-    # E3 calibrated the settings on paintings; the synthetic and other stress images are reported separately.
+    # The default remains the v0.2 median rule at the frozen E3 operating point.
+    assert (PERCEPTUAL_RULE, PHASH_FLAT_SIGMA, PERCEPTUAL_F_THRESHOLD, PERCEPTUAL_SHOTS) == ("median", 25.0, 0.65, 2048)
     jpeg_alarm, text_hits = [], 0
     for path in PAINTINGS:
         img = sp.load_image(path)
@@ -345,7 +351,11 @@ def test_perceptual_e3_settings_on_paintings():
     assert text_hits >= len(PAINTINGS) // 2
 
 
-def test_perceptual_matches_scalar_reference(art):
+@pytest.mark.parametrize("rule,ac_floor,flat_sigma", [
+    ("deadzone", None, None), ("deadzone", 5.0, None), ("deadzone", 20.0, None),
+    ("median", None, None), ("median", None, 0.0), ("median", None, 100.0),
+])
+def test_perceptual_matches_scalar_reference(art, rule, ac_floor, flat_sigma):
     from scipy.fft import dctn
 
     expected = np.zeros((16, 64), np.uint8)
@@ -355,9 +365,54 @@ def test_perceptual_matches_scalar_reference(art):
             y = (region @ np.array([299, 587, 114]) + 500) // 1000
             averaged = sum(y[dy::2, dx::2].astype(np.float64) for dy in range(2) for dx in range(2)) / 4
             ac = dctn(averaged, type=2, norm="ortho")[:8, :8].ravel()[1:]
-            if np.sqrt(np.mean(ac**2)) >= PHASH_FLAT_SIGMA:
+            if rule == "deadzone":
+                expected[row * 4 + col, 1:] = ac > (PHASH_AC_FLOOR if ac_floor is None else ac_floor)
+            elif np.sqrt(np.mean(ac**2)) >= (PHASH_FLAT_SIGMA if flat_sigma is None else flat_sigma):
                 expected[row * 4 + col, 1:] = ac > np.median(ac)
-    assert np.array_equal(sp.fingerprint(art, "perceptual").data, expected)
+    assert np.array_equal(encodings.perceptual(art, rule=rule, ac_floor=ac_floor, flat_sigma=flat_sigma), expected)
+    if rule == "median" and flat_sigma is None:
+        assert np.array_equal(sp.fingerprint(art, "perceptual").data, expected)
+
+
+@pytest.mark.parametrize("seed", range(4))
+@pytest.mark.parametrize("sigma", [0.0, 25.0, 100.0])
+def test_perceptual_v02_bits_unchanged(seed, sigma):
+    """Frozen vectorized v0.2 implementation, including flat/textured/JPEG regions."""
+    from scipy.fft import dctn
+
+    img = synthetic.artwork(seed)
+    img[:64, :64] = 128
+    for img in (img, sp.edits.jpeg(img, quality=90)):
+        rgb = img.astype(np.int64)
+        y = (299 * rgb[..., 0] + 587 * rgb[..., 1] + 114 * rgb[..., 2] + 500) // 1000
+        regions = y.reshape(4, 64, 4, 64).transpose(0, 2, 1, 3).reshape(16, 32, 2, 32, 2)
+        regions = regions.mean(axis=(2, 4), dtype=np.float64)
+        ac = dctn(regions, type=2, norm="ortho", axes=(1, 2))[:, :8, :8].reshape(16, 64)[:, 1:]
+        old_bits = np.zeros((16, 64), dtype=np.uint8)
+        old_bits[:, 1:] = ((ac > np.median(ac, axis=1, keepdims=True)) &
+                          (np.sqrt(np.mean(ac**2, axis=1))[:, None] >= sigma))
+        assert np.array_equal(encodings.perceptual(img, rule="median", flat_sigma=sigma), old_bits)
+
+
+def test_perceptual_rule_defaults_and_validation(art):
+    assert PERCEPTUAL_RULE == "median"
+    assert (PHASH_FLAT_SIGMA, PERCEPTUAL_F_THRESHOLD, PERCEPTUAL_SHOTS) == (25.0, 0.65, 2048)
+    assert np.array_equal(encodings.perceptual(art), encodings.perceptual(art, rule="median"))
+    # Flat sigma cannot reintroduce the region cliff in dead-zone mode.
+    assert np.array_equal(encodings.perceptual(art, rule="deadzone"),
+                          encodings.perceptual(art, rule="deadzone", flat_sigma=1e9))
+    with pytest.raises(ValueError, match="rule"):
+        encodings.perceptual(art, rule="unknown")
+
+
+@pytest.mark.parametrize("seed", range(16))
+def test_deadzone_synthetic_jpeg90(seed):
+    img = synthetic.artwork(seed)
+    # Exact image probability; no seed-dependent measurement trial.
+    from experiments.core_perceptual_v3 import distances, probabilities
+
+    d = distances(img, sp.edits.jpeg(img, quality=90), rule="deadzone", ac_floor=10.0)
+    assert probabilities(d, shots=4096, threshold=0.80) < 0.01
 
 
 @pytest.mark.parametrize("value", [0, 128, 255])
@@ -493,3 +548,22 @@ def test_timing(art, fp_strict, fp_strict_pixel):
     t = time.perf_counter()
     sp.compare(fp_strict, fp_strict_pixel, shots=32, seed=0)
     assert time.perf_counter() - t < 0.5
+
+
+@pytest.mark.parametrize("source, digest", [
+    (None, "4b83070de23fcdfc8acea5e7400ba80f6d0e162eb3c9f9b621688628958e71a5"),
+    ("caillebotte_paris_street.png", "939f4644fcfa045f0c3bc674a26311fb28f0233b8bb78545c19e9c6fcbdd1359"),
+    ("hokusai_great_wave.png", "bb0324f0bcabd122008d2dbda2232d13b975187864f515d85acdd3f05a83c344"),
+])
+def test_default_perceptual_v021_fingerprint(source, digest):
+    """SHA-256 of uint8 bit bytes from c36fce3's unmodified encoder/config.
+
+    Generated via git show c36fce3:swapprint/{config,encodings,fingerprint}.py
+    in an isolated reference package; version taken from its fingerprint().
+    """
+    import hashlib
+
+    img = synthetic.artwork(0) if source is None else sp.load_image(REPO / "data/artworks" / source)
+    fp = sp.fingerprint(img, "perceptual")
+    assert hashlib.sha256(fp.data.tobytes()).hexdigest() == digest
+    assert fp.version.encode("utf-8") == b"swapprint-0.1/perceptual/q6/r64/flat25.0"

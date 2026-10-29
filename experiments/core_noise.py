@@ -227,10 +227,12 @@ def make_figure(noise, costs, thresholds):
     from matplotlib.lines import Line2D
     from qiskit_ibm_runtime.fake_provider import FakeFez
 
-    plt.rcParams.update({"font.size": 10, "axes.titlesize": 12, "axes.labelsize": 10,
-                         "legend.fontsize": 8, "figure.facecolor": "white",
-                         "axes.spines.top": False, "axes.spines.right": False})
-    colors = {"same": "#0072B2", "near": "#E69F00", "orthogonal": "#009E73"}
+    from swapprint import style
+    style.use("white")
+    plt.rcParams["legend.fontsize"] = 8
+    cat = style.categorical("white")      # Carbon categorical: purple 70, cyan 50, teal 70
+    colors = {"same": cat[0], "near": cat[1], "orthogonal": cat[2]}
+    grey = style.CARBON["gray-60"]
     fig = plt.figure(figsize=(17, 7.2), layout="constrained")
     outer = fig.add_gridspec(1, 3, width_ratios=(1.45, 1, 1.12))
     left = outer[0].subgridspec(2, 1, hspace=.05)
@@ -259,7 +261,6 @@ def make_figure(noise, costs, thresholds):
                 ax.plot(x, row["p1_ideal"], "_", color="black", ms=13, mew=1.4)
         ax.set(xlim=(.5, maxq+.5), ylim=(-.025, .57), xticks=range(1, maxq+1),
                ylabel="P(SWAP outcome = 1)")
-        ax.grid(alpha=.17)
         if index == 1:
             ax.set_xlabel("q (qubits per state); colour groups: same / near / orthogonal")
             handles = [Line2D([], [], color=c, lw=2, label=p) for p, c in colors.items()]
@@ -268,9 +269,9 @@ def make_figure(noise, costs, thresholds):
             ax.legend(handles=handles, ncol=3, loc="upper center", bbox_to_anchor=(.5, -.24))
     ax = fig.add_subplot(outer[1])
     for target, ls in (("all-to-all", "--"), ("FakeFez", "-")):
-        for component, kind, color, marker in (("preparation", "state", "#666666", "^"),
-                                               ("swap", "ancilla", "#0072B2", "o"),
-                                               ("swap", "destructive", "#D55E00", "s")):
+        for component, kind, color, marker in (("preparation", "state", grey, "^"),
+                                               ("swap", "ancilla", cat[0], "o"),
+                                               ("swap", "destructive", cat[1], "s")):
             selected = [r for r in costs if r["target"] == target and r["component"] == component and r["kind"] == kind]
             ax.plot([r["q"] for r in selected], [r["two_qubit_gates"] for r in selected],
                     color=color, marker=marker, ms=3, ls=ls, label=f"{target}: {kind}")
@@ -279,27 +280,26 @@ def make_figure(noise, costs, thresholds):
     gate = "cz" if "cz" in fake.target.operation_names else "ecr"
     error = float(np.median([p.error for p in fake.target[gate].values() if p is not None and p.error is not None]))
     guide = 1 / error
-    ax.axhline(guide, color="#CC79A7", ls=":", lw=1.7)
-    ax.text(1.1, guide*1.15, "Rough guide: one expected 2q-gate fault\n1 / median FakeFez gate error", color="#8E487A", fontsize=8)
+    ax.axhline(guide, color=style.ALERT, ls=":", lw=1.7)
+    ax.text(1.1, guide*1.15, "Rough guide: one expected 2q-gate fault\n1 / median FakeFez gate error", color=style.CARBON["magenta-70"], fontsize=8)
     plotted.append(dict(panel="b", series="rough model guide", x=0, y=guide, median_gate_error=error))
     ax.set(title="(b) Real transpilation costs", xlabel="q (qubits per state)",
            ylabel="Two-qubit gates (count, log scale)", yscale="log", xticks=(1, 3, 5, 7, 9, 11))
     ax.set_ylim(bottom=.8)
     ax.text(.03, .97, "q=1 preparation uses 0 two-qubit gates\n(zero omitted on log scale)",
             transform=ax.transAxes, fontsize=8, va="top")
-    ax.grid(alpha=.17)
     ax.legend(loc="lower right")
     ax = fig.add_subplot(outer[2])
     f = np.logspace(-8, -.5, 500)
     independent = -np.expm1(4096 * np.log1p(-f))
     union = 4096 * f
-    ax.plot(f, independent, color="#0072B2", label="Independence: 1 − (1 − f)⁴⁰⁹⁶")
-    ax.plot(f, union, color="#D55E00", ls="--", label="Union bound: 4096 f")
+    ax.plot(f, independent, color=cat[0], label="Independence: 1 − (1 − f)⁴⁰⁹⁶")
+    ax.plot(f, union, color=cat[1], ls="--", label="Union bound: 4096 f")
     for series, values in (("independence", independent), ("union bound", union)):
         plotted.extend(dict(panel="c", series=series, x=float(x), y=float(y)) for x, y in zip(f, values))
     limit = -np.expm1(np.log(.99) / 4096)
-    ax.axvspan(1e-8, limit, alpha=.15, color="#009E73")
-    ax.axhline(.01, color="#777777", ls=":")
+    ax.axvspan(1e-8, limit, alpha=.15, color=cat[2])
+    ax.axhline(.01, color=grey, ls=":")
     ax.text(1.4e-8, .035, "1% image target\nf ≲ 2.45 × 10⁻⁶\nextrapolated, not measured", fontsize=8)
     # A shot is one unit test for this measured baseline: k=1, tau=0.
     # Its false-alarm rate is exactly the measured same-pair ones / 4000.
@@ -307,7 +307,7 @@ def make_figure(noise, costs, thresholds):
     for row in [r for r in fez if r["pair"] == "same"]:
         value = row["p1_raw"]
         image_f = -np.expm1(4096 * np.log1p(-value))
-        color = "#0072B2" if row["kind"] == "ancilla" else "#D55E00"
+        color = cat[0] if row["kind"] == "ancilla" else cat[1]
         ax.plot(value, image_f, "o" if row["kind"] == "ancilla" else "s", color=color, ms=5)
         plotted.append(dict(panel="c", series="measured k=1 tau=0 false alarm", x=value,
                             y=float(image_f), k=1, tau=0, **row))
@@ -323,15 +323,14 @@ def make_figure(noise, costs, thresholds):
             ax.annotate(f"q{q} {'A' if kind=='ancilla' else 'D'}", (value, image_f),
                         xytext=(value, level), textcoords="data", ha="center", fontsize=8,
                         bbox=dict(facecolor="white", edgecolor="none", alpha=.9, pad=1),
-                        arrowprops=dict(arrowstyle="-", color="#888888", lw=.6))
+                        arrowprops=dict(arrowstyle="-", color=style.CARBON["gray-50"], lw=.6))
     ax.set(xscale="log", yscale="log", xlim=(1e-8, .32), ylim=(1e-5, 2),
            xlabel="Per-tile false-alarm probability f", ylabel="Image false-alarm probability (4096 tiles)",
            title="(c) Small tile errors accumulate")
-    ax.grid(alpha=.17)
     ax.legend(loc="lower right")
     ax.text(.03, .08, "Markers: measured f = p(same),\nsingle-shot rule k=1, τ=0.\nA=ancilla; D=destructive.\n4000 shots cannot resolve f\nat the image target.",
             transform=ax.transAxes, fontsize=8)
-    fig.suptitle(f"F6 — {LABEL}", fontsize=14)
+    fig.suptitle(f"F6 — {LABEL}")
     fig.savefig(FIGURES / "core_noise.png", dpi=200)
     plt.close(fig)
     # Include controls and the second device as supplemental source values.
