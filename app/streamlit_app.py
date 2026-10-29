@@ -244,7 +244,8 @@ def tab_fingerprint():
             f"- **{sp.config.STRICT_GRID**2:,} tiles × {sp.config.STRICT_Q} qubits.** Each 4×4 tile = "
             f"{info['n']} bits → {info['m']:,}-bit codeword → {sp.config.STRICT_Q}-qubit state.\n"
             f"- The code is a public pseudo-random linear [{info['m']}, {info['n']}] code (seed `{info['seed']}`). "
-            f"Any change to a tile flips about half of its codeword's signs.\n"
+            f"A single-bit change flips {core.single_bit_flips()[0]}–{core.single_bit_flips()[1]} of the "
+            f"{info['m']:,} signs (exact, over all {info['n']} bit positions).\n"
             f"- Heuristic guarantee: minimum distance ≥ {info['d_min_guaranteed']}, so every changed tile has "
             f"p1 ≥ {info['p1_min']:.3f}, and {sp.shots_needed(1e-6, info['p1_min'])} shots miss it with "
             f"probability ≤ 10⁻⁶.\n"
@@ -641,8 +642,9 @@ def compare_encodings():
 @safe
 def check_a_file():
     with st.expander("Check a file against a registered fingerprint (no original needed)"):
-        st.markdown("Upload an image and a `.npz` fingerprint from **1 · Fingerprint → Register**. The verifier never "
-                    "sees the original artwork: that is the point of a fingerprint.")
+        st.markdown("Upload an image and a `.npz` fingerprint from **1 · Fingerprint → Register**. The original image "
+                    "file need not be uploaded, but a stored strict fingerprint contains enough information to "
+                    "reconstruct the canonical image: integrity, not secrecy.")
         c1, c2 = st.columns(2)
         img_file = c1.file_uploader("Image to check", type=["png", "jpg", "jpeg", "webp", "tif", "tiff", "bmp"], key="chk-img")
         npz_file = c2.file_uploader("Registered fingerprint (.npz)", type=["npz"], key="chk-npz")
@@ -687,10 +689,12 @@ def tab_how():
     s[0].markdown("**1 · Canonical image**\n\nResize to 256×256 RGB, deterministically on every machine.")
     s[1].markdown(f"**2 · Tiles**\n\nCut into {sp.config.STRICT_GRID**2:,} tiles of 4×4 pixels: {info['n']} bits each.")
     s[2].markdown(f"**3 · Error-correcting code**\n\nA public linear code stretches {info['n']} bits to "
-                  f"{info['m']:,}. Any change spreads over about half the codeword.")
+                  f"{info['m']:,}. A single-bit change flips {core.single_bit_flips()[0]}–{core.single_bit_flips()[1]} of "
+                  f"the {info['m']:,} signs.")
     s[3].markdown(f"**4 · Sign state**\n\nCodeword bits become the signs of an {sp.config.STRICT_Q}-qubit state's "
                   f"{info['m']:,} amplitudes.")
-    s[4].markdown("**5 · SWAP test → decision**\n\nCompare with the original's state. One 1 proves the tile changed.")
+    s[4].markdown("**5 · SWAP test → decision**\n\nCompare with the original's state. Identical states never give a 1 in "
+                  "the noiseless model, so a tile that gives a 1 is flagged.")
 
     c1, c2 = st.columns(2, gap="large")
     with c1:

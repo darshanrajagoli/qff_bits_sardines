@@ -11,6 +11,7 @@ import math
 import re
 import sys
 from dataclasses import dataclass
+from functools import lru_cache
 from pathlib import Path
 
 import numpy as np
@@ -303,6 +304,13 @@ def f_interval(k: int, n: int) -> tuple[float, float, float]:
     return f(k / n), f(hi), f(lo)
 
 
+@lru_cache(maxsize=1)
+def single_bit_flips() -> tuple[int, int]:
+    """Fewest and most codeword signs a single input-bit change flips, exactly, over all 384 bit positions."""
+    w = sp.codes.generator_matrix().sum(axis=1)
+    return int(w.min()), int(w.max())
+
+
 def verdict(cmp: sp.Comparison) -> str:
     if cmp.mode == "perceptual":
         return "CONTENT CHANGE DETECTED" if cmp.tampered else "NO CONTENT CHANGE DETECTED"
@@ -317,7 +325,7 @@ def summary_line(cmp: sp.Comparison) -> str:
     if cmp.mode == "perceptual":
         if n:
             return f"{n} of {total} regions look different: their estimated overlap² fell below the threshold."
-        return f"All {total} regions stayed above the overlap² threshold: no visible content change was found."
+        return f"No region crossed the estimated-overlap² threshold. Visible edits may still have been missed."
     if n == 0:
         return f"None of the {total:,} {word}s produced a single 1 in {cmp.shots} SWAP-test shots each."
     u = most_suspicious(cmp)
@@ -325,7 +333,8 @@ def summary_line(cmp: sp.Comparison) -> str:
     first = cmp.first_detection.get(u)
     when = f", first on shot {first}" if first else ""
     return (f"{n:,} of {total:,} {word}s read 1 at least once{when}. "
-            f"An untouched {word} can never read 1, so each flagged {word} has changed.")
+            f"In the ideal noiseless model an untouched {word} has zero chance of reading 1; we flag a {word} "
+            f"when a 1 is observed.")
 
 
 def confidence_text(cmp: sp.Comparison) -> str:
@@ -339,7 +348,8 @@ def confidence_text(cmp: sp.Comparison) -> str:
         return (f"Each region's 64-bit perceptual hash becomes a 6-qubit state. {cmp.shots:,} shots estimate its "
                 f"overlap² with the original; a region is flagged when that estimate falls below {t}. Re-saves and "
                 f"small tone changes flip few hash bits and usually stay above it; pasted or painted content flips "
-                f"many. A small edit can stay under the threshold: use strict mode to catch every change.")
+                f"many. Edits that preserve the hash's retained bits can pass, and small text on some paintings is "
+                f"missed. Strict mode is sensitive to any change of canonical pixels, probabilistically.")
     return ("FRQI (“pixels as angles”) is the textbook baseline. A small edit barely moves the state, so p1 is tiny "
             "and a SWAP test needs millions of shots to notice. That is why SwapPrint uses an error-correcting code.")
 
