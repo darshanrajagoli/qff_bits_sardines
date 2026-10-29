@@ -50,8 +50,7 @@
 
 ---
 
-### Automated Storyboard Sync
-The script above is synchronized with:
-- `app/demo/storyboard.json` (clean run with Plex captions)
-- `app/demo/storyboard_cards.json` (broadcast run with Carbon title, section, and end cards)
-- Command to reproduce: `python app/demo/record_demo.py app/demo/storyboard_cards.json --url=http://localhost:8501 --out=demo_v2`
+### Automated Storyboard & Keynote Video Sync
+The demo script is implemented in two synchronized production pipelines:
+- **Interactive App Walkthrough:** `app/demo/storyboard_cards.json` recorded via Playwright (`python app/demo/record_demo.py app/demo/storyboard_cards.json --url=http://localhost:8501 --out=demo_v2`).
+- **Story-First Keynote Presentation:** [`video/narration.md`](../video/narration.md) recorded and synthesized with high-production Carbon cards, live app footage, diagrams, and hardware figures via `video/finish.py` (delivered at `https://drive.google.com/file/d/1MgQzH2eoaSqJfYkz7lAx7c88kPXjNzxP/view`).
