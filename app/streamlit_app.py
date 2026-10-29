@@ -273,7 +273,138 @@ st.markdown('<div class="lead">Every 4×4 patch of an artwork gets an 11-qubit q
             'compares fingerprints: an untouched patch never fires, a changed patch fires about half the time.</div>',
             unsafe_allow_html=True)
 
-tabs = st.tabs(["1 · Fingerprint", "2 · Tamper", "3 · Verify", "How it works", "Results"])
+tabs = st.tabs(["Start here", "1 · Fingerprint", "2 · Tamper", "3 · Verify", "How it works", "Results"])
+
+
+# ---------------------------------------------------------------- Start here
+
+
+@safe
+def tab_start():
+    """A no-jargon guide for someone who knows nothing about quantum fingerprinting. Numbers come from code."""
+    info, cfg = sp.code_info(), sp.config
+    fs = frqi_vs_strict()
+    lo, hi = core.single_bit_flips()
+    p1 = fs["strict"]["p1"]
+    miss1, miss_default = 1 - p1, (1 - p1) ** cfg.DEFAULT_SHOTS
+    tiles = cfg.STRICT_GRID ** 2
+
+    st.markdown("### Start here: SwapPrint in plain words")
+    st.markdown(
+        '<div class="sp-vs"><div class="sp-stat win"><div class="lbl">The question</div>'
+        '<div class="det" style="font-size:1rem;color:var(--text-primary,#f4f4f4)">Has anyone changed this digital '
+        "painting, even by one pixel you could never see? And if so, where?</div></div>"
+        '<div class="sp-stat win"><div class="lbl">Our answer</div>'
+        '<div class="det" style="font-size:1rem;color:var(--text-primary,#f4f4f4)">Give every small patch of the painting '
+        "a fingerprint made for a quantum computer, then compare the original's fingerprints with the copy's using a "
+        "quantum test called the <b>SWAP test</b>. A changed patch makes the test fire; a heatmap shows where.</div>"
+        "</div></div>", unsafe_allow_html=True)
+    st.caption("This is a research demo of encoding and measurement, run on a simulator of a perfect quantum computer. "
+               "It is not a security product; see “What this is not” below.")
+
+    st.markdown("#### Try it in 60 seconds")
+    with st.container(border=True):
+        st.markdown(
+            "1. **Sidebar:** keep any artwork and the encoding **strict**.\n"
+            "2. **2 · Tamper:** press **Surprise me**. It changes one colour value of one pixel by 1 (out of 255) "
+            "at a hidden spot. Nobody can see that.\n"
+            "3. **3 · Verify:** click where you think the edit is, then press **Verify**.\n"
+            f"4. **The result:** `CHANGE DETECTED`, and the heatmap marks the one changed patch out of {tiles:,}. "
+            f"A changed patch makes the test fire about half the time (p1 = {p1:.2f} for this kind of edit), so the "
+            f"first alarm usually comes within about {fs['strict']['first']:.0f} tries, and "
+            f"{fs['strict']['need99']} tries catch it 99% of the time.\n"
+            "5. Press **▶ Play shots** to watch the test run one try at a time.")
+
+    st.markdown("#### What's going on, without the maths")
+    st.markdown('<div class="sp-steps">' + "".join(
+        f'<div class="sp-step"><div class="num">{n}</div><div class="ttl">{t}</div><div class="txt">{txt}</div></div>'
+        for n, t, txt in [
+            ("1", "Same size for everyone", f"Every image is resized to {cfg.CANON}×{cfg.CANON} pixels the same way "
+             "on every computer, so the original and the copy are compared fairly."),
+            ("2", "Cut into patches", f"The image is cut into {tiles:,} small patches of {cfg.STRICT_TILE}×"
+             f"{cfg.STRICT_TILE} pixels. Each patch is {info['n']} bits (ones and zeros)."),
+            ("3", "Spread out any change", f"Each patch goes through an error-correcting code that stretches its "
+             f"{info['n']} bits to {info['m']:,}. Change even one bit and {lo:,}–{hi:,} of the {info['m']:,} bits "
+             "flip. That is what makes a tiny edit easy to catch."),
+            ("4", "Make it quantum", f"The {info['m']:,} bits become the + and − signs of a {cfg.STRICT_Q}-qubit "
+             f"quantum state (a state of {cfg.STRICT_Q} qubits has 2^{cfg.STRICT_Q} = {info['m']:,} amplitudes, one sign each). That state is the "
+             "patch's fingerprint."),
+            ("5", "Compare with the SWAP test", "Each try (a “shot”) gives 0 or 1. On a perfect quantum computer an "
+             "unchanged patch never gives 1; a changed patch gives 1 about half the time. One 1 flags the patch."),
+        ]) + "</div>", unsafe_allow_html=True)
+
+    st.markdown("#### Experiments you can run")
+    st.markdown(
+        "| Change this | Where | What you should see |\n|---|---|---|\n"
+        f"| **Shots per tile** down to 1 | Sidebar, strict | One try catches a changed patch only about "
+        f"{1 - miss1:.0%} of the time, so Verify sometimes says `NO CHANGE DETECTED`. That is why “no change "
+        f"detected” is never proof. At the default {cfg.DEFAULT_SHOTS} tries the miss chance for that patch is "
+        f"about {miss_default:.0e}. |\n"
+        "| **Seed** | Sidebar | Same seed, same random tries and the same hidden Surprise spot. Change it to re-roll. |\n"
+        f"| **Encoding: perceptual** | Sidebar | Compares a coarse summary of {cfg.PERCEPTUAL_GRID ** 2} big regions "
+        f"(a {cfg.PERCEPTUAL_BITS}-bit “perceptual hash” each) instead of exact pixels. A one-pixel edit is ignored by "
+        "design (`NO CONTENT CHANGE DETECTED`); a pasted patch or text is often flagged; a JPEG re-save usually "
+        "is not. Small edits such as short text can be missed. |\n"
+        f"| **Encoding: frqi** | Sidebar | The textbook way: pixels as angles, no code. The same one-pixel edit "
+        f"then needs about {fs['frqi']['need99']:,} tries for 99% detection instead of {fs['strict']['need99']}. |\n"
+        "| **Other edit tools** | 2 · Tamper | Brightness or contrast changes many pixels, so strict flags most "
+        "patches; Patch, Text and Splice light up only where you edited. |\n"
+        "| **Compare encodings** | 3 · Verify | The same edit through all three encodings, side by side. |\n"
+        "| **Run on Qiskit Aer** | 3 · Verify | Builds the actual SWAP-test circuit for one patch and simulates it; "
+        "its estimate should match the exact prediction within its error bar. |\n"
+        "| **Register / Check a file** | 3 · Verify | Save the original's fingerprint, then check a copy against "
+        "it without the original image. |\n"
+        "| **Challenge a friend** | 2 · Tamper | Hide your own edit and let a friend race the SWAP test. |")
+
+    st.markdown("#### Words you will see")
+    with st.container(border=True):
+        st.markdown(
+            "| Term | Meaning |\n|---|---|\n"
+            "| **Bit** | A 0 or a 1. Images are stored as bits. |\n"
+            "| **Qubit** | The quantum version of a bit. The state of *q* qubits is described by 2^*q* numbers (amplitudes). |\n"
+            "| **Quantum state** | What a group of qubits holds. Ours is a list of + and − signs, one per codeword bit. |\n"
+            "| **Error-correcting code / codeword** | A fixed recipe that turns a short bit string into a long one so "
+            "that any two different inputs end up very different. The long result is the codeword. |\n"
+            "| **Fingerprint** | All the patches' quantum states for one image. |\n"
+            "| **Tile / patch, region** | A 4×4-pixel patch (strict, frqi) or a 64×64-pixel region (perceptual): the unit "
+            "that gets its own test. |\n"
+            "| **SWAP test** | A small quantum circuit that compares two quantum states without reading them out. It "
+            "gives 0 or 1; identical states never give 1. |\n"
+            "| **Shot** | One run of the test: one 0-or-1 answer. More shots, more confidence. |\n"
+            "| **Overlap** | How similar two states are: 1 means identical, 0 means completely different (only its square matters for the test). |\n"
+            "| **p1** | The chance that one shot gives 1: (1 − overlap²) / 2. |\n"
+            "| **Encoding** | How pixels are turned into a quantum state: strict, perceptual or frqi. |\n"
+            "| **Threshold** | For perceptual mode: how similar regions must stay to count as unchanged "
+            f"(estimated overlap² ≥ {cfg.PERCEPTUAL_F_THRESHOLD}). |\n"
+            "| **Seed** | A number that fixes the random results, so a run can be repeated exactly. |\n"
+            "| **Exact backend** | The default: computes each patch's p1 exactly and draws the shots from it, matching "
+            "in distribution what a perfect quantum computer would give. |\n"
+            "| **Qiskit, Aer** | Qiskit is the open-source quantum programming toolkit; Aer is its simulator. |\n"
+            "| **Noise, hardware** | Real quantum chips make errors. On small toy versions, identical states then "
+            "give 1s too, so a real device needs a threshold (Results, F6 simulated noise and F8 a real chip). |\n"
+            "| **Miss bound** | The chance of missing a patch that did change. It is not the chance the image is "
+            "unchanged. |\n"
+            "| **Heuristic** | A bound proven for a random code; ours is a fixed pseudo-random code, so we treat it as a "
+            "well-tested rule of thumb and check it with measurements. |")
+
+    q1, q2 = st.columns(2, gap="large")
+    q1.markdown(
+        '<div class="cds-notice warning" style="margin-top:0"><b>What this is not</b><ul>'
+        "<li>Not a secure signature or watermark: anyone can make a fingerprint, and a strict fingerprint can be "
+        "decoded back to the image.</li>"
+        "<li>Not faster than ordinary computers here: a classical hash (SHA-256) does this job better in practice.</li>"
+        "<li>“No change detected” is not proof that nothing changed.</li>"
+        "<li>The full 11-qubit test is far too big for today's quantum chips; only small toy versions ran on a real "
+        "one.</li></ul></div>", unsafe_allow_html=True)
+    with q2.container(border=True):
+        st.markdown(
+            "**Read more**\n\n"
+            "- Buhrman, Cleve, Watrous and de Wolf, *Quantum fingerprinting* (2001), the idea we build on: "
+            "[arXiv:quant-ph/0102001](https://arxiv.org/abs/quant-ph/0102001)\n"
+            "- Garcia-Escartin and Chamorro-Posada, *SWAP test and Hong-Ou-Mandel effect are equivalent* (2013): "
+            "[arXiv:1303.6814](https://arxiv.org/abs/1303.6814)\n"
+            "- [Qiskit](https://github.com/Qiskit/qiskit), the toolkit we use\n"
+            "- In this app: **How it works** for the maths, **Results** for every experiment and figure.")
 
 
 # ---------------------------------------------------------------- 1 · Fingerprint
@@ -867,13 +998,15 @@ def tab_results():
 
 
 with tabs[0]:
-    tab_fingerprint()
+    tab_start()
 with tabs[1]:
-    tab_tamper()
+    tab_fingerprint()
 with tabs[2]:
+    tab_tamper()
+with tabs[3]:
     tab_verify()
     check_a_file()
-with tabs[3]:
-    tab_how()
 with tabs[4]:
+    tab_how()
+with tabs[5]:
     tab_results()
