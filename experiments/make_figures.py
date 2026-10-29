@@ -754,7 +754,7 @@ def write_captions_json() -> None:
     """Write captions.json for the app and README."""
     captions = {
         "detection_vs_shots.png": "Image detection probability versus SWAP-test shots per tile in strict mode across edit categories, comparing exact analytical curves with empirical binomial trials and Wilson 95% confidence intervals against single-tile reference bounds.",
-        "encodings_shots_needed.png": "Shots needed to reach 99% image detection probability across 22 conditions (one control and 21 non-control cases), comparing strict mode, perceptual mode (historical median hash at t=0.52), and the textbook FRQI baseline on held-out artworks.",
+        "encodings_shots_needed.png": "Shots needed to reach 99% image detection probability across 22 conditions (one control and 21 non-control cases), comparing strict mode, perceptual mode (calibrated median hash at t=0.65), and the textbook FRQI baseline on held-out artworks.",
         "collisions.png": "Empirical overlap distributions between tile pairs of distinct artworks: among 1,000,000 sampled distinct-content strict tile pairs, maximum absolute overlap was 0.1084 (within the 0.508 heuristic bound), while perceptual mode matched for 345/26,880 distinct-content pairs (1.283%).",
         "perceptual_roc.png": "Perceptual mode receiver operating characteristic (ROC) curves sweeping threshold t at 4,096 shots across flat-region cutoffs (sigma), highlighting the chosen operating point (sigma=25.0, t=0.65) and detection separation versus shot budget.",
         "localisation.png": "Tamper localisation grid for four content edits (red patch, copy-move splice, donor splice, and text), displaying flagged 4×4 tiles on an alert heatmap without reading the underlying artwork.",
