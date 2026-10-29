@@ -19,7 +19,7 @@ build/
 !.env.example
 qiskit-ibm.json
 
-# AI assistants' private working notes (queues, scratch)
+# Local working notes
 .ai/
 
 # OS / editor
