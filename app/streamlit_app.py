@@ -17,6 +17,7 @@ import io  # noqa: E402
 import json  # noqa: E402
 import os  # noqa: E402
 import time  # noqa: E402
+from datetime import datetime, timedelta, timezone  # noqa: E402
 
 import numpy as np  # noqa: E402
 import plotly.graph_objects as go  # noqa: E402
@@ -24,6 +25,7 @@ import streamlit as st  # noqa: E402
 from streamlit_image_coordinates import streamlit_image_coordinates  # noqa: E402
 
 import core  # noqa: E402
+from certificate import make_certificate  # noqa: E402
 import swapprint as sp  # noqa: E402
 
 st.set_page_config(page_title="SwapPrint", page_icon="🔍", layout="wide")
@@ -31,6 +33,7 @@ st.set_page_config(page_title="SwapPrint", page_icon="🔍", layout="wide")
 AER_ENABLED = os.environ.get("SWAPPRINT_NO_AER", "") != "1"
 ACCENT_HEX = "#E841D6"
 CANON = sp.config.CANON
+IST = timezone(timedelta(hours=5, minutes=30), "IST")
 
 st.markdown(
     f"""
@@ -389,7 +392,8 @@ def run_verify():
     fa, fb = fp_of(base, mode), fp_of(edited, mode)
     t0 = time.perf_counter()
     cmp = sp.compare(fa, fb, shots=shots, backend="exact", seed=seed)
-    ss.verify = {"key": (base_sha, edited_sha, mode, shots, seed), "cmp": cmp, "seconds": time.perf_counter() - t0}
+    ss.verify = {"key": (base_sha, edited_sha, mode, shots, seed), "cmp": cmp, "seconds": time.perf_counter() - t0,
+                 "when": datetime.now(IST)}
     ss.aer = None
     ss.aer_pick = None
     if ss.game:
@@ -487,6 +491,11 @@ def tab_verify():
         z1.image(za, caption="original", output_format="PNG", width="stretch")
         z2.image(zb, caption="edited", output_format="PNG", width="stretch")
         st.caption(core.confidence_text(cmp))
+        cert = make_certificate(base, edited, cmp, artwork_title=source_note,
+                                when=v["when"], heatmap_img=core.heatmap(edited, cmp, 512))
+        st.download_button("Download a verification record (PNG)", cert, file_name=f"swapprint_record_{mode}.png",
+                           mime="image/png", help="A shareable card with the verdict, mode, shots, miss bound, date and "
+                           "thumbnails. An integrity record, not a signature.")
 
     live_swap_test(cmp)
     aer_panel(cmp)
