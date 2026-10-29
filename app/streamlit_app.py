@@ -113,64 +113,48 @@ TOKENS = {
 }
 
 
-def theme_mode() -> str:
-    """'light' or 'dark', following the viewer's Streamlit theme (⋮ → Settings); dark if unknown."""
-    try:
-        return "light" if (st.context.theme.type or "dark") == "light" else "dark"
-    except Exception:  # noqa: BLE001 - st.context.theme is missing in bare mode (tests)
-        return "dark"
+def _tokens(mode: str) -> str:
+    return "".join(f"--{k}: {v};" for k, v in TOKENS[mode].items())
 
 
 @st.cache_resource(show_spinner=False)
-def pixel_css(mode: str) -> str:
-    """The light or dark token block, then app/pixel.css (which only reads the tokens)."""
+def figure_notes() -> dict:
+    """Plain-language titles and summaries for the Results figures (app/figure_notes.json); {} if missing."""
+    try:
+        return json.loads((Path(__file__).resolve().parent / "figure_notes.json").read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return {}
+
+
+@st.cache_resource(show_spinner=False)
+def pixel_css() -> str:
+    """Both token sets, then app/pixel.css (which only reads the tokens). app/page.js marks
+    <html data-sp-mode="light|dark"> from the page's real background; before it runs, the system preference decides."""
     try:
         css = (Path(__file__).resolve().parent / "pixel.css").read_text(encoding="utf-8")
     except OSError:
         css = ""
-    return ":root, .stApp {" + "".join(f"--{k}: {v};" for k, v in TOKENS[mode].items()) + "}" + css
+    return (f":root {{{_tokens('dark')}}}"
+            f"@media (prefers-color-scheme: light) {{ :root:not([data-sp-mode=\"dark\"]) {{{_tokens('light')}}} }}"
+            f":root[data-sp-mode=\"light\"] {{{_tokens('light')}}}" + css)
+
+
+@st.cache_resource(show_spinner=False)
+def page_js_component() -> str:
+    """app/page.js, injected once into the app page itself (not the component frame), so it survives reruns."""
+    try:
+        code = (Path(__file__).resolve().parent / "page.js").read_text(encoding="utf-8")
+    except OSError:
+        return ""
+    payload = json.dumps(code).replace("</", "<\\/")
+    return ("<script>const d = window.parent.document;"
+            "if (!d.getElementById('sp-page-js')) { const s = d.createElement('script'); s.id = 'sp-page-js';"
+            f"s.textContent = {payload}; d.head.appendChild(s); }}</script>")
 
 
 st.markdown(f"<style>{_one_line(carbon_css())}</style>", unsafe_allow_html=True)
-st.markdown(f"<style>{_one_line(pixel_css(theme_mode()))}</style>", unsafe_allow_html=True)
-
-# Double-click or double-tap a picture to open (and close) it full screen: presses that picture's own Streamlit
-# full-screen button. Tab names written as [2 · Tamper](#go-tamper) switch tabs. Runs once per page from a hidden
-# component (same origin as the app frame).
-FULLSCREEN_JS = """<script>
-const d = window.parent.document;
-if (!d.__spFullscreen) {
-  d.__spFullscreen = true;
-  const toggle = (t) => {
-    const frame = t && t.closest ? t.closest('[data-testid="stFullScreenFrame"]') : null;
-    if (!frame || !frame.querySelector('[data-testid="stImage"]')) return false;
-    const b = frame.querySelector('[data-testid="stBaseButton-elementToolbar"][aria-label*="ullscreen"]');
-    if (b) { b.click(); return true; }
-    return false;
-  };
-  d.addEventListener('dblclick', (e) => { if (toggle(e.target)) e.preventDefault(); });
-  // in-text tab links: [2 · Tamper](#go-tamper) switches to that tab and scrolls to its top
-  const TABS = {start: 'start here', fingerprint: 'fingerprint', tamper: 'tamper', verify: 'verify',
-                how: 'how it works', results: 'results'};
-  d.addEventListener('click', (e) => {
-    const a = e.target && e.target.closest ? e.target.closest('a[href*="#go-"]') : null;
-    if (!a) return;
-    const want = TABS[a.getAttribute('href').split('#go-')[1]];
-    const tab = [...d.querySelectorAll('[role="tab"]')].find(t => t.innerText.toLowerCase().includes(want));
-    if (!tab) return;
-    e.preventDefault(); e.stopPropagation();
-    tab.click();
-    const main = d.querySelector('[data-testid="stMain"]') || d.querySelector('.stMain');
-    setTimeout(() => (main ? main.scrollTo({top: 0, behavior: 'smooth'}) : tab.scrollIntoView()), 50);
-  }, true);
-  let lastTap = 0;
-  d.addEventListener('touchend', (e) => {
-    const now = Date.now();
-    if (now - lastTap < 320 && toggle(e.target)) { e.preventDefault(); lastTap = 0; } else { lastTap = now; }
-  }, {passive: false});
-}
-</script>"""
-components.html(FULLSCREEN_JS, height=0)
+st.markdown(f"<style>{_one_line(pixel_css())}</style>", unsafe_allow_html=True)
+components.html(page_js_component(), height=0)
 
 
 # ---------------------------------------------------------------- cached work
@@ -337,8 +321,11 @@ with st.sidebar:
     st.divider()
     st.caption(f"swapprint {sp.__version__} · exact backend = analytical sampler, identical in distribution to a "
                f"noiseless SWAP-test circuit on each unit")
-    st.caption("Light or dark mode: ⋮ menu → Settings. Double-click any picture for full screen.")
-    st.markdown('<div class="sp-credit">SwapPrint · team sardines. Type: Departure Mono by Helena Zhang (SIL OFL 1.1). '
+    st.markdown('<div class="sp-modes"><a class="sp-mode light" href="#theme-light">☀ Light</a>'
+                '<a class="sp-mode dark" href="#theme-dark">☾ Dark</a></div>', unsafe_allow_html=True)
+    st.caption("Double-click any picture for full screen.")
+    st.markdown('<div class="sp-credit">SwapPrint · team sardines. Type: Departure Mono by Helena Zhang (headings) and '
+                'IBM Plex Mono (text), both SIL OFL 1.1. '
                 'Colours: Carbon Design System tokens (Apache-2.0). Not made or endorsed by IBM.</div>',
                 unsafe_allow_html=True)
 
@@ -1074,6 +1061,10 @@ def tab_results():
             return {}
 
     core_caps = captions("core_captions.json")
+    simple = st.toggle("Simple explanations", value=True, key="results-simple",
+                       help="On: a plain-language summary above each figure, the full caption one click away. "
+                            "Off: the authors' full technical captions only.")
+    notes = figure_notes() if simple else {}
     # each figure once; Darshan's core_* figures keep the caption from his own core_captions.json
     sections = [("Tamper experiments", {k: v for k, v in captions("captions.json").items() if k not in core_caps}),
                 ("Circuits and noise", core_caps)]
@@ -1084,8 +1075,16 @@ def tab_results():
             continue
         st.markdown(f"#### {heading}")
         for png, caption in figs:
+            note = notes.get(png)
+            if note:  # a plain-language title and summary first; the authors' full caption one click away
+                st.markdown(f"**{note['title']}**")
+                st.markdown(f'<div class="sp-plain">{note["plain"]}</div>', unsafe_allow_html=True)
             st.image(str(core.FIG_DIR / png), output_format="PNG", width="stretch")
-            st.caption(caption)
+            if note:
+                with st.expander("Technical details (full caption)"):
+                    st.caption(caption)
+            else:
+                st.caption(caption)
             st.divider()
             shown += 1
     if not (core.FIG_DIR / "captions.json").exists():

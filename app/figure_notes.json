@@ -1,0 +1,38 @@
+{
+  "detection_vs_shots.png": {
+    "title": "More tries catch more edits",
+    "plain": "In strict mode, each line shows how often an edited image is caught as the shots (tries) per patch increase. Detection climbs to near-certain for every kind of edit, while the unedited control stays at zero. Exact math and sampled trials agree."
+  },
+  "encodings_shots_needed.png": {
+    "title": "Tries needed by each encoding",
+    "plain": "Dots show how many shots (tries) it takes to catch a change 99% of the time, for 22 cases on paintings not used for tuning. Strict needs few tries for every real change; perceptual never reacts to tiny pixel edits; FRQI often needs far more."
+  },
+  "collisions.png": {
+    "title": "Can different artworks look alike?",
+    "plain": "Left: in 1,000,000 sampled pairs of patches from different artworks, strict-mode codes always stayed far apart, well inside a heuristic bound. Right: perceptual mode's coarse hash gave identical results for 345 of 26,880 different-content region pairs (1.283%), mostly flat areas."
+  },
+  "perceptual_roc.png": {
+    "title": "Tuning perceptual mode's sensitivity",
+    "plain": "Left: each curve trades catching real content edits against false alarms on harmless edits as the match threshold changes; a dot marks the chosen setting. Right: with that setting, extra shots (tries) barely change how often each kind of edit is flagged."
+  },
+  "localisation.png": {
+    "title": "Pinpointing where the image changed",
+    "plain": "For four edits to a wave painting (a red square, a block copied and moved, a piece pasted from another painting, and added text), the right column highlights just the 4x4-pixel patches that changed, found from test results without reading the artwork itself."
+  },
+  "core_validation.png": {
+    "title": "Simulated circuits match the math",
+    "plain": "Each point compares the exact predicted chance of the test outputting 1 with the rate from running the circuits on a noiseless simulator. Points sit on the diagonal, so the circuits behave as the math predicts; this says nothing about noisy hardware."
+  },
+  "core_noise.png": {
+    "title": "Simulated noise breaks the zero rule",
+    "plain": "Using a simulated IBM noise model (FakeFez) on small toy states: identical copies no longer always give 0, so a cutoff is needed; circuit size grows fast as qubits increase; and tiny per-patch false alarms add up across 4096 patches."
+  },
+  "core_perceptual_ablation.png": {
+    "title": "Why the default perceptual rule stays",
+    "plain": "Compares the default perceptual rule (v0.2) with a tweak called dead-zone. The tweak fixed a weakness on flat synthetic test images, but on paintings not used for tuning it raised false alarms on harmless edits from 2.78% to 14.09%, so v0.2 stays."
+  },
+  "core_hardware.png": {
+    "title": "Toy test on a real IBM chip",
+    "plain": "On ibm_marrakesh, a real IBM chip, with toy states only (1 to 3 qubits; the full 11-qubit test remains far beyond today's hardware): identical pairs sometimes gave 1 because of noise, so a cutoff is needed. Simulated FakeFez results are shown for comparison."
+  }
+}

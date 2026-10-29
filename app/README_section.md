@@ -45,7 +45,7 @@ Streamlit (Apache-2.0), Plotly (MIT), streamlit-image-coordinates (MIT), Pillow 
 in `data/artworks/SOURCES.md`.
 
 **Design and type.** The app follows the [Carbon Design System](https://carbondesignsystem.com) (Apache-2.0; tokens
-from `swapprint/style.py`, CSS in `docs/style/carbon.css`). App type: Departure Mono by Helena Zhang (SIL Open Font License 1.1; licence in `app/static/fonts/DepartureMono-OFL.txt`). SwapPrint is an independent
+from `swapprint/style.py`, CSS in `docs/style/carbon.css`). App type: Departure Mono by Helena Zhang for headings and IBM Plex Mono for text (both SIL Open Font License 1.1; licences in `app/static/fonts/DepartureMono-OFL.txt` and `app/static/fonts/OFL.txt`). SwapPrint is an independent
 project by team sardines and is not made or endorsed by IBM.
 
 Screenshots: `app/screenshots/`.

@@ -4,12 +4,20 @@
    synthetic bold. Departure Mono is drawn on an 11 px grid: big sizes are multiples of 11 so edges stay crisp. */
 
 :root {
-  --font-sans: "Departure Mono", ui-monospace, Menlo, Consolas, monospace;
-  --font-mono: "Departure Mono", ui-monospace, Menlo, Consolas, monospace;
+  --font-sans: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;     /* body: terminal monospace */
+  --font-mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+  --font-pixel: "Departure Mono", "IBM Plex Mono", ui-monospace, monospace;  /* headings and display numbers */
   --px: 3px;                                   /* one "pixel" of the border art */
 }
-.stApp { font-synthesis: none; -webkit-font-smoothing: antialiased; }
-.stApp b, .stApp strong { font-weight: 400; color: var(--accent-text); }
+.stApp { -webkit-font-smoothing: antialiased; }
+.stApp b, .stApp strong { font-weight: 600; color: var(--accent-text); }
+
+/* pixel type only where it is display type */
+.stApp h1, .stApp h2, .stApp h3, .stApp h4, .stApp h5, .stApp h6, .sp-title, [data-baseweb="tab"],
+.sp-hero .big, .sp-hero .kicker, .sp-badge b, .sp-step .num, .sp-stat .big, .verdict, .sp-card .lbl, .sp-mode {
+  font-family: var(--font-pixel) !important; font-synthesis: none;
+}
+.stApp h1 *, .stApp h2 *, .stApp h3 *, .stApp h4 *, [data-baseweb="tab"] * { font-family: var(--font-pixel) !important; }
 ::selection { background: var(--accent); color: #ffffff; }
 
 /* a faint pixel grid behind the page, like graph paper */
@@ -81,15 +89,15 @@ hr { border: 0; height: var(--px); background: repeating-linear-gradient(90deg, 
 .sp-step:hover { background: var(--layer-hover-01); }
 .sp-stat { border-left: 0 !important; }
 .sp-stat.win, .sp-card.win { --frame: var(--accent); }
-.sp-step .num, .sp-stat .big { font-family: var(--font-mono) !important; font-weight: 400 !important; color: var(--accent-text) !important; }
+.sp-step .num, .sp-stat .big { font-family: var(--font-pixel) !important; font-weight: 400 !important; color: var(--accent-text) !important; }
 .sp-step .num { font-size: 33px !important; }
 .sp-stat .big { font-size: 44px !important; }
 .sp-stat:not(.win) .big { color: var(--text-primary) !important; }
-.sp-step .ttl { font-weight: 400 !important; color: var(--text-primary) !important; font-size: 17px !important; }
+.sp-step .ttl { font-weight: 600 !important; color: var(--text-primary) !important; font-size: 17px !important; }
 .sp-step .txt { color: var(--text-secondary) !important; font-size: 13px !important; letter-spacing: 0;
   word-break: normal; overflow-wrap: normal; hyphens: auto; -webkit-hyphens: auto; }
 .sp-step .ttl { hyphens: auto; -webkit-hyphens: auto; word-break: normal; overflow-wrap: normal; }
-.sp-stat .lbl { font-weight: 400 !important; color: var(--text-secondary) !important; }
+.sp-stat .lbl { font-weight: 500 !important; color: var(--text-secondary) !important; }
 .sp-stat .det { color: var(--text-helper) !important; }
 .sp-step .viz { background: var(--viz-bg) !important; }
 
@@ -111,13 +119,27 @@ hr { border: 0; height: var(--px); background: repeating-linear-gradient(90deg, 
 
 /* tables (glossary, experiments) */
 .stApp table { border-collapse: collapse; }
-.stApp th { font-weight: 400 !important; color: var(--accent-text); }
+.stApp th { font-weight: 600 !important; color: var(--accent-text); }
 
 /* full screen on double-click: make the picture toolbar visible without hovering (touch screens) */
 @media (hover: none) {
   [data-testid="stFullScreenFrame"]:has([data-testid="stImage"]) [data-testid="stElementToolbar"] { opacity: 1 !important; }
 }
 [data-testid="stImage"] img { cursor: zoom-in; }
+
+/* Results: plain-language summary above each figure */
+.sp-plain { font-size: 17px; line-height: 1.55; color: var(--text-primary); max-width: 900px; margin: 4px 0 12px 0;
+  padding-left: 12px; border-left: var(--px) solid var(--accent); }
+
+/* sidebar Light / Dark switch (app/page.js drives Streamlit's own theme setting) */
+.sp-modes { display: flex; gap: 10px; margin: 4px 0 8px 0; }
+.sp-mode { flex: 1; text-align: center; padding: 8px 0; border: 2px solid var(--border-strong); color: var(--text-primary) !important;
+  text-decoration: none !important; font-size: 15px; box-shadow: var(--px) var(--px) 0 0 var(--border-subtle); }
+.sp-mode:hover { border-color: var(--accent); }
+:root[data-sp-mode="light"] .sp-mode.light, :root[data-sp-mode="dark"] .sp-mode.dark,
+:root:not([data-sp-mode]) .sp-mode.dark {
+  background: var(--accent); border-color: var(--accent); color: #ffffff !important; box-shadow: var(--px) var(--px) 0 0 var(--accent-shadow);
+}
 
 /* the hidden component that adds double-click full screen takes no space */
 [data-testid="stElementContainer"]:has(iframe[height="0"]), .element-container:has(iframe[height="0"]) { display: none; }

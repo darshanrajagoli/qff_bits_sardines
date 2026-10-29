@@ -1,6 +1,7 @@
 # SwapPrint Streamlit theme: pixel-art look on the Carbon colour tokens, accent = q-bits.in purple.
-# Type: Departure Mono by Helena Zhang (SIL OFL 1.1, app/static/fonts/DepartureMono-OFL.txt) for all app text;
-# formulas stay in KaTeX (LaTeX). Two modes: [theme.light] and [theme.dark]; viewers switch in ⋮ → Settings.
+# Type: Departure Mono by Helena Zhang (SIL OFL 1.1, app/static/fonts/DepartureMono-OFL.txt) for headings and
+# display numbers; IBM Plex Mono (SIL OFL 1.1, app/static/fonts/OFL.txt) for body text; formulas stay in KaTeX.
+# Two modes: [theme.light] and [theme.dark]; the sidebar Light/Dark switch (app/page.js) or ⋮ menu changes them.
 # Colour tokens: Carbon v11 white / g100 (@carbon/themes 11.84.0, Apache-2.0). Fonts are served from app/static/
 # (server.enableStaticServing). Departure Mono has a single weight: headings use size, not bold.
 
@@ -8,9 +9,9 @@
 primaryColor = "#8a3ffc"                 # q-bits.in --qiskit-violet = Carbon Purple 60
 baseRadius = "none"                      # square, pixel corners
 buttonRadius = "none"
-font = "Departure Mono"
-headingFont = "Departure Mono"
-codeFont = "Departure Mono"
+font = "IBM Plex Mono"                   # body: a clean terminal monospace
+headingFont = "Departure Mono"           # headings: pixel type
+codeFont = "IBM Plex Mono"
 baseFontSize = 16
 headingFontWeights = [400, 400, 400, 400, 400, 400]
 showWidgetBorder = true
@@ -20,6 +21,30 @@ linkUnderline = true
 family = "Departure Mono"
 url = "app/static/fonts/DepartureMono-Regular.woff2"
 weight = "400"
+style = "normal"
+
+[[theme.fontFaces]]
+family = "IBM Plex Mono"
+url = "app/static/fonts/IBMPlexMono-Regular.ttf"
+weight = "400"
+style = "normal"
+
+[[theme.fontFaces]]
+family = "IBM Plex Mono"
+url = "app/static/fonts/IBMPlexMono-Medium.ttf"
+weight = "500"
+style = "normal"
+
+[[theme.fontFaces]]
+family = "IBM Plex Mono"
+url = "app/static/fonts/IBMPlexMono-SemiBold.ttf"
+weight = "600"
+style = "normal"
+
+[[theme.fontFaces]]
+family = "IBM Plex Mono"
+url = "app/static/fonts/IBMPlexMono-Bold.ttf"
+weight = "700"
 style = "normal"
 
 [theme.dark]
@@ -71,7 +96,7 @@ headless = true
 
 [client]
 showErrorDetails = "none"
-toolbarMode = "minimal"
+toolbarMode = "viewer"                   # keeps the viewer menu (theme switch); hides deploy/rerun/cache
 
 [browser]
 gatherUsageStats = false
