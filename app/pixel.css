@@ -150,6 +150,7 @@ hr { border: 0; height: var(--px); background: repeating-linear-gradient(90deg, 
 
 /* the hidden component that adds double-click full screen takes no space */
 [data-testid="stElementContainer"]:has(iframe[height="0"]), .element-container:has(iframe[height="0"]) { display: none; }
+[data-testid="stElementContainer"]:has(iframe[title="st.iframe"]) { display: none !important; }
 
 /* Start here: a welcome section above the tabs (an expander), centred, with a pixel frame in the accent colour */
 [data-testid="stExpander"]:has(.sp-hero) details { border: 0 !important; margin: var(--px) var(--px) 18px var(--px);
@@ -319,4 +320,6 @@ iframe[title="streamlit_image_coordinates.streamlit_image_coordinates"] { aspect
   [data-testid="stMain"] [data-testid="stImage"] img,
   [data-testid="stMain"] iframe[title="streamlit_image_coordinates.streamlit_image_coordinates"] { width: 100% !important; }
   [data-testid="stMain"] iframe[title="streamlit_image_coordinates.streamlit_image_coordinates"] { display: block; margin-left: auto; margin-right: auto; }
+  /* plotly sizes itself from the on-screen width (80% of the column under the zoom): undo the zoom on its plot */
+  [data-testid="stPlotlyChart"] .plot-container { zoom: 1.25; }
 }

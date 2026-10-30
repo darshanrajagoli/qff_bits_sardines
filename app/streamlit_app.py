@@ -361,7 +361,7 @@ game_on = bool(game and not game["revealed"])
 st.markdown('<div class="sp-title">SwapPrint<span class="sp-cursor"></span></div><br>'
             '<div class="sp-sub">Quantum fingerprints for digital art, checked with a SWAP test</div>',
             unsafe_allow_html=True)
-st.markdown('<div class="lead">Every 4×4 patch of an artwork gets an 11-qubit quantum fingerprint. A SWAP test '
+st.markdown('<div class="lead">In strict mode, every 4×4 patch gets an 11-qubit quantum fingerprint. A SWAP test '
             'compares fingerprints: in the ideal noiseless model an untouched patch never fires, and a typical changed '
             'patch fires about half the time.</div>',
             unsafe_allow_html=True)
@@ -617,7 +617,7 @@ def tab_tamper():
             py, px = core.clamp_box(y, x, size)
             step = {"name": "patch", "params": {"y": py, "x": px, "size": size, "rgb": rgb}}
         elif name == "text":
-            s = st.text_input("Text", "FAKE", max_chars=24) or "FAKE"
+            s = st.text_input("Text", "FAKE", max_chars=24).strip() or "FAKE"
             ty, tx = core.clamp_box(y, x, 12)
             step = {"name": "text", "params": {"s": s, "y": ty, "x": tx}}
         elif name == "copy_move":
@@ -651,10 +651,13 @@ def tab_tamper():
         b2, b3 = st.container(), st.container()
         if b1.button("Apply", type="primary", width="stretch", disabled=game_on):
             try:
-                core.apply_step(edited, step)  # validate before it enters the history
-                ss.history = ss.history + [step]
-                ss.verify = ss.aer = ss.game = None
-                st.rerun()
+                result = core.apply_step(edited, step)
+                if np.array_equal(result, edited):
+                    st.warning("That edit changes no pixels here. Move the spot or change the settings.")
+                else:
+                    ss.history = ss.history + [step]
+                    ss.verify = ss.aer = ss.game = None
+                    st.rerun()
             except ValueError as exc:
                 st.warning(f"That edit doesn't fit: {exc}")
         if b2.button("Surprise me", width="stretch", help="A random invisible edit at a hidden spot: then "
@@ -665,8 +668,9 @@ def tab_tamper():
             ss.game = {"kind": "surprise", "guess": None, "revealed": False}
             ss.verify = ss.aer = None
             st.rerun()
-        if b3.button("Challenge a friend", width="stretch", disabled=not ss.history or game_on,
-                     help="Hide your edits, then hand over: your friend guesses in 3 · Verify, against the SWAP test."):
+        if b3.button("Challenge a friend", width="stretch", disabled=np.array_equal(edited, base) or game_on,
+                     help="Make an edit that changes pixels to enable a challenge. Hide your edits, then hand over: "
+                          "your friend guesses in 3 · Verify, against the SWAP test."):
             ss.game = {"kind": "challenge", "guess": None, "revealed": False}
             ss.verify = ss.aer = None
             st.rerun()
@@ -757,7 +761,8 @@ def tab_verify():
     word = core.UNIT_WORD[mode]
     st.markdown(f'<div class="verdict {"hit" if hit else "miss"}">{core.verdict(cmp)}</div>'
                     f'<div class="lead">{core.summary_line(cmp)}</div>'
-                    f'<div class="fine">{cmp.shots:,} shots per {word} · {cmp.flagged.size:,} {word}s · compared on '
+                    f'<div class="fine">{cmp.shots:,} {"shot" if cmp.shots == 1 else "shots"} per {word} · '
+                    f'{cmp.flagged.size:,} {word}s · compared on '
                     f'the canonical 256×256 image · exact backend · {v["seconds"] * 1000:.0f} ms</div>',
                     unsafe_allow_html=True)
     g = ss.game
@@ -765,7 +770,7 @@ def tab_verify():
         if hit and mode != "perceptual":
             first_hit = cmp.first_detection.get(core.most_suspicious(cmp))
             if first_hit:
-                say(f"Found it. The first 1 came on shot {first_hit}.", "hit")
+                say(f"Found it. On the most suspicious {word}, the first 1 came on shot {first_hit}.", "hit")
         elif not hit:
             say("No alarm. That isn't proof that nothing changed.", "quiet")
 
@@ -773,11 +778,13 @@ def tab_verify():
     if g and g["revealed"] and box:
         first = cmp.first_detection.get(core.most_suspicious(cmp))
         if cmp.tampered and cmp.mode != "perceptual" and first:
-            found = f"The SWAP test found it: first 1 on shot {first} of {cmp.shots}."
+            found = (f"The SWAP test found it: on the most suspicious {word}, "
+                     f"the first 1 came on shot {first} of {cmp.shots}.")
         elif cmp.tampered:
             found = "The SWAP test flagged a change."
         elif cmp.mode == "strict":
-            found = f"The SWAP test missed it in {cmp.shots} shots: try more shots or another seed."
+            found = (f"The SWAP test missed it in {cmp.shots} {'shot' if cmp.shots == 1 else 'shots'}: "
+                     "try more shots or another seed.")
         elif cmp.mode == "perceptual":
             found = ("Perceptual mode did not flag it, by design: it ignores one-pixel edits. Switch to strict."
                      if g["kind"] == "surprise" else
@@ -812,9 +819,10 @@ def tab_verify():
         fp = fp_of(base, mode)
         same = cmp.p1.flat[unit] == 0
         why = ("picked by you" if ss.aer_pick is not None else
-               "an example tile: no fingerprint difference anywhere" if same else "most suspicious by the exact overlap")
+               f"an example {word}: no fingerprint difference anywhere" if same else "most suspicious by the exact overlap")
         st.markdown(f"**{word.title()} (row {r}, col {c})**, {why}: overlap {cmp.overlap.flat[unit]:.7f}, "
-                    f"p1 {cmp.p1.flat[unit]:.3g}, {int(cmp.ones.flat[unit])} ones in {cmp.shots:,} shots")
+                    f"p1 {cmp.p1.flat[unit]:.3g}, {int(cmp.ones.flat[unit])} ones in {cmp.shots:,} "
+                    f"{'shot' if cmp.shots == 1 else 'shots'}")
         za, zb = core.zoom_pair(base, edited, unit, cmp.grid, fp.unit_px, 230,
                                 ring=core._rgb(PURPLE) if same else core.ACCENT)
         z1, z2 = st.columns(2)
@@ -852,11 +860,10 @@ def live_swap_test(cmp):
     first = cmp.first_detection.get(u)
     st.markdown(f"Shots of the most suspicious {core.UNIT_WORD[cmp.mode]} (row {r}, col {c}), one by one. "
                 f"Grey = 0, magenta = 1. The first 1 is outlined.")
-    _, b1, b2, _ = st.columns([2, 1, 1, 2])  # centred pair
+    _, b1, _ = st.columns([1, 1, 1])
     play = b1.button("▶ Play shots", key="play", width="stretch")
-    show_all = b2.button("Show all", key="showall", width="stretch")
     box = st.empty()
-    limit = 100 if cmp.mode == "perceptual" else len(trace)
+    limit = 64
 
     def draw(n):
         shown = trace[:min(n, limit)]
@@ -868,7 +875,8 @@ def live_swap_test(cmp):
         more = f"<div class='fine'>…and {n - limit:,} more shots not drawn</div>" if n > limit else ""
         box.markdown(
             f'<div class="shots">{cells}</div>{more}'
-            f'<div class="sp-shotsum">After <b>{m:,}</b> shots: <b>{k:,}</b> ones · p̂1 = {k / m:.3f} · estimated overlap² = '
+            f'<div class="sp-shotsum">After <b>{m:,}</b> {"shot" if m == 1 else "shots"}: <b>{k:,}</b> ones · '
+            f'p̂1 = {k / m:.3f} · estimated overlap² = '
             f'<b>{f:.3f}</b> (95% Wilson interval {lo:.3f} – {hi:.3f}) · exact overlap² = {cmp.overlap.flat[u] ** 2:.4f}'
             + (f' · <b>first 1 on shot {first}</b>' if first and first <= m else "") + '</div>',
             unsafe_allow_html=True)
@@ -881,7 +889,7 @@ def live_swap_test(cmp):
             time.sleep(0.4)
             draw(len(trace))
     else:
-        draw(len(trace) if show_all or not play else 0)
+        draw(len(trace))
 
 
 @st.fragment
@@ -911,7 +919,7 @@ def aer_panel(cmp):
             except RuntimeError as exc:
                 st.warning(f"The circuit run didn't finish: {exc}. The exact result above is unaffected.")
     a = ss.aer
-    if a and a["unit"] == unit:
+    if a and a["unit"] == unit and a["kind"] == kind:
         res = a["res"]
         lo, hi = core.wilson(res["ones"], res["shots"])
         m1, m2, m3, m4 = st.columns(4)
@@ -951,19 +959,19 @@ def compare_encodings():
             "Shots for 99% detection (that unit)": core.fmt_shots(row["shots_99"], row["never"] or "threshold rule"),
             f"Detected (default shots)": f"{'yes' if row['detected'] else 'no'} at {row['shots']:,}",
         })
-    st.dataframe(table, hide_index=True, width="stretch")
+    st.table(table, hide_index=True, width="stretch")
     fig = go.Figure()
     xs = [core.MODE_LABEL[r["mode"]] for r in rows]
     ys = [r["expected_first"] if r["expected_first"] else None for r in rows]
     fig.add_bar(x=xs, y=ys, marker_color=[PURPLE if r["mode"] == "strict" else G100["border-strong-01"]
                                           for r in rows],
                 text=[core.fmt_shots(r["expected_first"], r["never"]) for r in rows], textposition="outside")
-    fig.update_layout(yaxis_type="log", yaxis_title="expected shots to first 1 (log)", height=340,
+    fig.update_layout(autosize=True, yaxis_type="log", yaxis_title="expected shots to first 1 (log)", height=340,
                       margin=dict(l=10, r=10, t=30, b=10), paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
                       # the app's body font (Plex Sans isn't loaded, so it fell back to a serif); no fixed colour, so
                       # Streamlit's chart theme picks readable text for light and dark mode
                       font_family="IBM Plex Mono, ui-monospace, monospace", showlegend=False)
-    st.plotly_chart(fig, width="stretch")
+    st.plotly_chart(fig, width="stretch", config={"responsive": True})
     st.caption("Exact values (1/p1 from the exact overlap), no sampling, except the last column, which is one run at the "
                "seed above. Perceptual mode ignores tiny edits by design and decides by a threshold on overlap², not by "
                "a single 1.")
@@ -1003,7 +1011,8 @@ def check_a_file():
         cmp = sp.compare(ref, cand, seed=seed)
         st.markdown(f'<div class="verdict {"hit" if cmp.tampered else "miss"}">{core.verdict(cmp)}</div>'
                     f'<div class="lead">{core.summary_line(cmp)}</div>'
-                    f'<div class="fine">{core.MODE_LABEL[ref.mode]} · {cmp.shots:,} shots per unit · compared on the '
+                    f'<div class="fine">{core.MODE_LABEL[ref.mode]} · {cmp.shots:,} '
+                    f'{"shot" if cmp.shots == 1 else "shots"} per unit · compared on the '
                     f'canonical 256×256 image{" · " + "; ".join(notes) if notes else ""}</div>', unsafe_allow_html=True)
         st.image(core.heatmap(img, cmp, 420), output_format="PNG", width="stretch")
 

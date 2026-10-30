@@ -311,7 +311,7 @@ def guess_distance(a: np.ndarray, b: np.ndarray, guess: tuple[int, int]) -> floa
 def describe_box(box: tuple[int, int, int, int]) -> str:
     y0, x0, y1, x1 = box
     if (y1 - y0) * (x1 - x0) > 0.5 * sp.config.CANON**2:
-        return "across most of the image (a global edit)"
+        return "across most of the image, a global edit"
     if y1 - y0 == 1 and x1 - x0 == 1:
         return f"at row {y0}, column {x0}"
     return f"in a {y1 - y0}×{x1 - x0} px area at rows {y0}–{y1 - 1}, columns {x0}–{x1 - 1}"
@@ -425,11 +425,12 @@ def summary_line(cmp: sp.Comparison) -> str:
             return f"{n} of {total} regions look different: their estimated overlap² fell below the threshold."
         return f"No region crossed the estimated-overlap² threshold. Visible edits may still have been missed."
     if n == 0:
-        return f"None of the {total:,} {word}s produced a single 1 in {cmp.shots} SWAP-test shots each."
+        return (f"None of the {total:,} {word}s produced a single 1 in {cmp.shots} "
+                f"SWAP-test {'shot' if cmp.shots == 1 else 'shots'} each.")
     u = most_suspicious(cmp)
     r, c = unit_rc(cmp, u)
     first = cmp.first_detection.get(u)
-    when = f", first on shot {first}" if first else ""
+    when = f"; on the most suspicious {word}, the first 1 came on shot {first}" if first else ""
     return (f"{n:,} of {total:,} {word}s read 1 at least once{when}. "
             f"In the ideal noiseless model an untouched {word} has zero chance of reading 1; we flag a {word} "
             f"when a 1 is observed.")
@@ -438,12 +439,14 @@ def summary_line(cmp: sp.Comparison) -> str:
 def confidence_text(cmp: sp.Comparison) -> str:
     if cmp.mode == "strict":
         return (f"An untouched tile can never produce a 1 in a noiseless SWAP test. If a tile had changed, the chance "
-                f"of missing it in {cmp.shots} shots would be at most {cmp.miss_bound:.1e} (heuristic code bound: "
+                f"of missing it in {cmp.shots} {'shot' if cmp.shots == 1 else 'shots'} would be at most "
+                f"{cmp.miss_bound:.1e} (heuristic code bound: "
                 f"p1 ≥ {sp.code_info()['p1_min']:.3f} for every changed tile). This is not the probability that the "
                 f"image is unchanged.")
     if cmp.mode == "perceptual":
         t = sp.config.PERCEPTUAL_F_THRESHOLD
-        return (f"Each region's 64-bit perceptual hash becomes a 6-qubit state. {cmp.shots:,} shots estimate its "
+        return (f"Each region's 64-bit perceptual hash becomes a 6-qubit state. {cmp.shots:,} "
+                f"{'shot estimates' if cmp.shots == 1 else 'shots estimate'} its "
                 f"overlap² with the original; a region is flagged when that estimate falls below {t}. Re-saves and "
                 f"small tone changes flip few hash bits and usually stay above it; pasted or painted content flips "
                 f"many. Edits that preserve the hash's retained bits can pass, and small text on some paintings is "

@@ -126,10 +126,9 @@ def do_step(page: Page, step: dict, base_url: str = "http://localhost:8601") -> 
     elif act == "click_image":
         sel = f'{IMG_IFRAME} >> visible=true >> nth={int(step.get("index", 0))}'
         page.locator(sel).scroll_into_view_if_needed()
-        img = page.frame_locator(sel).locator("img")
-        img.wait_for(state="visible", timeout=15_000)
-        box = img.bounding_box()
-        img.click(position={"x": box["width"] * float(step["x"]), "y": box["height"] * float(step["y"])})
+        page.locator(sel).wait_for(state="visible", timeout=15_000)
+        bb = page.locator(sel).bounding_box()
+        page.mouse.click(bb["x"] + bb["width"] * float(step["x"]), bb["y"] + bb["height"] * float(step["y"]))
     elif act == "scroll_to_text":
         target = visible(page.get_by_text(step["text"]))
         target.wait_for(state="visible", timeout=15_000)
