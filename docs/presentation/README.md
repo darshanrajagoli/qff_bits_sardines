@@ -1,0 +1,25 @@
+# SwapPrint presentation
+
+Ten slides for the team demo and judge discussion:
+
+1. SwapPrint and the artwork
+2. One invisible edit, one flagged patch
+3. The fingerprint construction
+4. What the SWAP test measures
+5. Strict, perceptual and FRQI on the same edit
+6. Painting experiments and ideal Aer checks
+7. Collision evidence
+8. Real IBM hardware on toy states
+9. Practical limits and the SHA-256 baseline
+10. Team and live app
+
+`SwapPrint_v1.pptx` contains editable text, construction labels and the comparison table. Figure images come from
+the saved experiment outputs, with their sources and caveats in the speaker notes. The app screenshot reflects
+Ansh's current interface. The separate seeded encoding comparison uses the frozen keynote example.
+
+`SwapPrint.pdf` is the fixed-layout viewing copy, made from the reviewed slide renders. Use it for reliable
+appearance if IBM Plex is unavailable on the presentation computer. The PPTX uses IBM Plex Sans and IBM Plex Mono
+from `swapprint/fonts/` (SIL Open Font License). Design colours use Carbon tokens (Apache-2.0). The Hokusai artwork
+is public domain, from The Metropolitan Museum of Art, credited in `data/artworks/SOURCES.md`.
+
+This is an independent student project with no IBM endorsement. Hardware results cover q=1–3 toy states only.
