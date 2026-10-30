@@ -22,6 +22,10 @@ video/.venv/Scripts/python.exe video/finish.py --human-manifest video/out/human/
 video/.venv/Scripts/python.exe video/media.py
 ```
 
+Before APP FINAL, a private banner preview can be rendered without changing published media or rebuilding the teaser:
+`video/.venv/Scripts/python.exe video/media.py --hero-only --output .ai/hero_app_style.png`.
+The light banner uses the same dot grid, notched frame and Departure/Plex Mono typography as the app.
+
 Without `--url`, the recorder starts a headless app on port 8601 if needed. It generates deterministic facts with
 the main repository Python environment, warms caches, then captures a clean 3840×2160 take. Each recording replaces
 `video/out/raw`; preserve a wanted take before running it again. Failed actions abort the take. Rendering produces
