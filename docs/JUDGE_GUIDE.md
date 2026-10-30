@@ -45,4 +45,4 @@ The quick tamper command writes a smoke-test subset into the experiment result p
 
 The code is public, linear and unkeyed. It is not a digital signature, secure watermark, or practical replacement for SHA-256. Full-image statistics are simulated; Aer runs selected units; F8 is a separate toy hardware study. State preparation is expensive and independent shots require fresh state copies. The fixed-code 30-shot bound is heuristic. Perceptual mode deliberately tolerates small changes and has measured misses/false alarms. Noise can flag unchanged states, so the noiseless single-1 decision rule does not transfer directly to hardware. A negative finite-shot result is not proof that the image is unchanged.
 
-The [README](../README.md) gives the complete study, setup, asset credits and contribution details.
+The [saved-result audit](RELEASE_AUDIT.md) recounts headline numerators/denominators and distinguishes the pooled controls from held-out perceptual calibration. The [README](../README.md) gives the complete study, setup, asset credits and contribution details.
