@@ -259,3 +259,6 @@ iframe[title="streamlit_image_coordinates.streamlit_image_coordinates"] { aspect
 [data-testid="stMain"] [data-testid="stElementContainer"]:has(> [data-testid="stDownloadButton"]),
 [data-testid="stMain"] [data-testid="stElementContainer"]:has(> .stButton),
 [data-testid="stMain"] [data-testid="stElementContainer"]:has(> .stDownloadButton) { align-self: center; }
+/* Live SWAP test: the row of shots and its running summary are centred too (not the step-5 picture on How it works) */
+[data-testid="stMain"] .shots:not(.sp-step .shots) { justify-content: center; }
+[data-testid="stMain"] .sp-shotsum { text-align: center; margin-bottom: 18px; }

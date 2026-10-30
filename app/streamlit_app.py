@@ -825,9 +825,9 @@ def live_swap_test(cmp):
     first = cmp.first_detection.get(u)
     st.markdown(f"Shots of the most suspicious {core.UNIT_WORD[cmp.mode]} (row {r}, col {c}), one by one. "
                 f"Grey = 0, magenta = 1. The first 1 is outlined.")
-    b1, b2, _ = st.columns([1, 1, 4])
-    play = b1.button("▶ Play shots", key="play")
-    show_all = b2.button("Show all", key="showall")
+    _, b1, b2, _ = st.columns([2, 1, 1, 2])  # centred pair
+    play = b1.button("▶ Play shots", key="play", width="stretch")
+    show_all = b2.button("Show all", key="showall", width="stretch")
     box = st.empty()
     limit = 100 if cmp.mode == "perceptual" else len(trace)
 
@@ -841,7 +841,7 @@ def live_swap_test(cmp):
         more = f"<div class='fine'>…and {n - limit:,} more shots not drawn</div>" if n > limit else ""
         box.markdown(
             f'<div class="shots">{cells}</div>{more}'
-            f'<div>After <b>{m:,}</b> shots: <b>{k:,}</b> ones · p̂1 = {k / m:.3f} · estimated overlap² = '
+            f'<div class="sp-shotsum">After <b>{m:,}</b> shots: <b>{k:,}</b> ones · p̂1 = {k / m:.3f} · estimated overlap² = '
             f'<b>{f:.3f}</b> (95% Wilson interval {lo:.3f} – {hi:.3f}) · exact overlap² = {cmp.overlap.flat[u] ** 2:.4f}'
             + (f' · <b>first 1 on shot {first}</b>' if first and first <= m else "") + '</div>',
             unsafe_allow_html=True)
