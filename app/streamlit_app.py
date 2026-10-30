@@ -13,6 +13,7 @@ import matplotlib  # noqa: E402
 
 matplotlib.use("Agg")  # Streamlit runs scripts off the main thread; the macOS GUI backend crashes there
 
+import html  # noqa: E402
 import io  # noqa: E402
 import logging  # noqa: E402
 import json  # noqa: E402
@@ -282,6 +283,8 @@ with st.sidebar:
     labels["__upload__"] = "Upload your own image…"
     default_art = "hokusai_great_wave.png" if "hokusai_great_wave.png" in options else options[0]
     choice = st.selectbox("Artwork", options, index=options.index(default_art), format_func=labels.get)
+    # the box is a one-line text input that cuts long names off, so the full name sits underneath, wrapped
+    st.markdown(f'<div class="sp-artwork-full">{html.escape(labels[choice])}</div>', unsafe_allow_html=True)
 
     base, source_note = None, ""
     if choice == "__upload__":

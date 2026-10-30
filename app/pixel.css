@@ -141,6 +141,13 @@ hr { border: 0; height: var(--px); background: repeating-linear-gradient(90deg, 
   background: var(--accent); border-color: var(--accent); color: #ffffff !important; box-shadow: var(--px) var(--px) 0 0 var(--accent-shadow);
 }
 
+/* dropdowns (artwork, tool, donor): long names wrap onto a second line instead of being cut off */
+[role="option"][data-rac] { height: auto !important; min-height: 40px; padding-top: 8px !important; padding-bottom: 8px !important; }
+[role="option"][data-rac] [data-item-hl] { height: auto !important; white-space: normal !important; overflow: visible !important;
+  text-overflow: clip !important; overflow-wrap: anywhere; line-height: 1.35; font-size: 14px; }
+[data-testid="stSidebar"] [data-testid="stSelectbox"] input[role="combobox"] { font-size: 14px; text-overflow: ellipsis; }
+.sp-artwork-full { font-size: 13px; line-height: 1.4; color: var(--text-secondary); margin: -6px 0 6px 0; overflow-wrap: anywhere; }
+
 /* the hidden component that adds double-click full screen takes no space */
 [data-testid="stElementContainer"]:has(iframe[height="0"]), .element-container:has(iframe[height="0"]) { display: none; }
 
