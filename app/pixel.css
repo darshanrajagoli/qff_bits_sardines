@@ -280,6 +280,15 @@ iframe[title="streamlit_image_coordinates.streamlit_image_coordinates"] { aspect
 [data-testid="stMain"] .stButton [data-testid="stTooltipHoverTarget"],
 [data-testid="stMain"] .stButton [data-testid="stTooltipHoverTarget"] > button { width: 100%; }
 
+/* tab bar: larger text and taller click targets, still one row inside the column (Ansh) */
+[data-testid="stTab"] p { font-size: 20px !important; line-height: 1.3 !important; }
+[data-testid="stTab"] { padding: 10px 14px !important; }
+@media (max-width: 640px) {
+  [data-testid="stTab"] p { font-size: 15px !important; } [data-testid="stTab"] { padding: 8px 8px !important; }
+  /* the row is wider than a phone: start it at the left so every tab can be scrolled to (centring hid tab 1) */
+  [data-testid="stMain"] [role="tablist"] { justify-content: flex-start !important; }
+}
+
 /* five-step cards, three to a row: the last row (cards 4 and 5) is centred instead of left-aligned */
 @media (min-width: 641px) and (max-width: 1279px) {
   .sp-steps { display: flex !important; flex-wrap: wrap; justify-content: center; }
