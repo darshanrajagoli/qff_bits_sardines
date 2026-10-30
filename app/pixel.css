@@ -223,3 +223,30 @@ label[data-testid="stRadioOption"][data-selected="true"] [data-testid="stMarkdow
 }
 .sp-line.hit { --frame: var(--alert); color: var(--alert-text); }
 .sp-line.quiet { --frame: var(--border-subtle); color: var(--text-secondary); }
+
+/* Centred layout (Ansh): title block, Start here bar, tab bar, headings, paragraphs, captions, game lines and Results
+   notes are centred. Bullet lists, tables and the sidebar's form controls stay left-aligned inside it, for reading. */
+[data-testid="stMain"] .sp-title, [data-testid="stMain"] .sp-sub, [data-testid="stMain"] .lead { text-align: center; }
+[data-testid="stMain"] h1, [data-testid="stMain"] h2, [data-testid="stMain"] h3, [data-testid="stMain"] h4,
+[data-testid="stMain"] h5, [data-testid="stMain"] h6 { text-align: center; }
+[data-testid="stMain"] [data-testid="stMarkdownContainer"] > p { text-align: center; }
+[data-testid="stMain"] [data-testid="stCaptionContainer"], [data-testid="stMain"] [data-testid="stCaptionContainer"] p { text-align: center; }
+[data-testid="stMain"] .sp-line, [data-testid="stMain"] .verdict, [data-testid="stMain"] .fine { text-align: center; }
+[data-testid="stMain"] table { margin-left: auto; margin-right: auto; }
+[data-testid="stMain"] [role="tablist"] { justify-content: center; }
+.sp-plain { text-align: center; margin-left: auto !important; margin-right: auto !important; border-left: 0 !important;
+  padding: 8px 12px 0 12px !important; border-top: var(--px) solid var(--accent); }
+
+/* Start here bar: one tidy centred line; icon, pixel title and text share a baseline */
+[data-testid="stExpander"]:has(.sp-hero) summary { justify-content: center; align-items: center; gap: 10px; }
+[data-testid="stExpander"]:has(.sp-hero) summary [data-testid="stMarkdownContainer"] p { margin: 0; font-size: 16px; line-height: 1.4; text-align: center; }
+[data-testid="stExpander"]:has(.sp-hero) summary strong { font-size: 19px; vertical-align: -1px; }
+[data-testid="stMain"] .sp-title { display: block; text-align: center; }
+[data-testid="stExpander"]:has(.sp-hero) summary > span, [data-testid="stExpander"]:has(.sp-hero) summary > span > div {
+  flex: 0 1 auto !important; justify-content: center; }
+[data-testid="stExpander"]:has(.sp-hero) summary > span, [data-testid="stExpander"]:has(.sp-hero) summary > span > div { width: auto !important; }
+[data-testid="stMain"] [data-testid="stCheckbox"] { width: fit-content; margin-left: auto; margin-right: auto; }
+
+/* clickable pictures (streamlit-image-coordinates) get a fixed-height frame from their full-size image, which left a
+   tall empty gap under them in narrow columns; every one of ours is square, so the frame follows its width */
+iframe[title="streamlit_image_coordinates.streamlit_image_coordinates"] { aspect-ratio: 1 / 1; height: auto !important; }

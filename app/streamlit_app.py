@@ -1119,7 +1119,7 @@ def tab_results():
 
 # Start here sits above the tabs, open on arrival; collapsing it brings the tabs up. ?welcome=closed starts it
 # collapsed (used by the scripted demo recordings).
-with st.expander("**Start here** · new to quantum fingerprints? A two-minute guide, no quantum knowledge needed",
+with st.expander("**Start here** · a two-minute guide, no quantum knowledge needed",
                  expanded=st.query_params.get("welcome") != "closed", icon=":material/explore:"):
     tab_start()
 
