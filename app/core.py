@@ -342,7 +342,8 @@ def unit_rc(cmp_or_grid, unit: int) -> tuple[int, int]:
     return divmod(int(unit), grid[1])
 
 
-def zoom_pair(a: np.ndarray, b: np.ndarray, unit: int, grid, unit_px: int, size: int = 240) -> tuple[Image.Image, Image.Image]:
+def zoom_pair(a: np.ndarray, b: np.ndarray, unit: int, grid, unit_px: int, size: int = 240,
+              ring: tuple = ACCENT) -> tuple[Image.Image, Image.Image]:
     """The unit with one unit of context on each side, from both images, enlarged with crisp pixels and ringed."""
     r, c = unit_rc(grid, unit)
     ctx = unit_px if unit_px < 64 else 0
@@ -354,7 +355,7 @@ def zoom_pair(a: np.ndarray, b: np.ndarray, unit: int, grid, unit_px: int, size:
         s = size / (x1 - x0)
         ImageDraw.Draw(crop).rectangle(
             [(c * unit_px - x0) * s, (r * unit_px - y0) * s, ((c + 1) * unit_px - x0) * s - 1, ((r + 1) * unit_px - y0) * s - 1],
-            outline=ACCENT, width=3,
+            outline=ring, width=3,
         )
         out.append(crop)
     return out[0], out[1]

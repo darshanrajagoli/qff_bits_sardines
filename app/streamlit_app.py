@@ -334,7 +334,7 @@ with st.sidebar:
                f"noiseless SWAP-test circuit on each unit")
     st.markdown('<div class="sp-modes"><a class="sp-mode light" href="#theme-light">☀ Light</a>'
                 '<a class="sp-mode dark" href="#theme-dark">☾ Dark</a></div>', unsafe_allow_html=True)
-    st.caption("Double-click any picture for full screen.")
+    st.caption("Double-click an artwork preview for full screen.")
     st.markdown('<div class="sp-credit">SwapPrint · team sardines. Type: Departure Mono by Helena Zhang (headings) and '
                 'IBM Plex Mono (text), both SIL OFL 1.1. '
                 'Colours: Carbon Design System tokens (Apache-2.0). Not made or endorsed by IBM.</div>',
@@ -580,6 +580,7 @@ def tab_tamper():
     with right.container(border=True):
         st.markdown("**Edit tools**")
         name = st.selectbox("Tool", list(core.TOOLS), format_func=lambda n: core.TOOLS[n][0], key="tool")
+        st.markdown(f'<div class="sp-artwork-full">{html.escape(core.TOOLS[name][0])}</div>', unsafe_allow_html=True)
         step = None
         if name == "pixel":
             ch = st.radio("Channel", [0, 1, 2], format_func=lambda c: "RGB"[c], horizontal=True)
@@ -787,10 +788,13 @@ def tab_verify():
         unit = ss.aer_pick if ss.aer_pick is not None else core.most_suspicious(cmp)
         r, c = core.unit_rc(cmp, unit)
         fp = fp_of(base, mode)
-        why = "picked by you" if ss.aer_pick is not None else "most suspicious by the exact overlap"
+        same = cmp.p1.flat[unit] == 0
+        why = ("picked by you" if ss.aer_pick is not None else
+               "an example tile: no fingerprint difference anywhere" if same else "most suspicious by the exact overlap")
         st.markdown(f"**{word.title()} (row {r}, col {c})**, {why}: overlap {cmp.overlap.flat[unit]:.7f}, "
                     f"p1 {cmp.p1.flat[unit]:.3g}, {int(cmp.ones.flat[unit])} ones in {cmp.shots:,} shots")
-        za, zb = core.zoom_pair(base, edited, unit, cmp.grid, fp.unit_px, 230)
+        za, zb = core.zoom_pair(base, edited, unit, cmp.grid, fp.unit_px, 230,
+                                ring=core._rgb(PURPLE) if same else core.ACCENT)
         z1, z2 = st.columns(2)
         z1.image(za, caption="original", output_format="PNG", width="stretch")
         z2.image(zb, caption="edited", output_format="PNG", width="stretch")
@@ -802,6 +806,7 @@ def tab_verify():
                            "thumbnails. An integrity record, not a signature.")
 
     live_swap_test(cmp)
+    st.divider()
     aer_panel(cmp)
     compare_encodings()
 
@@ -1078,8 +1083,9 @@ def tab_how():
 @safe
 def tab_results():
     st.markdown("### Results")
-    st.caption("Figures from experiments/figures/, exactly as listed in captions.json (tamper experiments) and "
-               "core_captions.json (circuits, noise, hardware).")
+    st.caption("The recorded experiments: how reliably each kind of edit is caught, how much the encoding matters, "
+               "circuit cost, simulated noise, and a toy run on a real IBM chip. Sources: captions.json and "
+               "core_captions.json in experiments/figures/.")
     def captions(name: str) -> dict:
         try:
             return json.loads((core.FIG_DIR / name).read_text(encoding="utf-8"))

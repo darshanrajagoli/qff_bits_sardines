@@ -258,7 +258,24 @@ iframe[title="streamlit_image_coordinates.streamlit_image_coordinates"] { aspect
 [data-testid="stMain"] [data-testid="stElementContainer"]:has(> [data-testid="stButton"]),
 [data-testid="stMain"] [data-testid="stElementContainer"]:has(> [data-testid="stDownloadButton"]),
 [data-testid="stMain"] [data-testid="stElementContainer"]:has(> .stButton),
-[data-testid="stMain"] [data-testid="stElementContainer"]:has(> .stDownloadButton) { align-self: center; }
+[data-testid="stMain"] [data-testid="stElementContainer"]:has(> .stDownloadButton) { align-self: stretch; width: 100% !important; }
 /* Live SWAP test: the row of shots and its running summary are centred too (not the step-5 picture on How it works) */
 [data-testid="stMain"] .shots:not(.sp-step .shots) { justify-content: center; }
 [data-testid="stMain"] .sp-shotsum { text-align: center; margin-bottom: 18px; }
+
+/* UI/UX audit fixes (Codex review, each checked): */
+/* selected tab text meets WCAG AA on dark (accent-text, not the darker accent); the ▶ and underline stay purple */
+[data-testid="stTab"][aria-selected="true"], [data-testid="stTab"][aria-selected="true"] p { color: var(--accent-text) !important; }
+/* digits on magenta shot squares: dark text for contrast (white on #ee5396 was ~3.3:1) */
+.shot.one, .sp-step .viz .shots .one { color: #161616 !important; }
+/* five-step cards: no mid-word hyphen breaks in the narrow cards */
+.sp-step .txt, .sp-step .ttl { hyphens: manual !important; -webkit-hyphens: manual !important; }
+/* centred prose stays readable: at most ~70 characters a line */
+[data-testid="stMain"] .lead, .sp-hero .sub, .sp-plain { max-width: 70ch; margin-left: auto !important; margin-right: auto !important; }
+@media (max-width: 640px) { [data-testid="stMain"] .lead, [data-testid="stMain"] .sp-sub { font-size: 16px; line-height: 1.5; } }
+/* buttons with a hover tip (Surprise me, Challenge a friend) sit inside tooltip wrappers that the centring above
+   shrank; they ask for full width, so the wrappers and the button fill their column again */
+[data-testid="stMain"] .stButton > div:has([data-testid="stTooltipIcon"]),
+[data-testid="stMain"] .stButton [data-testid="stTooltipIcon"],
+[data-testid="stMain"] .stButton [data-testid="stTooltipHoverTarget"],
+[data-testid="stMain"] .stButton [data-testid="stTooltipHoverTarget"] > button { width: 100%; }
