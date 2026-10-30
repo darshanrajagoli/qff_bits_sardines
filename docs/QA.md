@@ -6,7 +6,7 @@ Image experiments and F6 use classical simulation; F8 separately measures toy st
 ## The 20-second pitch
 
 > SwapPrint gives every 4×4 patch of an artwork an 11-qubit quantum fingerprint, using the error-correcting-code
-> construction of Buhrman et al. A SWAP test compares fingerprints. Untouched patches never trigger it; a changed patch
+> construction of Buhrman et al. A SWAP test compares fingerprints. In an ideal noiseless test, untouched patches never trigger it; a changed patch
 > typically triggers it about half the time. Thirty shots give a heuristic upper bound of 10⁻⁶ on P(no detection | changed); flagged tiles show the location. The usual
 > "pixels as angles" encoding would need millions of shots for the same edit. Our experiments measure all of this, and
 > what IBM-device noise does to small versions of the circuit.

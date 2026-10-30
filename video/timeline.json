@@ -89,7 +89,7 @@
      "tts": "We tested it properly. Fifteen artworks. Twenty-two conditions. Sixty-nine thousand three hundred trials. Perceptual thresholds checked on held-out paintings. Qiskit Aer: ninety-seven of one hundred Wilson ninety-five percent intervals contain the exact value. Then real hardware: eighteen toy comparisons on IBM's Marrakesh processor, four thousand shots each. Noise makes even identical states fire. Readout correction helps, but leaves circuit error. These are small toy states, not full-image hardware results.",
      "vo_at": 0.3,
      "cards": [
-       {"fig": "encodings_shots_needed.png", "big": "69,300", "label": "trials · 15 artworks · 22 tamper cases", "cue": "tested"},
+       {"fig": "encodings_shots_needed.png", "big": "69,300", "label": "trials · 15 artworks · 22 conditions", "cue": "tested"},
        {"fig": "perceptual_roc.png", "big": "6", "label": "held-out paintings for the perceptual thresholds", "cue": "Perceptual"},
        {"fig": "core_validation.png", "big": "97 / 100", "label": "Wilson 95% intervals contain the exact p1", "cue": "Qiskit"},
        {"fig": "core_hardware.png", "big": "18", "label": "toy comparisons · real ibm_marrakesh · 4,000 shots each", "cue": "Then"},
