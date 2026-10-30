@@ -421,31 +421,31 @@ def tab_start():
              "unchanged patch never gives 1; a changed patch gives 1 about half the time. One 1 flags the patch."),
         ]) + "</div>", unsafe_allow_html=True)
 
-    st.markdown("#### Experiments you can run")
-    st.markdown(
-        "| Change this | Where | What you should see |\n|---|---|---|\n"
-        f"| **Shots per tile** down to 1 | Sidebar, strict | One try catches a changed patch only about "
-        f"{1 - miss1:.0%} of the time, so Verify sometimes says `NO CHANGE DETECTED`. That is why “no change "
-        f"detected” is never proof. At the default {cfg.DEFAULT_SHOTS} tries the miss chance for that patch is "
-        f"about {miss_default:.0e}. |\n"
-        "| **Seed** | Sidebar | Same seed, same random tries and the same hidden Surprise spot. Change it to re-roll. |\n"
-        f"| **Encoding: perceptual** | Sidebar | Compares a coarse summary of {cfg.PERCEPTUAL_GRID ** 2} big regions "
-        f"(a {cfg.PERCEPTUAL_BITS}-bit “perceptual hash” each) instead of exact pixels. A one-pixel edit is ignored by "
-        "design (`NO CONTENT CHANGE DETECTED`); a pasted patch or text is often flagged; a JPEG re-save usually "
-        "is not. Small edits such as short text can be missed. |\n"
-        f"| **Encoding: frqi** | Sidebar | The textbook way: pixels as angles, no code. The same one-pixel edit "
-        f"then needs about {fs['frqi']['need99']:,} tries for 99% detection instead of {fs['strict']['need99']}. |\n"
-        "| **Other edit tools** | [2 · Tamper](#go-tamper) | Brightness or contrast changes many pixels, so strict flags most "
-        "patches; Patch, Text and Splice light up only where you edited. |\n"
-        "| **Compare encodings** | [3 · Verify](#go-verify) | The same edit through all three encodings, side by side. |\n"
-        "| **Run on Qiskit Aer** | [3 · Verify](#go-verify) | Builds the actual SWAP-test circuit for one patch and simulates it; "
-        "its estimate should match the exact prediction within its error bar. |\n"
-        "| **Register / Check a file** | [3 · Verify](#go-verify) | Save the original's fingerprint, then check a copy against "
-        "it without the original image. |\n"
-        "| **Challenge a friend** | [2 · Tamper](#go-tamper) | Hide your own edit and let a friend race the SWAP test. |")
+    # the table and the glossary fold away so the guide stays short (Codex UI/UX audit, Ansh's call)
+    with st.expander("**Experiments you can run** · what to change and what you should see", icon=":material/science:"):
+        st.markdown(
+            "| Change this | Where | What you should see |\n|---|---|---|\n"
+            f"| **Shots per tile** down to 1 | Sidebar, strict | One try catches a changed patch only about "
+            f"{1 - miss1:.0%} of the time, so Verify sometimes says `NO CHANGE DETECTED`. That is why “no change "
+            f"detected” is never proof. At the default {cfg.DEFAULT_SHOTS} tries the miss chance for that patch is "
+            f"about {miss_default:.0e}. |\n"
+            "| **Seed** | Sidebar | Same seed, same random tries and the same hidden Surprise spot. Change it to re-roll. |\n"
+            f"| **Encoding: perceptual** | Sidebar | Compares a coarse summary of {cfg.PERCEPTUAL_GRID ** 2} big regions "
+            f"(a {cfg.PERCEPTUAL_BITS}-bit “perceptual hash” each) instead of exact pixels. A one-pixel edit is ignored by "
+            "design (`NO CONTENT CHANGE DETECTED`); a pasted patch or text is often flagged; a JPEG re-save usually "
+            "is not. Small edits such as short text can be missed. |\n"
+            f"| **Encoding: frqi** | Sidebar | The textbook way: pixels as angles, no code. The same one-pixel edit "
+            f"then needs about {fs['frqi']['need99']:,} tries for 99% detection instead of {fs['strict']['need99']}. |\n"
+            "| **Other edit tools** | [2 · Tamper](#go-tamper) | Brightness or contrast changes many pixels, so strict flags most "
+            "patches; Patch, Text and Splice light up only where you edited. |\n"
+            "| **Compare encodings** | [3 · Verify](#go-verify) | The same edit through all three encodings, side by side. |\n"
+            "| **Run on Qiskit Aer** | [3 · Verify](#go-verify) | Builds the actual SWAP-test circuit for one patch and simulates it; "
+            "its estimate should match the exact prediction within its error bar. |\n"
+            "| **Register / Check a file** | [3 · Verify](#go-verify) | Save the original's fingerprint, then check a copy against "
+            "it without the original image. |\n"
+            "| **Challenge a friend** | [2 · Tamper](#go-tamper) | Hide your own edit and let a friend race the SWAP test. |")
 
-    st.markdown("#### Words you will see")
-    with st.container(border=True):
+    with st.expander("**Words you will see** · a glossary, from bit to SWAP test", icon=":material/menu_book:"):
         st.markdown(
             "| Term | Meaning |\n|---|---|\n"
             "| **Bit** | A 0 or a 1. Images are stored as bits. |\n"
@@ -571,7 +571,13 @@ def tab_tamper():
         st.caption("Untouched, for comparison.")
     with edit_col:
         st.markdown("**Edited**")
-        click = streamlit_image_coordinates(core.upscale(edited, 768), key="tamper-click", width="stretch")
+        # read this run's click before drawing, so the crosshair lands on it now rather than one click late
+        if new_click("tamper", st.session_state.get("tamper-click")):
+            ss.loc = click_to_canon(st.session_state["tamper-click"])
+        pic = core.upscale(edited, 768)
+        if not game_on:  # the marker would give a hidden edit away
+            pic = core.mark_point(pic, *ss.loc)
+        click = streamlit_image_coordinates(pic, key="tamper-click", width="stretch")
         if new_click("tamper", click):
             ss.loc = click_to_canon(click)
         y, x = ss.loc
@@ -1130,10 +1136,10 @@ def tab_results():
         st.info("No figures yet.")
 
 
-# Start here sits above the tabs, open on arrival; collapsing it brings the tabs up. ?welcome=closed starts it
-# collapsed (used by the scripted demo recordings).
+# Start here sits above the tabs, closed on arrival so the tabs are the first thing seen (Ansh); ?welcome=open starts
+# it open. ?welcome=closed (used by the scripted demo recordings) keeps working, since closed is the default.
 with st.expander("**Start here** · a two-minute guide, no quantum knowledge needed",
-                 expanded=st.query_params.get("welcome") != "closed", icon=":material/explore:"):
+                 expanded=st.query_params.get("welcome") == "open", icon=":material/explore:"):
     tab_start()
 
 tabs = st.tabs(["1 · Fingerprint", "2 · Tamper", "3 · Verify", "How it works", "Results"])

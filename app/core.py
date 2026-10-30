@@ -125,6 +125,26 @@ def upscale(img: np.ndarray, size: int = 512) -> Image.Image:
     return Image.fromarray(img).resize((size, size), Image.NEAREST)
 
 
+def mark_point(pic: Image.Image, y: int, x: int, canon: int = 256) -> Image.Image:
+    """A purple crosshair around canonical pixel (y, x), on a fresh copy; the gap keeps the pixel itself visible.
+    Sized for a picture shown at about a third of its width (Tamper's 768 px image in a narrow column)."""
+    out = pic.copy()
+    scale = pic.width / canon
+    cx, cy = int((x + 0.5) * scale), int((y + 0.5) * scale)
+    length, gap = max(1, round(pic.width * 0.06)), max(2, round(pic.width * 0.016))
+    width, edge = max(2, round(pic.width * 0.012)), max(1, round(pic.width * 0.004))
+    lo, hi = width // 2, (width - 1) // 2
+    purple, dark = _rgb(sp_style.PURPLE), _rgb("#161616")
+    d = ImageDraw.Draw(out)
+    arms = ((cx - gap - length, cy - lo, cx - gap - 1, cy + hi), (cx + gap + 1, cy - lo, cx + gap + length, cy + hi),
+            (cx - lo, cy - gap - length, cx + hi, cy - gap - 1), (cx - lo, cy + gap + 1, cx + hi, cy + gap + length))
+    for x0, y0, x1, y1 in arms:  # dark outline first, so the arms read on light and dark artwork
+        d.rectangle([x0 - edge, y0 - edge, x1 + edge, y1 + edge], fill=dark)
+    for x0, y0, x1, y1 in arms:
+        d.rectangle([x0, y0, x1, y1], fill=purple)
+    return out
+
+
 # ---------------------------------------------------------------- edits
 
 # name -> (label, needs a location)
