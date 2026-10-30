@@ -526,8 +526,11 @@ def tab_fingerprint():
     fa, fb = fp_of(base, "strict"), fp_of(edited, "strict")
     changed = (fa.data != fb.data).any(axis=1).reshape(fa.grid)
     c1, c2 = st.columns(2, gap="large")
-    c1.image(core.mosaic_image(fa, 420), caption="Original's mosaic", output_format="PNG", width="stretch")
     n_changed = int(changed.sum())
+    # ring the same tiles on the original too, so the colour jump can be compared side by side (not during the game)
+    ring_both = bool(ss.history) and not game_on and 0 < n_changed
+    c1.image(core.mosaic_image(fa, 420, changed if ring_both else None), output_format="PNG", width="stretch",
+             caption="Original's mosaic" + (" (the same tiles ringed)" if ring_both and n_changed <= 60 else ""))
     if not ss.history:
         c2.info("Make an edit in **[2 · Tamper](#go-tamper)** to see the edited image's mosaic here.")
     elif game_on:
