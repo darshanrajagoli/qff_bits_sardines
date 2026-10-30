@@ -28,7 +28,18 @@ import streamlit as st  # noqa: E402
 import streamlit.components.v1 as components  # noqa: E402
 from streamlit_image_coordinates import streamlit_image_coordinates  # noqa: E402
 
+import importlib  # noqa: E402
+
+import certificate  # noqa: E402
 import core  # noqa: E402
+
+# Streamlit re-runs only this script; a redeploy can leave the old core/certificate modules in memory (the Tamper
+# crosshair failed live with an AttributeError on core.mark_point). Reload each one whose file has changed.
+for _mod in (core, certificate):
+    _mtime = os.path.getmtime(_mod.__file__)
+    if getattr(_mod, "_sp_mtime", None) != _mtime:
+        importlib.reload(_mod)
+        _mod._sp_mtime = _mtime
 from certificate import make_certificate  # noqa: E402
 import swapprint as sp  # noqa: E402
 
