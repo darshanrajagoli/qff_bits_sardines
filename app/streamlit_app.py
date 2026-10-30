@@ -843,7 +843,7 @@ def tab_verify():
 
 @st.fragment
 def live_swap_test(cmp):
-    st.markdown("### Live SWAP test")
+    st.markdown("### Live SWAP test (simulated)")
     traced = [u for u in cmp.traces if cmp.p1.flat[u] > 0]
     if not traced:
         if cmp.mode == "perceptual":
