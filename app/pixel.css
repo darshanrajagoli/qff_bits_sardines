@@ -250,3 +250,5 @@ label[data-testid="stRadioOption"][data-selected="true"] [data-testid="stMarkdow
 /* clickable pictures (streamlit-image-coordinates) get a fixed-height frame from their full-size image, which left a
    tall empty gap under them in narrow columns; every one of ours is square, so the frame follows its width */
 iframe[title="streamlit_image_coordinates.streamlit_image_coordinates"] { aspect-ratio: 1 / 1; height: auto !important; }
+/* Start here block: the same space above (after the intro) and below (before the tabs) */
+[data-testid="stExpander"]:has(.sp-hero) details { margin: 25px var(--px) 9px var(--px) !important; }
