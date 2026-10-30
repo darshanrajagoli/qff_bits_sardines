@@ -28,7 +28,7 @@ moves the state far away.
 tile flips 955 to 1080 of its 2048 code bits (all 384 single-bit changes, computed exactly), which gives $p_1 \ge 0.4977$.
 A union bound over random codes gives $p_1 \ge 0.371$ for *every* changed tile, so 15 shots miss a changed tile with
 probability at most $10^{-3}$, and 30 shots at most $10^{-6}$. That bound holds for all but a $10^{-6}$ fraction of
-random matrices. Ours is one fixed matrix, so the bound is a **heuristic**. Among 1,000,000 sampled distinct-content strict tile pairs, maximum absolute overlap was 0.1083984375; no identical-content pairs were set aside. This supports, but does not certify, the fixed-code heuristic. Perceptual hashes matched for 345/26,880 distinct-content pairs: 1.283% (95% Wilson interval: 1.156%–1.425%). Source: `experiments/figures/collisions.csv`.
+random matrices. Ours is one fixed matrix, so the bound is a **heuristic**. Among 1,000,000 sampled distinct-content strict tile pairs, maximum absolute overlap was 0.109375; no identical-content pairs were set aside. This supports, but does not certify, the fixed-code heuristic. Perceptual hashes matched for 345/26,880 distinct-content pairs: 1.283% (95% Wilson interval: 1.156%–1.425%). Source: `experiments/figures/collisions.csv`.
 
 **What the verdict means.** By default, `compare` uses 32 shots per tile. "Tampered" means at least one SWAP test read
 1. In the ideal noiseless model, identical inputs have zero probability of producing a 1; we flag a tile when a 1 is observed. "No change detected" is **not** proof that nothing changed: the

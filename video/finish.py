@@ -36,6 +36,7 @@ ROOT = HERE.parent
 OUT = HERE / "out"
 RAW = OUT / "raw"
 TTS_DIR = OUT / "tts"
+NARRATION_CREDIT = "Narration: synthetic timing reference."
 W, H = 1920, 1080
 SR = 48000
 
@@ -357,6 +358,18 @@ def fake_words(text: str) -> list:
     return out
 
 
+def human_clip(manifest_path, item):
+    path = manifest_path.parent / item["audio"]
+    with wave.open(str(path)) as wf:
+        if (wf.getframerate(), wf.getnchannels(), wf.getsampwidth()) != (SR, 1, 2):
+            raise ValueError(f"Human clip must be mono 48 kHz 16-bit PCM: {path}")
+        pcm = np.frombuffer(wf.readframes(wf.getnframes()), np.int16).astype(np.float32) / 32768
+    words = item["words"]
+    if not words or any(a < 0 or d <= 0 or a+d > len(pcm)/SR + .25 for a, d, _ in words):
+        raise ValueError(f"Review human word timings for {path}")
+    return pcm, words
+
+
 def norm(w: str) -> str:
     return re.sub(r"[^a-z0-9]", "", w.lower())
 
@@ -663,7 +676,7 @@ def render_end(seg: Seg, u: float) -> np.ndarray:
     credits = [
         "Design tokens: Carbon Design System (Apache-2.0). Typeface: IBM Plex (SIL OFL 1.1). Artwork: Hokusai, "
         "The Great Wave, public domain (The Met).",
-        f"Narration: synthetic voice ({META['voice']}, Microsoft Edge text-to-speech). Music: an original pad "
+        f"{NARRATION_CREDIT} Music: an original pad "
         "generated in code. SwapPrint is an independent project, not made or endorsed by IBM.",
     ]
     credit_lines = [line for credit in credits for line in wrap(credit, "IBMPlexSans-Regular", 22, 1664)]
@@ -1099,6 +1112,12 @@ def pad(dur: float) -> np.ndarray:
 # ------------------------------------------------------------------ build
 
 def build(args):
+    global NARRATION_CREDIT
+    manifest_path = getattr(args, "human_manifest", None)
+    human = load_json(manifest_path) if manifest_path else None
+    NARRATION_CREDIT = (f"Narration: {human['narrator']} (original human recording)." if human else
+                        "Narration: none (captions only)." if args.no_tts else
+                        f"Narration: synthetic timing reference ({META['voice']}, Microsoft Edge text-to-speech).")
     voice, rate = META["voice"], META.get("rate", "+0%")
     take = Take(TAKE) if TAKE else None
     vars_ = fmt_vars()
@@ -1110,7 +1129,9 @@ def build(args):
         vo = (d.get("vo") or "").format(**vars_)
         if vo:
             spoken = (d.get("tts") or d["vo"]).format(**vars_)
-            if args.no_tts:
+            if human:
+                s.pcm, s.words = human_clip(manifest_path, human["segments"][s.id])
+            elif args.no_tts:
                 s.pcm, s.words = None, fake_words(spoken)
             else:
                 s.pcm, s.words = tts(spoken, voice, rate)
@@ -1200,10 +1221,18 @@ def main():
     import argparse
     ap = argparse.ArgumentParser()
     ap.add_argument("--stills", default="")
-    ap.add_argument("--no-tts", action="store_true")
+    narration = ap.add_mutually_exclusive_group(required=True)
+    narration.add_argument("--no-tts", action="store_true", help="Explicit captions-only preview")
     ap.add_argument("--no-music", action="store_true")
-    ap.add_argument("--out", default=str(OUT / "swapprint_demo.mp4"))
+    narration.add_argument("--human-manifest", type=Path, help="ingest_narration.py output; required for final voiced export")
+    narration.add_argument("--reference-tts", action="store_true", help="Explicitly generate a synthetic timing reference")
+    ap.add_argument("--out")
     args = ap.parse_args()
+    if not (args.human_manifest or args.reference_tts or args.no_tts):
+        ap.error("Final narration must be Rashida's recording: pass --human-manifest. Use --reference-tts only for timing previews.")
+    if args.out is None:
+        args.out = str(OUT / ("swapprint_demo.mp4" if args.human_manifest else
+                              "captions_preview.mp4" if args.no_tts else "reference_tts.mp4"))
     segs, captions, total = build(args)
     if args.stills:
         qc = OUT / "qc"

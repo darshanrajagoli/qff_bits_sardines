@@ -64,7 +64,7 @@ infeasible. So we call 0.371 and 30 shots a heuristic bound and back it with mea
 
 * all 384 single-bit changes (exact): codeword weights 955 to 1080, so $|\text{overlap}| \le 0.0674$ and $p_1 \ge 0.4977$
 * 100,000 random nonzero messages (seed 0): largest $|\text{overlap}| = 0.0957$, smallest $p_1 = 0.4954$
-* F3 (`experiments/figures/collisions.png`): Among 1,000,000 sampled distinct-content strict tile pairs, maximum absolute overlap was 0.1083984375; no identical-content pairs were set aside. This supports, but does not certify, the fixed-code heuristic. Perceptual hashes matched for 345/26,880 distinct-content pairs: 1.283% (95% Wilson interval: 1.156%–1.425%). Source: `experiments/figures/collisions.csv`.
+* F3 (`experiments/figures/collisions.png`): Among 1,000,000 sampled distinct-content strict tile pairs, maximum absolute overlap was 0.109375; no identical-content pairs were set aside. This supports, but does not certify, the fixed-code heuristic. Perceptual hashes matched for 345/26,880 distinct-content pairs: 1.283% (95% Wilson interval: 1.156%–1.425%). Source: `experiments/figures/collisions.csv`.
 
 A typical change gives $p_1 \approx 0.5$, so in practice a changed tile reads 1 about every second shot.
 

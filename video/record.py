@@ -21,6 +21,7 @@ import subprocess
 import sys
 import time
 import urllib.request
+import urllib.parse
 from pathlib import Path
 
 from playwright.sync_api import Page, sync_playwright
@@ -264,7 +265,10 @@ def new_page(browser, base_url: str):
     ctx = browser.new_context(viewport={"width": W, "height": H}, device_scale_factor=DPR)
     page = ctx.new_page()
     page.set_default_timeout(20_000)
-    page.goto(base_url)
+    parts = urllib.parse.urlsplit(base_url)
+    query = dict(urllib.parse.parse_qsl(parts.query, keep_blank_values=True))
+    query["welcome"] = "closed"
+    page.goto(urllib.parse.urlunsplit(parts._replace(query=urllib.parse.urlencode(query))))
     page.get_by_role("tab", name="1 · Fingerprint").wait_for(timeout=180_000)
     page.add_style_tag(content=CLEAN_CSS)
     wait_idle(page)
