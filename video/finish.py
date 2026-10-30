@@ -1,13 +1,14 @@
 """Keynote finishing pass: video/timeline.json + video/out/raw/ (from record.py) -> video/out/swapprint_demo.mp4.
 
-    video/.venv/Scripts/python.exe video/finish.py              # full render
-    video/.venv/Scripts/python.exe video/finish.py --stills 3,20,45   # QC stills (seconds) -> out/qc/, no encode
-    options: --no-tts (captions only)  --no-music
+    video/.venv/Scripts/python.exe video/finish.py --human-manifest video/out/human/narration.json
+    video/.venv/Scripts/python.exe video/finish.py --no-tts --stills 3,20,45
+    Use --reference-tts only for an explicitly labelled synthetic timing reference.
 
 Every frame is drawn here, in Python: Carbon g100 cards, the animated idea diagram and log-scale chart, figure cards,
-and the app take with subpixel eased zooms (the take is 3840x2160, so zooms up to 2x are never upscaled). Motion uses
+and the app take with subpixel eased zooms (the take is 3840x2160, so zooms up to 2x are never upscaled). Cards match
+the app's dotted stage, notched grey frame, Departure Mono headings and IBM Plex Mono body. Motion uses
 Carbon's curves (carbondesignsystem.com/elements/motion/overview): productive standard cubic-bezier(0.2, 0, 0.38, 0.9)
-for camera and UI, expressive standard cubic-bezier(0.4, 0.14, 0.3, 1) for big reveals. Narration: edge-tts.
+for camera and UI, expressive standard cubic-bezier(0.4, 0.14, 0.3, 1) for big reveals. Final narration is human PCM.
 Music: an original pad synthesised below (no third-party audio). Colours and fonts: swapprint/style.py (read only).
 """
 from __future__ import annotations
@@ -65,6 +66,7 @@ ALERT = rgb(style.ALERT_ON_DARK)         # #ff7eb6
 ALERT50 = rgb(style.ALERT)               # #ee5396
 GRAD = [rgb(c) for c in style.WEBSITE_GRADIENT]
 FONTS = style.font_paths()
+APP_QR = np.asarray(Image.open(HERE / "assets/live_app_qr.png").convert("RGB"))
 
 
 # ------------------------------------------------------------------ easing (Carbon motion)
@@ -119,19 +121,27 @@ def canvas(color=BG) -> np.ndarray:
 
 @lru_cache(maxsize=4)
 def grid_bg() -> np.ndarray:
-    """g100 with the event site's faint 40 px circuit grid (purple at 8 %), as in docs/style/title_card.html."""
+    """Match the app's quiet dot stage and thin notched evidence frame."""
     c = canvas()
-    a = 0.08
-    for x in range(0, W, 40):
-        c[:, x] = c[:, x] * (1 - a) + np.array(ACCENT) * a
-    for y in range(20, H, 40):
-        c[y, :] = c[y, :] * (1 - a) + np.array(ACCENT) * a
+    dot = tuple(float(v) for v in (np.array(BG) * .83 + np.array(BORDER) * .17))
+    for x in range(24, W, 24):
+        for y in range(24, H, 24):
+            c[y:y + 2, x:x + 2] = dot
+    frame = np.array([[80,64],[1840,64],[1856,80],[1856,1000],
+                      [1840,1016],[80,1016],[64,1000],[64,80]], np.int32)
+    cv2.polylines(c, [frame], True, BORDER, 2, cv2.LINE_8)
     return c
 
 
 @lru_cache(maxsize=64)
 def font(name: str, size: int) -> ImageFont.FreeTypeFont:
-    return ImageFont.truetype(str(FONTS[name]), size)
+    if name == "IBMPlexSans-SemiBold":
+        path = HERE / "assets/DepartureMono-Regular.otf"
+    elif name == "IBMPlexSansMath-Regular":
+        path = FONTS["IBMPlexSans-Regular"]
+    else:
+        path = FONTS["IBMPlexMono-Regular" if name == "IBMPlexSans-Regular" else name]
+    return ImageFont.truetype(str(path), size)
 
 
 @lru_cache(maxsize=512)
@@ -243,7 +253,7 @@ def ring(dst, cx, cy, r, color, th=3, op=1.0, fill=False):
     reg += np.array(color, np.float32) * a
 
 
-def ket(dst, x, y, inner, size, color=TXT, op=1.0, name="IBMPlexSans-Regular"):
+def ket(dst, x, y, inner, size, color=TXT, op=1.0, name="IBMPlexSansMath-Regular"):
     """|inner> with a drawn right angle bracket (Plex has no U+27E9). Returns the width."""
     bar = text_layer("|", name, size, color)
     blit(dst, bar, x, y, op)
@@ -523,8 +533,8 @@ def lower_third(dst, title, sub, u, t0, dur, bottom=168):
 
 
 def draw_caption(dst, text, op):
-    lines = wrap(text, "IBMPlexSans-SemiBold", 40, 1500)
-    lays = [text_layer(s, "IBMPlexSans-SemiBold", 40, (255, 255, 255)) for s in lines]
+    lines = wrap(text, "IBMPlexMono-SemiBold", 40, 1500)
+    lays = [text_layer(s, "IBMPlexMono-SemiBold", 40, (255, 255, 255)) for s in lines]
     lh = 52
     bw = max(l.shape[1] for l in lays) + 56
     bh = lh * len(lays) + 28
@@ -623,7 +633,9 @@ def mosaic_tiles(dst, x, y, size, u, t0, t_flip, highlight=None, k_hl=0.0):
 def render_title(seg: Seg, u: float) -> np.ndarray:
     dst = grid_bg().copy()
     d = seg.d
-    rise(dst, text_layer(d["kicker"], "IBMPlexSans-Regular", 28, TXT2), 128, 236, u, 0.15, 0.5, ease=ENTRANCE)
+    for i, line in enumerate(wrap(d["kicker"], "IBMPlexSans-Regular", 28, 1000)):
+        rise(dst, text_layer(line, "IBMPlexSans-Regular", 28, TXT2), 128, 180 + i * 38,
+             u, 0.15, 0.5, ease=ENTRANCE)
     k_bar = prog(u, 0.25, 0.7, EXPRESSIVE)
     if k_bar > 0:
         gradient_bar(dst, 128, 300, 160, 8, 1.0, k_bar)
@@ -658,6 +670,8 @@ def render_section(seg: Seg, u: float) -> np.ndarray:
 def render_end(seg: Seg, u: float) -> np.ndarray:
     dst = grid_bg().copy()
     d = seg.d
+    blit(dst, image_layer(APP_QR, 260, 260, cv2.INTER_NEAREST), 1490, 170, prog(u, .5, .4))
+    rise(dst, text_layer("Try the app", "IBMPlexMono-Regular", 24, TXT2), 1490, 446, u, .5, .4)
     rise(dst, text_layer("Thank you for watching", "IBMPlexSans-Regular", 28, TXT2), 128, 200, u, 0.1)
     k_bar = prog(u, 0.2, 0.7, EXPRESSIVE)
     if k_bar > 0:
@@ -666,15 +680,13 @@ def render_end(seg: Seg, u: float) -> np.ndarray:
     la = text_layer(a.strip(), "IBMPlexSans-SemiBold", 120, TXT, track=-1)
     rise(dst, la, 122, 312, u, 0.3, 0.6, 20, EXPRESSIVE)
     if b:
-        dot = text_layer("·", "IBMPlexSans-SemiBold", 120, ACCENT_D)
-        rise(dst, dot, 122 + la.shape[1] + 18, 312, u, 0.38, 0.6, 20, EXPRESSIVE)
-        rise(dst, text_layer(b.strip(), "IBMPlexSans-Regular", 120, TXT2, track=-1), 122 + la.shape[1] + 18 + dot.shape[1]
-             + 18, 312, u, 0.45, 0.6, 20, EXPRESSIVE)
+        rise(dst, text_layer(b.strip(), "IBMPlexSans-Regular", 48, TXT2),
+             128, 438, u, 0.45, 0.6, 20, EXPRESSIVE)
     rise(dst, text_layer(d["sub"], "IBMPlexMono-Regular", 40, ACCENT_D), 128, 500, u, 0.6, 0.5)
     for i, s in enumerate(d.get("lines", [])):
         rise(dst, text_layer(s, "IBMPlexSans-Regular", 34, TXT2), 128, 588 + i * 52, u, 0.75 + 0.08 * i, 0.5)
     credits = [
-        "Design tokens: Carbon Design System (Apache-2.0). Typeface: IBM Plex (SIL OFL 1.1). Artwork: Hokusai, "
+        "Design tokens: Carbon Design System (Apache-2.0). Type: Departure Mono / IBM Plex Mono (SIL OFL 1.1). Artwork: Hokusai, "
         "The Great Wave, public domain (The Met).",
         f"{NARRATION_CREDIT} Music: an original pad "
         "generated in code. SwapPrint is an independent project, not made or endorsed by IBM.",
@@ -754,8 +766,10 @@ def render_diagram(seg: Seg, u: float) -> np.ndarray:
              t_code + 0.4)
     k_b = prog(u, t_buhr - 0.2, 0.5, ENTRANCE)
     if k_b > 0:
-        blit(dst, text_layer("after Buhrman, Cleve, Watrous & de Wolf, PRL 2001", "IBMPlexSans-Regular", 22, HELP),
-             CX, CY + 32 * cell + 56, k_b)
+        for i, credit in enumerate(wrap("after Buhrman, Cleve, Watrous & de Wolf, PRL 2001",
+                                        "IBMPlexSans-Regular", 20, 440)):
+            blit(dst, text_layer(credit, "IBMPlexSans-Regular", 20, HELP),
+                 CX, CY + 32 * cell + 56 + i * 28, k_b)
     # 4. the 11-qubit state
     SX = 1420
     k_s = prog(u, t_q, 0.6, EXPRESSIVE)
@@ -763,8 +777,8 @@ def render_diagram(seg: Seg, u: float) -> np.ndarray:
         line(dst, (CX + 64 * cell + 20, TY + TS / 2), (lerp(CX + 64 * cell + 20, SX - 24, k_s), TY + TS / 2), BORDER, 2)
         ket(dst, SX, 268 + 14 * (1 - k_s), "ψ", 120, TXT, k_s)
         blit(dst, text_layer("11 qubits", "IBMPlexSans-SemiBold", 30, TXT), SX, 440, k_s)
-        blit(dst, text_layer("2,048 amplitudes, signs from the code", "IBMPlexSans-Regular", 22, TXT2), SX, 480,
-             k_s)
+        for i, caption in enumerate(wrap("2,048 amplitudes, signs from the code", "IBMPlexSans-Regular", 22, 340)):
+            blit(dst, text_layer(caption, "IBMPlexSans-Regular", 22, TXT2), SX, 480 + i * 30, k_s)
     # 5. the SWAP test circuit, drawn left to right
     if u > t_swap - 0.4:
         y_a, y_p, y_f = 660, 740, 820
@@ -851,7 +865,9 @@ def render_chart(seg: Seg, u: float) -> np.ndarray:
         y = 400 + i * 200
         t0 = seg.wt(cue, default=1.5 + 3 * i) - 0.1
         rise(dst, text_layer(name, "IBMPlexSans-SemiBold", 40, TXT), 128, y, u, 0.3 + 0.1 * i)
-        rise(dst, text_layer(sub, "IBMPlexSans-Regular", 26, TXT2), 128, y + 56, u, 0.4 + 0.1 * i)
+        for j, subline in enumerate(wrap(sub, "IBMPlexSans-Regular", 24, 470)):
+            rise(dst, text_layer(subline, "IBMPlexSans-Regular", 24, TXT2),
+                 128, y + 56 + j * 30, u, 0.4 + 0.1 * i)
         grow = 3.4 if val > 1000 else 0.7
         k = prog(u, t0, grow, EXPRESSIVE)
         if k > 0:
