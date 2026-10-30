@@ -1,5 +1,9 @@
 # SwapPrint presentation
 
+**Status, 30 Oct:** contingency design studies. The official rulebook and Problem 5 brief do not require slides.
+Darshan rejected the recent layouts, and further slide redesign is out of the submission critical path. Keep the
+current website per Ansh's design decision. These decks are not an approved final visual direction.
+
 ## IBM × Undertale design study, v2
 
 Review `SwapPrint_IBM_Undertale_v2.pdf` or the editable `SwapPrint_IBM_Undertale_v2.pptx` for the current proposed

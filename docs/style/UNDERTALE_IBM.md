@@ -1,5 +1,14 @@
 # SwapPrint art direction: Undertale × IBM
 
+## Final design decision — Darshan and Ansh, 30 Oct
+
+Ansh voted NO to a website redesign and gave exact deck changes. Darshan then made **Ansh's design call final**,
+explicitly overriding the earlier requirement to await Rashida's design vote. Keep the current website. Match the
+deck and video to it: #161616 with faint dot grid, thin grey notched pixel frames and violet emphasis, Departure Mono
+titles/short labels, IBM Plex Mono body and numbers. Retain the small original sardine/heart stickers on cover/close.
+Use current app screenshots and a live-app QR. Closing slide lists names and GitHub IDs, not roles.
+The pure-black/white-dialogue v2 below is a superseded study, preserved for reference. No website trial is authorised.
+
 Darshan's direction, 30 Oct: the feeling, design and production should suggest a collaboration between Undertale
 and IBM. A pixel font alone does not satisfy this. This direction supersedes the earlier purely Carbon look.
 
