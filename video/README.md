@@ -50,6 +50,11 @@ ASR receives 16 kHz float samples decoded by FFmpeg; original 48 kHz edit clips 
 incompatible PyAV file-decoder call in faster-whisper 1.2.1. Use `--model base.en` for the final word-timing review.
 The original pixel sardine is a small identity-card mark. `brand_mark.py` bounds the output duration and copies
 audio packets unchanged; `render_patch.py` can repair a short visual section without regenerating a voice take.
+Use repeated `brand_mark.py --patch PATH` arguments for separately rendered visual sections. All patches must
+match the unchanged resolved timeline. The final end screen intentionally keeps just the team and app CTA:
+full credits remain here, in the repository asset licences and original human-narration manifest. Narration is
+Rashida Baldiwala's original recording; no IBM endorsement is implied. The original code-generated pad has no
+third-party music. Hokusai/The Met and Carbon/Departure Mono/Plex credits above remain applicable.
 After editorial approval, make `out/swapprint_demo.mp4` point to the approved human cut before running `media.py`.
 
 Review the actual encoded output at the hook, diagram, verdict, first detected shot, heatmap, FRQI result, chart,

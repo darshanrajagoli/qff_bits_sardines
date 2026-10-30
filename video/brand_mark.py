@@ -34,6 +34,8 @@ def main():
     parser.add_argument('output',type=Path)
     parser.add_argument('--timeline',type=Path,default=HERE/'out/timeline_resolved.json')
     parser.add_argument('--chart-patch',type=Path)
+    parser.add_argument('--patch',type=Path,action='append',default=[],
+                        help='Additional visual segment patch; repeat for separate segments')
     args=parser.parse_args()
     if args.input.resolve()==args.output.resolve():
         parser.error('Keep the original rendered cut; choose a different output')
@@ -47,12 +49,15 @@ def main():
     inputs=['-i',str(args.input),'-loop','1','-framerate','30','-i',str(mark)]
     filters=['[1:v]format=rgba,split=2[t][e]']
     base='0:v'
-    if args.chart_patch:
-        patch=json.loads(args.chart_patch.with_suffix('.json').read_text())
-        inputs+=['-i',str(args.chart_patch)]
-        filters += [f"[2:v]setpts=PTS-STARTPTS+{patch['start']}/TB[chart]",
-                    f"[0:v][chart]overlay=x=0:y=0:eof_action=pass:enable='between(t,{patch['start']},{patch['end']-.001})'[base]"]
-        base='base'
+    patches=([args.chart_patch] if args.chart_patch else [])+args.patch
+    for i,path in enumerate(patches):
+        patch=json.loads(path.with_suffix('.json').read_text())
+        if abs(patch['total']-plan['total'])>.05:
+            raise ValueError('Patch timeline does not match the source cut')
+        inputs+=['-i',str(path)]
+        filters += [f"[{i+2}:v]setpts=PTS-STARTPTS+{patch['start']}/TB[patch{i}]",
+                    f"[{base}][patch{i}]overlay=x=0:y=0:eof_action=pass:enable='between(t,{patch['start']},{patch['end']-.001})'[base{i}]"]
+        base=f'base{i}'
     for label,segment in [('t',title),('e',end)]:
         start=segment['start']+.45
         stop=segment['start']+segment['dur']-.4

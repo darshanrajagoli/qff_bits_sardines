@@ -91,16 +91,21 @@ def hero(output: Path | None = None) -> Path:
     return out
 
 
-def teaser() -> Path:
+def teaser(film: Path | None = None, output: Path | None = None) -> Path:
     tl = json.loads((HERE / "out" / "timeline_resolved.json").read_text(encoding="utf-8"))
     seg = {s["id"]: s for s in tl["segments"]}
-    a = seg["shots"]["start"] + seg["shots"]["dur"] - 3.0        # shots stream in, the first 1 lands
-    b = seg["heatmap"]["start"] + 4.6                              # ...then the heatmap zooms onto the tile
-    out = MEDIA / "teaser.gif"
+    # Follow the actual human reveal instead of the end of the shots segment,
+    # which can already be past the first 1. Retain the revised heatmap hold/zoom.
+    reveal = next((c[0] for c in tl["captions"] if c[2].startswith("And there it is")),
+                  seg["shots"]["start"] + 6)
+    a = max(seg["shots"]["start"], reveal - 1.8)
+    b = min(seg["heatmap"]["start"] + seg["heatmap"]["dur"] - .5,
+            seg["heatmap"]["start"] + 8.5)
+    out = output if output is not None else MEDIA / "teaser.gif"
     vf = ("fps=12,scale=720:-1:flags=lanczos,split[s0][s1];[s0]palettegen=max_colors=128:stats_mode=diff[p];"
           "[s1][p]paletteuse=dither=bayer:bayer_scale=4:diff_mode=rectangle")
     subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-ss", f"{a:.2f}", "-t", f"{b - a:.2f}",
-                    "-i", str(HERE / "out" / "swapprint_demo.mp4"), "-vf", vf, "-loop", "0", str(out)], check=True)
+                    "-i", str(film or HERE / "out" / "swapprint_demo.mp4"), "-vf", vf, "-loop", "0", str(out)], check=True)
     return out
 
 
@@ -109,9 +114,12 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--hero-only", action="store_true", help="Preview the banner without refreshing the teaser")
     parser.add_argument("--output", type=Path, help="Banner preview path; requires --hero-only")
+    parser.add_argument("--film", type=Path, help="Explicit approved/review human film; avoids an old default source")
+    parser.add_argument("--output-dir", type=Path, default=MEDIA, help="Use a private directory for candidate media")
     args = parser.parse_args()
     if args.output and not args.hero_only:
         parser.error("--output requires --hero-only")
-    MEDIA.mkdir(parents=True, exist_ok=True)
-    for p in ((hero(args.output),) if args.hero_only else (hero(), teaser())):
+    args.output_dir.mkdir(parents=True, exist_ok=True)
+    hp = args.output or args.output_dir / "hero.png"
+    for p in ((hero(hp),) if args.hero_only else (hero(hp), teaser(args.film, args.output_dir / "teaser.gif"))):
         print(f"wrote {p} ({p.stat().st_size / 1e6:.2f} MB)")

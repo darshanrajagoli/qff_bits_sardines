@@ -685,15 +685,8 @@ def render_end(seg: Seg, u: float) -> np.ndarray:
     rise(dst, text_layer(d["sub"], "IBMPlexMono-Regular", 40, ACCENT_D), 128, 500, u, 0.6, 0.5)
     for i, s in enumerate(d.get("lines", [])):
         rise(dst, text_layer(s, "IBMPlexSans-Regular", 34, TXT2), 128, 588 + i * 52, u, 0.75 + 0.08 * i, 0.5)
-    credits = [
-        "Design tokens: Carbon Design System (Apache-2.0). Type: Departure Mono / IBM Plex Mono (SIL OFL 1.1). Artwork: Hokusai, "
-        "The Great Wave, public domain (The Met).",
-        f"{NARRATION_CREDIT} Music: an original pad "
-        "generated in code. SwapPrint is an independent project, not made or endorsed by IBM.",
-    ]
-    credit_lines = [line for credit in credits for line in wrap(credit, "IBMPlexSans-Regular", 22, 1664)]
-    for i, s in enumerate(credit_lines):
-        rise(dst, text_layer(s, "IBMPlexSans-Regular", 22, HELP), 128, 800 + i * 30, u, 1.0, 0.5)
+    # Full asset/narration credits remain in video/README.md and the source
+    # manifests. Rashida's editorial note keeps this final card to the team/CTA.
     return dst
 
 
@@ -997,7 +990,7 @@ def recorded_shot_card(trace, shown, row, col, p1):
                         "IBMPlexMono-Medium", 34, TXT2), 128, 752)
     blit(dst, text_layer(f"Recorded outcomes · redrawn · tile ({row}, {col}) · seed {FACTS['seed']}",
                         "IBMPlexMono-Medium", 25, HELP), 128, 830)
-    blit(dst, text_layer("Analytical sampler · ideal noiseless model · not a hardware measurement",
+    blit(dst, text_layer("Simulated · analytical sampler · ideal noiseless model · not hardware",
                         "IBMPlexMono-Medium", 24, HELP), 128, 874)
     return dst
 
@@ -1123,7 +1116,10 @@ class AppSeg(Seg):
             art = src[y0:int((box["y"] + box["h"]) * dpr),
                       x0:int((box["x"] + box["w"]) * dpr)]
             ah, aw = art.shape[:2]
-            k = prog(u, 1.2, 2.6, PRODUCTIVE)
+            # Let the actual full heatmap register before moving into the tile.
+            # No audio/timeline shift: hold it through the human "heatmap lands"
+            # line and keep the zoomed result visible for the rest of this beat.
+            k = prog(u, 3.4, 2.6, PRODUCTIVE)
             zoom = math.exp(lerp(0, math.log(3.2), k))
             ty, tx = FACTS["truth"]
             cw, ch = aw / zoom, ah / zoom
@@ -1142,7 +1138,7 @@ class AppSeg(Seg):
             blit(dst, text_layer(f"Tile ({row}, {col})", "IBMPlexMono-Medium", 42, ALERT50), 128, 374)
             blit(dst, text_layer(f"Pixel ({ty}, {tx}) · one shade", "IBMPlexSans-Regular", 30, TXT2), 128, 446)
             blit(dst, text_layer("Recorded app heatmap", "IBMPlexSans-Regular", 26, HELP), 128, 560)
-            blit(dst, text_layer("Analytical sampler · noiseless model", "IBMPlexSans-Regular", 26, HELP), 128, 602)
+            blit(dst, text_layer("Simulated · noiseless model", "IBMPlexSans-Regular", 26, HELP), 128, 602)
             return dst
         c = self.cam(u)
         dst = render_view(src, fid, c)
