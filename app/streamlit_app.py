@@ -118,7 +118,8 @@ def _tokens(mode: str) -> str:
     return "".join(f"--{k}: {v};" for k, v in TOKENS[mode].items())
 
 
-@st.cache_resource(show_spinner=False)
+# Not cached: a Streamlit Cloud redeploy can keep the server process, and a cached copy then hides edits to
+# this file. It's a few KB, so reading it on each run costs nothing.
 def figure_notes() -> dict:
     """Plain-language titles and summaries for the Results figures (app/figure_notes.json); {} if missing."""
     try:
@@ -127,7 +128,8 @@ def figure_notes() -> dict:
         return {}
 
 
-@st.cache_resource(show_spinner=False)
+# Not cached: a Streamlit Cloud redeploy can keep the server process, and a cached copy then hides edits to
+# this file. It's a few KB, so reading it on each run costs nothing.
 def pixel_css() -> str:
     """Both token sets, then app/pixel.css (which only reads the tokens). app/page.js marks
     <html data-sp-mode="light|dark"> from the page's real background; before it runs, the system preference decides."""
@@ -140,7 +142,8 @@ def pixel_css() -> str:
             f":root[data-sp-mode=\"light\"] {{{_tokens('light')}}}" + css)
 
 
-@st.cache_resource(show_spinner=False)
+# Not cached: a Streamlit Cloud redeploy can keep the server process, and a cached copy then hides edits to
+# this file. It's a few KB, so reading it on each run costs nothing.
 def page_js_component() -> str:
     """app/page.js, injected once into the app page itself (not the component frame), so it survives reruns."""
     try:
@@ -217,6 +220,11 @@ def frqi_vs_strict() -> dict:
 def notice(html: str, kind: str = "info") -> None:
     """A Carbon inline notification (carbon.css .cds-notice): layer background, coloured bar on the left."""
     st.markdown(f'<div class="cds-notice {kind}">{html}</div>', unsafe_allow_html=True)
+
+
+def say(text: str, kind: str = "") -> None:
+    """One short game-style line (pixel.css .sp-line), shown as '* text'. It only restates what the data shows."""
+    st.markdown(f'<div class="sp-line {kind}">* {text}</div>', unsafe_allow_html=True)
 
 
 def safe(fn):
@@ -546,9 +554,18 @@ def tab_fingerprint():
 
 @safe
 def tab_tamper():
-    left, right = st.columns([1, 1], gap="large")
-    with left:
-        st.markdown("**Click the image to choose where to edit**")
+    if game_on and ss.game["kind"] == "surprise":
+        say("One pixel changed by one colour level. You can't see it. Can the SWAP test?")
+    elif game_on:
+        say("Your edits are hidden. Hand over: your friend guesses in 3 · Verify.")
+    # original and edited side by side at the top, so nobody has to scroll to find them; the edited one is clickable
+    orig_col, edit_col, right = st.columns([1, 1, 1.2], gap="medium")
+    with orig_col:
+        st.markdown("**Original**")
+        st.image(core.upscale(base, 768), output_format="PNG", width="stretch")
+        st.caption("Untouched, for comparison.")
+    with edit_col:
+        st.markdown("**Edited**")
         click = streamlit_image_coordinates(core.upscale(edited, 768), key="tamper-click", width="stretch")
         if new_click("tamper", click):
             ss.loc = click_to_canon(click)
@@ -556,7 +573,10 @@ def tab_tamper():
         if game_on:
             st.caption("Location hidden while the game runs.")
         else:
-            st.caption(f"Chosen location: row {y}, column {x} (canonical pixels)")
+            st.caption(f"Click the picture to choose where to edit. Chosen: row {y}, column {x}"
+                       + ("" if ss.history else " · no edits yet"))
+        st.download_button("Download the edited PNG", core.to_png(edited), file_name="swapprint_edited.png",
+                           mime="image/png", disabled=not ss.history, width="stretch")
     with right.container(border=True):
         st.markdown("**Edit tools**")
         name = st.selectbox("Tool", list(core.TOOLS), format_func=lambda n: core.TOOLS[n][0], key="tool")
@@ -602,9 +622,10 @@ def tab_tamper():
         elif name == "resize_roundtrip":
             step = {"name": "resize_roundtrip", "params": {"size": st.slider("Shrink to (px)", 32, 255, 128)}}
 
-        # two rows, so Carbon's wide button padding never truncates a label in a half-width column
-        b1, b4, b5 = st.columns([1.4, 1, 1])
-        b2, b3 = st.columns(2)
+        # the tools column is narrow (it shares the row with both pictures), so the long labels get rows of their own
+        b1 = st.container()
+        b4, b5 = st.columns(2)
+        b2, b3 = st.container(), st.container()
         if b1.button("Apply", type="primary", width="stretch", disabled=game_on):
             try:
                 core.apply_step(edited, step)  # validate before it enters the history
@@ -642,13 +663,6 @@ def tab_tamper():
         else:
             for i, s in enumerate(ss.history, 1):
                 st.markdown(f"{i}. {core.describe(s)}")
-
-    st.markdown("### Original and edited, side by side")
-    c1, c2 = st.columns(2, gap="large")
-    c1.image(core.upscale(base, 768), caption="Original", output_format="PNG", width="stretch")
-    c2.image(core.upscale(edited, 768), caption="Edited" if ss.history else "Edited (no edits yet)", output_format="PNG", width="stretch")
-    c2.download_button("Download the edited PNG", core.to_png(edited), file_name="swapprint_edited.png", mime="image/png",
-                       disabled=not ss.history)
 
 
 def _rgb(hex_colour: str) -> list[int]:
@@ -694,9 +708,9 @@ def tab_verify():
         with g2:
             if ss.game["guess"]:
                 gy, gx = ss.game["guess"]
-                st.success(f"Your guess: row {gy}, column {gx}. Now press Verify.")
+                say(f"Your guess: row {gy}, column {gx}. Press Verify.")
             else:
-                st.caption("No guess yet. You can also press Verify straight away.")
+                say("Click where you think the edit is, or press Verify now.", "quiet")
             if st.button("Verify", type="primary", key="verify-game", width="stretch"):
                 run_verify()
                 st.rerun()
@@ -722,8 +736,15 @@ def tab_verify():
                     f'<div class="fine">{cmp.shots:,} shots per {word} · {cmp.flagged.size:,} {word}s · compared on '
                     f'the canonical 256×256 image · exact backend · {v["seconds"] * 1000:.0f} ms</div>',
                     unsafe_allow_html=True)
-
     g = ss.game
+    if not (g and g["revealed"]):  # a revealed game already says this in its result box
+        if hit and mode != "perceptual":
+            first_hit = cmp.first_detection.get(core.most_suspicious(cmp))
+            if first_hit:
+                say(f"Found it. The first 1 came on shot {first_hit}.", "hit")
+        elif not hit:
+            say("No alarm. That isn't proof that nothing changed.", "quiet")
+
     box = core.changed_box(base, edited) if g and g["revealed"] else None
     if g and g["revealed"] and box:
         first = cmp.first_detection.get(core.most_suspicious(cmp))
