@@ -51,6 +51,8 @@ An interactive web application built with Streamlit and styled with the open-sou
 
 ## Judging Map
 
+> **Quick navigation:** For an executive summary mapping each rubric criterion directly to reproducible commands, data files, and explicit limits, see the **[Judge Evidence Guide](docs/JUDGE_GUIDE.md)**.
+
 How this repository addresses each criterion of Problem 5:
 
 | Criterion (Points) | Where to Look | Key Evidence & Findings |
@@ -153,7 +155,7 @@ Flexible Representation of Quantum Images (FRQI) encodes normalized color angles
 This comparison shows how encoding changes the SWAP test's sensitivity. There is no quantum advantage in our setting; SHA-256 per tile is better in practice. Buhrman et al.'s communication advantage applies in the simultaneous-message model without shared randomness.
 
 ### Two Circuit Implementations (Ancilla vs Destructive)
-1. **Ancilla SWAP Test ($2q + 1$ qubits):** Standard circuit using 1 ancilla and $q$ controlled-SWAP gates. Validated on Qiskit Aer across 50 unit pairs; 97 of 100 Wilson 95% confidence intervals contain the exact theoretical $p_1$ (67 of the 70 runs with $p_1 > 10^{-3}$; the 3 misses are 2.3σ-scale fluctuations in both directions, as expected for 95% intervals). Source: `experiments/results/core_validation.csv`, Figure F7 (`experiments/figures/core_validation.png`).
+1. **Ancilla SWAP Test ($2q + 1$ qubits):** Standard circuit using 1 ancilla and $q$ controlled-SWAP gates. Both circuit kinds were validated on Qiskit Aer across 50 unit pairs each (100 runs total); 97 of 100 Wilson 95% confidence intervals contain the exact theoretical $p_1$ (67 of the 70 runs with $p_1 > 10^{-3}$; the 3 misses are 2.3σ-scale fluctuations in both directions, as expected for 95% intervals). Source: `experiments/results/core_validation.csv`, Figure F7 (`experiments/figures/core_validation.png`).
 2. **Destructive SWAP Test ($2q$ qubits):** Based on Garcia-Escartin & Chamorro-Posada (*Phys. Rev. A* 87, 052330, 2013). Eliminates the ancilla qubit by applying transversal CNOTs and Hadamards followed by Bell-basis measurements. An odd number of singlet outcomes signals a 1. Saves hardware routing overhead while producing identical outcome probabilities.
 
 ---
@@ -285,7 +287,7 @@ Open `http://localhost:8501` in your browser, or visit the live public deploymen
 |---|---|
 | **Start here** (above the tabs) | Opens on arrival; collapse it to bring the tabs up. A plain-language guide for someone new to quantum fingerprinting: what the app does, a 60-second walk-through, experiments to try with encoding, shots and seed, a glossary, and links to the papers. |
 | **1 · Fingerprint** | View the canonical 256×256 artwork, inspect the math of the $[2048, 384]$ code, and visualize the **Fingerprint Mosaic** (codeword bits mapped to RGB color tiles). Download registered fingerprints as `.npz` files. |
-| **2 · Tamper** | Interactive canvas studio: click any coordinate to apply single-pixel nudges, red patches, copy-moves, splices, text insertions, LSB watermarks, or JPEG re-saves. Includes Undo, Reset, a **"Surprise Me"** button that hides an invisible 1-pixel edit for the game, and a **"Challenge a friend"** mode that hides your custom edits so someone else can test their eyes against the quantum verifier. |
+| **2 · Tamper** | The original and the edited image sit side by side at the top. Click the edited one to choose a spot, then apply an edit: nudge one pixel by ±1, recolour a pixel, paint a patch, write text, copy-move, splice from another artwork, hide a message in the lowest bits, or change brightness, contrast, JPEG quality or size. Edit history with Undo and Reset, and a download of the edited PNG. **Surprise me** makes a hidden, invisible one-pixel edit for the game; **Challenge a friend** hides your own edits so someone else can play. |
 | **3 · Verify** | **Spot the Edit:** Guess where the tamper occurred, then run verification. Displays the verdict, total shots evaluated, a 64×64 **tamper heatmap** highlighting altered tiles, a zoomed inspection of the most suspicious tile, and a **Live SWAP Test** visualizer that plays shots one by one with a real-time Wilson interval. Includes **Compare Encodings** (Strict vs Perceptual vs FRQI), a **"Run on Qiskit Aer"** button to execute true 23-qubit circuits, and **Check a file** to verify an image against a registered `.npz` without uploading the original (a strict `.npz` can itself reconstruct the canonical image). |
 | **How It Works** | Comprehensive educational walkthrough of the 5-step pipeline, circuit diagrams, mathematical derivations, and honest limitations. |
 | **Results** | Interactive gallery displaying all generated figures (F1–F7, ablation, noise) with captions from `captions.json` and `core_captions.json`. |
@@ -305,7 +307,7 @@ Open `http://localhost:8501` in your browser, or visit the live public deploymen
 ## Setup and Reproduction
 
 ### Prerequisites
-- Python 3.11, 3.12, or 3.13.
+- Python 3.12 (tested; the exact NumPy 2.5.4 / SciPy 1.18.1 pins require Python >=3.12).
 - Windows, macOS, or Linux. (On Windows, ensure long paths are enabled or clone into a short directory path).
 
 ### Installation
@@ -321,7 +323,7 @@ source .venv/bin/activate       # On Windows: .venv\Scripts\Activate.ps1
 # Install core and app dependencies
 pip install -r requirements.txt
 pip install -r app/requirements.txt
-pip install -e . --no-build-isolation
+pip install -e .
 ```
 
 ### Quickstart & Test Verification
