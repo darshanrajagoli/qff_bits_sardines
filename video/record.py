@@ -187,13 +187,17 @@ def do_action(page: Page, step: dict) -> list[float] | None:
     elif act == "click_image":
         sel = f'{IMG_IFRAME} >> visible=true >> nth={int(step.get("index", 0))}'
         page.locator(sel).scroll_into_view_if_needed()
-        frame = page.locator(sel).bounding_box()
         img = page.frame_locator(sel).locator("img")
         img.wait_for(state="visible", timeout=20_000)
-        b = img.bounding_box()  # page coordinates already
-        px, py = b["width"] * float(step["x"]), b["height"] * float(step["y"])
-        click = [b["x"] + px, b["y"] + py] if b else ([frame["x"] + px, frame["y"] + py] if frame else None)
-        img.click(position={"x": px, "y": py})
+        # The app's desktop CSS zoom makes Playwright's nested image box too
+        # large. The iframe box remains in viewport coordinates; use it for
+        # both the actual mouse click and the finishing pass's click marker.
+        frame = page.locator(sel).bounding_box()
+        if frame is None:
+            raise RuntimeError("Clickable image iframe has no viewport box")
+        click = [frame["x"] + frame["width"] * float(step["x"]),
+                 frame["y"] + frame["height"] * float(step["y"])]
+        page.mouse.click(*click)
     elif act == "scroll_to_text":
         target = page.get_by_text(step["text"]).filter(visible=True).first
         target.wait_for(state="visible", timeout=20_000)
