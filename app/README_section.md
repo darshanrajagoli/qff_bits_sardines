@@ -24,7 +24,7 @@ Then open http://localhost:8501. Use Python 3.12 or 3.13, the same as the core (
 | **How it works** | The five steps (canonical image → tiles → error-correcting code → sign state → SWAP test), the formulas, the 2-qubit SWAP-test circuit, why the encoding matters, and what we don't claim. |
 | **Results** | The figures in `experiments/figures/`, exactly as listed in `captions.json` and `core_captions.json`. |
 
-The app uses a pixel-art theme with light and dark modes (switch in the app's ⋮ menu → Settings). Double-click or double-tap any picture to open it full screen.
+The app uses a pixel-art theme with light and dark modes (Light / Dark switch in the sidebar, or the ⋮ menu → Settings). Double-click or double-tap any picture to open it full screen.
 
 ### How the app computes, said precisely
 
@@ -32,7 +32,7 @@ The app uses a pixel-art theme with light and dark modes (switch in the app's �
   identical in distribution to a noiseless circuit on that unit. It takes under 2 s.
 - **"Run on Qiskit Aer" runs a real circuit** for one tile, in a separate process. The tile is chosen classically (by the
   exact overlap, or by your click), so this is a hybrid demonstration, not a purely quantum verifier.
-- **Every number on screen is computed from `swapprint` at runtime**, including the code bound, shot counts, the
+- **Every number in the interactive tabs is computed from `swapprint` at runtime** (the Results tab shows the recorded experiments), including the code bound, shot counts, the
   perceptual threshold and the single-bit flip range. None are typed in.
 - **A fingerprint is not secret:** a strict `.npz` decodes back to the image, and there is no secret key: anyone can
   fingerprint anything, so a check only shows consistency with a trusted stored reference. It's an integrity check, not

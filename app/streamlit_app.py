@@ -455,7 +455,7 @@ def tab_start():
             "| **Tile / patch, region** | A 4×4-pixel patch (strict, frqi) or a 64×64-pixel region (perceptual): the unit "
             "that gets its own test. |\n"
             "| **SWAP test** | A small quantum circuit that compares two quantum states without reading them out. It "
-            "gives 0 or 1; identical states never give 1. |\n"
+            "gives 0 or 1; in the ideal noiseless model, identical states never give 1. |\n"
             "| **Shot** | One run of the test: one 0-or-1 answer. More shots, more confidence. |\n"
             "| **Overlap** | How similar two states are: 1 means identical, 0 means completely different (only its square matters for the test). |\n"
             "| **p1** | The chance that one shot gives 1: (1 − overlap²) / 2. |\n"
@@ -755,7 +755,10 @@ def tab_verify():
         elif cmp.mode == "strict":
             found = f"The SWAP test missed it in {cmp.shots} shots: try more shots or another seed."
         elif cmp.mode == "perceptual":
-            found = "Perceptual mode did not flag it, by design: it ignores small edits. Switch to strict."
+            found = ("Perceptual mode did not flag it, by design: it ignores one-pixel edits. Switch to strict."
+                     if g["kind"] == "surprise" else
+                     "Perceptual mode did not flag this edit: it compares a coarse summary, so visible edits "
+                     "can be missed. Try strict.")
         else:
             found = "FRQI did not flag it: small edits barely move FRQI states. Switch to strict."
         where = core.describe_box(box)

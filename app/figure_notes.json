@@ -29,7 +29,7 @@
   },
   "core_perceptual_ablation.png": {
     "title": "Why the default perceptual rule stays",
-    "plain": "Compares the default perceptual rule (v0.2) with a tweak called dead-zone. The tweak fixed a weakness on flat synthetic test images, but on paintings not used for tuning it raised false alarms on harmless edits from 2.78% to 14.09%, so v0.2 stays."
+    "plain": "Compares the default perceptual rule (v0.2) with a \"dead-zone\" tweak. It fixed flat synthetic images, but on six paintings not used for tuning it raised false alarms on harmless edits from 2.78% (95% interval 0–8.33%) to 14.09% (5.84–22.37%), so v0.2 stays."
   },
   "core_hardware.png": {
     "title": "Toy test on a real IBM chip",

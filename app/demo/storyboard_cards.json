@@ -104,7 +104,7 @@
  {
   "say": "The same test, as a real circuit on Qiskit's Aer simulator.",
   "action": "scroll_to_text",
-  "text": "Run it on a real Qiskit circuit",
+  "text": "Simulate the SWAP-test circuit",
   "hold": 3
  },
  {

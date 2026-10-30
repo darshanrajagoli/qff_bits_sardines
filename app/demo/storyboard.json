@@ -20,7 +20,7 @@
   {"say": "Watch the SWAP test shots arrive one by one: grey is 0, magenta is 1.",
    "action": "click_button", "name": "▶ Play shots", "hold": 4},
   {"say": "The same test, as a real circuit on Qiskit's Aer simulator.",
-   "action": "scroll_to_text", "text": "Run it on a real Qiskit circuit", "hold": 3},
+   "action": "scroll_to_text", "text": "Simulate the SWAP-test circuit", "hold": 3},
   {"say": "Aer agrees with the exact answer.",
    "action": "click_button", "name": "Run on Qiskit Aer", "hold": 7},
   {"say": "Why the encoding matters: same edit, same SWAP test, three encodings.",
