@@ -19,6 +19,9 @@ video/.venv/Scripts/python.exe video/finish.py --no-tts --stills 6,25,49,59,65,8
 # Final voiced export uses Rashida's real recording, not generated speech:
 video/.venv/Scripts/python.exe video/ingest_narration.py video/out/Rashida_take1.m4a
 video/.venv/Scripts/python.exe video/finish.py --human-manifest video/out/human/narration.json
+# Optional visual polish after inspecting the render; preserves its human audio:
+video/.venv/Scripts/python.exe video/render_patch.py --segment bars --human-manifest video/out/human/narration.json --out video/out/chart_patch.mp4
+video/.venv/Scripts/python.exe video/brand_mark.py video/out/swapprint_demo.mp4 video/out/swapprint_review.mp4 --chart-patch video/out/chart_patch.mp4
 video/.venv/Scripts/python.exe video/media.py
 ```
 
@@ -45,6 +48,9 @@ first zero until Rashida's reveal cue, then shows the first one on shot two. Thi
 capture to preserve a 100 ms animation frame. Outcomes, length and first-hit index are validated against the take.
 ASR receives 16 kHz float samples decoded by FFmpeg; original 48 kHz edit clips are preserved. This avoids the
 incompatible PyAV file-decoder call in faster-whisper 1.2.1. Use `--model base.en` for the final word-timing review.
+The original pixel sardine is a small identity-card mark. `brand_mark.py` bounds the output duration and copies
+audio packets unchanged; `render_patch.py` can repair a short visual section without regenerating a voice take.
+After editorial approval, make `out/swapprint_demo.mp4` point to the approved human cut before running `media.py`.
 
 Review the actual encoded output at the hook, diagram, verdict, first detected shot, heatmap, FRQI result, chart,
 hardware beat and end card. Check synchronization as well as legibility. Compare displayed numbers against

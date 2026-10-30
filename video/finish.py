@@ -868,13 +868,16 @@ def render_chart(seg: Seg, u: float) -> np.ndarray:
         for j, subline in enumerate(wrap(sub, "IBMPlexSans-Regular", 24, 470)):
             rise(dst, text_layer(subline, "IBMPlexSans-Regular", 24, TXT2),
                  128, y + 56 + j * 30, u, 0.4 + 0.1 * i)
-        grow = 3.4 if val > 1000 else 0.7
+        # Land the bar before its narrated number; intermediate counter values
+        # looked like measurements and could disagree with the spoken result.
+        number_cue = seg.wt("fifteen" if val > 1000 else "seven", default=t0 + 1.1)
+        grow = min(.95 if val > 1000 else .65, max(.3, number_cue - .15 - t0))
         k = prog(u, t0, grow, EXPRESSIVE)
         if k > 0:
             v = 10 ** (math.log10(val) * k)
             xe = xpos(v)
             rect(dst, X0, y + 4, max(2, xe - X0), 88, col)
-            label = f"{v:,.0f}" + (" shots" if k >= 0.999 else "")
+            label = f"{val:,.0f} shots"
             lay = text_layer(label, "IBMPlexMono-SemiBold", 44, TXT)
             lx = xe + 20 if xe + 20 + lay.shape[1] < W - 40 else xe - lay.shape[1] - 20
             blit(dst, lay, lx, y + 20)
