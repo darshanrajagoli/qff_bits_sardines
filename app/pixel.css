@@ -283,6 +283,9 @@ iframe[title="streamlit_image_coordinates.streamlit_image_coordinates"] { aspect
 /* tab bar: larger text and taller click targets, still one row inside the column (Ansh) */
 [data-testid="stTab"] p { font-size: 20px !important; line-height: 1.3 !important; }
 [data-testid="stTab"] { padding: 10px 14px !important; }
+/* more air between the tabs (Ansh); smaller step on narrow laptops so the row still fits */
+[data-testid="stMain"] [role="tablist"] { gap: 36px !important; }
+@media (max-width: 1199px) { [data-testid="stMain"] [role="tablist"] { gap: 16px !important; } }
 @media (max-width: 640px) {
   [data-testid="stTab"] p { font-size: 15px !important; } [data-testid="stTab"] { padding: 8px 8px !important; }
   /* the row is wider than a phone: start it at the left so every tab can be scrolled to (centring hid tab 1) */
