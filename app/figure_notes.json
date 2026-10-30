@@ -9,7 +9,7 @@
   },
   "collisions.png": {
     "title": "Can different artworks look alike?",
-    "plain": "Left: in 1,000,000 sampled pairs of patches from different artworks, strict-mode codes always stayed far apart, well inside a heuristic bound. Right: perceptual mode's coarse hash gave identical results for 345 of 26,880 different-content region pairs (1.283%), mostly flat areas."
+    "plain": "Left: in 1,000,000 sampled pairs of patches from different artworks, strict-mode codes always stayed far apart, well inside a heuristic bound. Right: perceptual mode's coarse hash gave identical results for 345 of 26,880 different-content region pairs (1.28%, 95% interval 1.16%–1.43%), mostly flat areas."
   },
   "perceptual_roc.png": {
     "title": "Tuning perceptual mode's sensitivity",
