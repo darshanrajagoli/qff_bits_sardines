@@ -335,7 +335,9 @@ with st.sidebar:
     st.markdown('<div class="sp-modes"><a class="sp-mode light" href="#theme-light">☀ Light</a>'
                 '<a class="sp-mode dark" href="#theme-dark">☾ Dark</a></div>', unsafe_allow_html=True)
     st.caption("Double-click an artwork preview for full screen.")
-    st.markdown('<div class="sp-credit">SwapPrint · team sardines. Type: Departure Mono by Helena Zhang (headings) and '
+    st.markdown('<div class="sp-credit">SwapPrint · team sardines: Ansh Varma (aviate15), Darshan Rajagoli '
+                '(darshanrajagoli) and Rashida Baldiwala (rsb17) on GitHub.<br><br>'
+                'Type: Departure Mono by Helena Zhang (headings) and '
                 'IBM Plex Mono (text), both SIL OFL 1.1. '
                 'Colours: Carbon Design System tokens (Apache-2.0). Not made or endorsed by IBM.</div>',
                 unsafe_allow_html=True)

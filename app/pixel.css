@@ -279,3 +279,26 @@ iframe[title="streamlit_image_coordinates.streamlit_image_coordinates"] { aspect
 [data-testid="stMain"] .stButton [data-testid="stTooltipIcon"],
 [data-testid="stMain"] .stButton [data-testid="stTooltipHoverTarget"],
 [data-testid="stMain"] .stButton [data-testid="stTooltipHoverTarget"] > button { width: 100%; }
+
+/* Laptop/desktop only (Ansh): everything at 80% and a centred ~1100 px column with equal space either side, so more of
+   each tab fits on one screen. Phones keep today's sizes. zoom scales text, pictures, buttons and spacing together;
+   the column's max-width is in zoomed units (1375 px x 0.8 = 1100 px on screen). */
+@media (min-width: 900px) {
+  [data-testid="stMainBlockContainer"] { zoom: 0.8; max-width: 1375px !important; margin-left: auto !important;
+    margin-right: auto !important; padding-left: 40px !important; padding-right: 40px !important; }
+  [data-testid="stSidebar"][data-collapsed="false"] { min-width: 240px !important; max-width: 240px !important; width: 240px !important; }
+  [data-testid="stSidebarContent"] { zoom: 0.8; }
+  /* keep supporting text readable after the zoom: 15 px here shows as 12 px on screen */
+  [data-testid="stCaptionContainer"], [data-testid="stCaptionContainer"] p, .sp-credit, .sp-artwork-full, .fine,
+  [data-testid="stSidebar"] [data-testid="stCaptionContainer"] p { font-size: 15px !important; }
+  /* pictures narrower than their column sit in its centre, under their centred headings */
+  [data-testid="stMain"] [data-testid="stImage"] { margin-left: auto; margin-right: auto; }
+  [data-testid="stMain"] [data-testid="stImage"] img { display: block; margin-left: auto; margin-right: auto; }
+  /* Streamlit sizes pictures from the column's on-screen width, which the zoom then shrinks a second time (to 80% of
+     the column, off-centre); pictures and the clickable pictures fill their column instead */
+  [data-testid="stMain"] [data-testid="stFullScreenFrame"] > div:has([data-testid="stImage"]),
+  [data-testid="stMain"] [data-testid="stImage"], [data-testid="stMain"] [data-testid="stImageContainer"],
+  [data-testid="stMain"] [data-testid="stImage"] img,
+  [data-testid="stMain"] iframe[title="streamlit_image_coordinates.streamlit_image_coordinates"] { width: 100% !important; }
+  [data-testid="stMain"] iframe[title="streamlit_image_coordinates.streamlit_image_coordinates"] { display: block; margin-left: auto; margin-right: auto; }
+}
