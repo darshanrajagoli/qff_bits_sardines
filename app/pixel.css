@@ -280,6 +280,12 @@ iframe[title="streamlit_image_coordinates.streamlit_image_coordinates"] { aspect
 [data-testid="stMain"] .stButton [data-testid="stTooltipHoverTarget"],
 [data-testid="stMain"] .stButton [data-testid="stTooltipHoverTarget"] > button { width: 100%; }
 
+/* five-step cards, three to a row: the last row (cards 4 and 5) is centred instead of left-aligned */
+@media (min-width: 641px) and (max-width: 1279px) {
+  .sp-steps { display: flex !important; flex-wrap: wrap; justify-content: center; }
+  .sp-steps > .sp-step { flex: 0 0 calc((100% - 2 * var(--sp-04, 12px)) / 3 - 2 * var(--px)); }
+}
+
 /* Laptop/desktop only (Ansh): everything at 80% and a centred ~1100 px column with equal space either side, so more of
    each tab fits on one screen. Phones keep today's sizes. zoom scales text, pictures, buttons and spacing together;
    the column's max-width is in zoomed units (1375 px x 0.8 = 1100 px on screen). */
