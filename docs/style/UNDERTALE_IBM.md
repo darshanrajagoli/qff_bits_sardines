@@ -3,6 +3,12 @@
 Darshan's direction, 30 Oct: the feeling, design and production should suggest a collaboration between Undertale
 and IBM. A pixel font alone does not satisfy this. This direction supersedes the earlier purely Carbon look.
 
+**Rollout clarification:** deck first. Send the actual slides for Darshan and teammate review. Keep the current
+website until BOTH Ansh and Rashida vote yes on using the slide design for it. Only then may they try a redesign,
+with the current website design preserved as a restorable version so the team can revert if it dislikes the trial.
+This document is an exploration, not an immediate app-restyling instruction. Minimal cute pixel stickers are
+welcome where they make sense.
+
 ## The feeling
 
 A quiet black stage. One tiny change. The interface speaks to you, waits for your guess, and lets the experiment
@@ -30,7 +36,7 @@ answer. A small heart/cursor makes the exchange feel human. The scientific expla
 - Original sparse 8-bit/triangle notes with a soft background tone. Duck under Rashida's human voice. Silence is
   part of the design. The final film retains her recorded voice and her editorial approval.
 
-## App translation for Ansh
+## Possible app translation after slide review
 
 The app should feel like the same world, including before and after an action: a framed introduction, an artwork
 inspection arena, square choice controls with a clear cursor/selection state, a short response after an edit, and

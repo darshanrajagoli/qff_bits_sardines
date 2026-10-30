@@ -1,5 +1,22 @@
 # SwapPrint presentation
 
+## IBM × Undertale design study, v2
+
+Review `SwapPrint_IBM_Undertale_v2.pdf` or the editable `SwapPrint_IBM_Undertale_v2.pptx` for the current proposed
+direction: a quiet near-black stage, white dialogue/evidence frames, restrained violet and magenta, two small
+original pixel stickers, Departure Mono headings and IBM Plex scientific content. Preview PNGs are in `previews/`.
+Artwork, evidence, source notes and the original ten-slide story remain intact. This is a visual study, not an
+endorsement or actual collaboration claim.
+
+**Website vote:** Ansh and Rashida must BOTH explicitly agree to this slide look before any website redesign trial.
+Silence or one yes is insufficient. Preserve the current website design as a restorable version, including its
+source commit and screenshots, before a trial. Current site stays in place while votes are pending.
+
+The original pure Carbon files below are retained for comparison and fallback. Generated sticker prompt/provenance
+and font licence are in `assets/README.md`.
+
+## Original Carbon deck, v1
+
 Ten slides for the team demo and judge discussion:
 
 1. SwapPrint and the artwork
