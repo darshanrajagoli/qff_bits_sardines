@@ -45,7 +45,7 @@
      "camera": [{"at": 0.0, "target": "verdict", "dur": 1.1, "scale": 1.8}],
      "clip": "click:0-0.3", "min_dur": 3.4, "sync": {"src": "idle:0-0.45", "word": "Change", "lead": 0.1}},
 
-    {"type": "app", "id": "shots",
+    {"type": "app", "id": "shots", "recorded_shot_card": true,
      "actions": [{"action": "scroll_to_text", "text": "Live SWAP test"},
                  {"action": "click_button", "name": "▶ Play shots", "watch": {"sel": ".shots .shot", "counts": [1, 2]}}],
      "vo": "These are the SWAP-test shots for the suspicious tile. In a noiseless test, identical states can never give a one. And there it is, on shot {strict_first_shot}.",

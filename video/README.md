@@ -40,6 +40,12 @@ make automatic splitting ambiguous, edit `detected_ranges.json` and pass `--rang
 recording instead of asking for a new one. The first ASR run downloads an open tiny.en model into ignored `out/models/`.
 Original audio stays local; the importer does not upload it to a transcription service.
 
+The final shot reveal is a labelled redraw of the actual outcome sequence saved in the app take. It holds the
+first zero until Rashida's reveal cue, then shows the first one on shot two. This avoids relying on a 4K screen
+capture to preserve a 100 ms animation frame. Outcomes, length and first-hit index are validated against the take.
+ASR receives 16 kHz float samples decoded by FFmpeg; original 48 kHz edit clips are preserved. This avoids the
+incompatible PyAV file-decoder call in faster-whisper 1.2.1. Use `--model base.en` for the final word-timing review.
+
 Review the actual encoded output at the hook, diagram, verdict, first detected shot, heatmap, FRQI result, chart,
 hardware beat and end card. Check synchronization as well as legibility. Compare displayed numbers against
 `out/raw/facts.json`, the saved experiment CSVs, and `docs/QA.md`. F8 measures toy states on real hardware; app

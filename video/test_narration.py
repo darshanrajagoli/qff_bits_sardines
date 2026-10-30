@@ -4,10 +4,23 @@ import tempfile
 import unittest
 
 import numpy as np
-from ingest_narration import SR, align_script, detect_ranges, read_wav, write_wav
+from ingest_narration import SR, align_script, asr_samples, detect_ranges, read_wav, write_wav
 
 
 class NarrationChecks(unittest.TestCase):
+    def test_asr_decode_has_16khz_timing_without_changing_edit_pcm(self):
+        t = np.arange(SR) / SR
+        original = (.15 * np.sin(2*np.pi*1000*t) * 32767).astype(np.int16)
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp)/"voice.wav"
+            write_wav(path, original)
+            decoded = asr_samples(path)
+            self.assertEqual(len(decoded), 16000)
+            self.assertEqual(decoded.dtype, np.float32)
+            self.assertEqual(np.argmax(np.abs(np.fft.rfft(decoded))), 1000)
+            self.assertAlmostEqual(float(np.sqrt(np.mean(decoded**2))), .15/np.sqrt(2), places=3)
+            np.testing.assert_array_equal(read_wav(path), original)
+
     def test_four_second_markers_separate_speech_without_cutting_it(self):
         t = np.arange(SR)/SR
         speech = (.15*np.sin(2*np.pi*220*t)*32767).astype(np.int16)

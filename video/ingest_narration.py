@@ -41,6 +41,18 @@ def write_wav(path, data):
         f.writeframes(data.astype(np.int16).tobytes())
 
 
+def asr_samples(path):
+    """Feed the supported 16 kHz float-array API; preserve 48 kHz edit clips.
+
+    This also avoids faster-whisper 1.2.1's file decoder calling the removed
+    PyAV metadata_errors argument. FFmpeg is already required for finishing.
+    """
+    decoded = subprocess.run(["ffmpeg", "-loglevel", "error", "-i", str(path),
+                              "-ac", "1", "-ar", "16000", "-f", "f32le", "pipe:1"],
+                             check=True, stdout=subprocess.PIPE)
+    return np.frombuffer(decoded.stdout, dtype=np.float32)
+
+
 def detect_ranges(data, gap=2.5):
     if not len(data):
         raise ValueError("recording is empty")
@@ -133,7 +145,7 @@ def main():
             raise ValueError(f"invalid range for {section['id']}")
         clip = out/f"{i:02d}_{section['id']}.wav"
         write_wav(clip, data[int(a*SR):int(b*SR)])
-        segments, _ = model.transcribe(str(clip), language="en", word_timestamps=True,
+        segments, _ = model.transcribe(asr_samples(clip), language="en", word_timestamps=True,
                         beam_size=5, vad_filter=False,
                         initial_prompt="SwapPrint, Qiskit, Hokusai, Marrakesh, SWAP test, SHA-256.")
         actual = [[w.start, max(.02, w.end-w.start), w.word.strip()]

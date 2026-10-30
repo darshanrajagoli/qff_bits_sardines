@@ -939,6 +939,66 @@ def render_figures(seg: Seg, u: float) -> np.ndarray:
 
 # ---- the app take
 
+def recorded_shot_sequence(text, expected, first_one):
+    """Read the actual outcomes captured from the app; never invent a reveal."""
+    match = re.search(r"Play shots\s+((?:[01]\s+)+)After", text)
+    if match is None:
+        raise ValueError("Recorded shot sequence missing from app take")
+    trace = tuple(int(x) for x in match[1].split())
+    if len(trace) != expected or next((i + 1 for i, x in enumerate(trace) if x), None) != first_one:
+        raise ValueError("Recorded shot sequence disagrees with the take facts")
+    return trace
+
+
+def shot_count_at(u, reveal, settle_end, total):
+    if u < reveal:
+        return 1
+    return min(total, 2 + max(0, int((u - settle_end) / .045)))
+
+
+@lru_cache(maxsize=64)
+def recorded_shot_card(trace, shown, row, col, p1):
+    """A clearly labelled redraw of recorded data, timed to the human voice.
+
+    The 4K screencast can skip the 100 ms first-zero frame. Redrawing the
+    captured outcomes avoids showing all 32 shots before the narrated reveal.
+    """
+    dst = grid_bg().copy()
+    rect(dst, 128, 132, 96, 8, ACCENT)
+    blit(dst, text_layer("ONE TILE · SHOT BY SHOT", "IBMPlexMono-Medium", 28, HELP), 128, 176)
+    blit(dst, text_layer("What the measurement sees.", "IBMPlexSans-SemiBold", 76, TXT), 124, 224)
+    for i in range(2):
+        x, y, size = 128 + i * 208, 386, 176
+        active = i < shown
+        fill = ALERT50 if active and trace[i] else LAYER2 if active else BG
+        rect(dst, x, y, size, size, fill)
+        frame_rect(dst, x, y, size, size, ACCENT_D if active and trace[i] else BORDER)
+        label = str(trace[i]) if active else "?"
+        lay = text_layer(label, "IBMPlexMono-Medium", 112, TXT if active else HELP)
+        blit(dst, lay, x + (size - lay.shape[1]) / 2, y + 8)
+        blit(dst, text_layer(f"SHOT {i + 1:02d}", "IBMPlexMono-Medium", 25, TXT2), x, y - 46)
+    hit = shown >= 2
+    blit(dst, text_layer("First 1: shot 2" if hit else "First 1: waiting", "IBMPlexSans-SemiBold", 54,
+                        ALERT50 if hit else TXT2), 720, 370)
+    blit(dst, text_layer(f"Exact p1 = {p1:.6f}", "IBMPlexMono-Medium", 32, TXT2), 720, 454)
+    blit(dst, text_layer("Identical states: p1 = 0", "IBMPlexMono-Medium", 30, HELP), 720, 510)
+    for i, value in enumerate(trace):
+        x, y, size = 128 + i * 52, 666, 44
+        active = i < shown
+        rect(dst, x, y, size, size, ALERT50 if active and value else LAYER2 if active else BG)
+        frame_rect(dst, x, y, size, size, ACCENT_D if i == 1 and active else BORDER)
+        if active:
+            lay = text_layer(str(value), "IBMPlexMono-Medium", 24, TXT)
+            blit(dst, lay, x + (size - lay.shape[1]) / 2, y + 2)
+    blit(dst, text_layer(f"{sum(trace[:shown])} ones in {shown} {'shot' if shown == 1 else 'shots'}",
+                        "IBMPlexMono-Medium", 34, TXT2), 128, 752)
+    blit(dst, text_layer(f"Recorded outcomes · redrawn · tile ({row}, {col}) · seed {FACTS['seed']}",
+                        "IBMPlexMono-Medium", 25, HELP), 128, 830)
+    blit(dst, text_layer("Analytical sampler · ideal noiseless model · not a hardware measurement",
+                        "IBMPlexMono-Medium", 24, HELP), 128, 874)
+    return dst
+
+
 class AppSeg(Seg):
     def plan(self, take: Take):
         self.take = take
@@ -949,7 +1009,11 @@ class AppSeg(Seg):
         self.pre = 0.0                                     # seconds of frozen first frame before playback
         self.sync_hold = None
         self.cuts = []
-        if d.get("sync") and self.words:
+        if d.get("recorded_shot_card"):
+            self.recorded_shots = recorded_shot_sequence(b["text"], FACTS["strict_shots"], FACTS["strict_first_shot"])
+            self.shot_reveal = max(.5, self.wt("there", default=self.vo_at + 6) - .2)
+            self.shot_settle_end = self.wt("two", end=True, default=self.shot_reveal + 2.4) + .8
+        elif d.get("sync") and self.words:
             sy = d["sync"]
             if str(sy["src"]).startswith("magenta:"):
                 self.src0, anchor = self.find_magenta(take, int(sy["src"].split(":")[1]), sy.get("region"))
@@ -969,6 +1033,8 @@ class AppSeg(Seg):
                     self.cuts.append((a["t_click"] + 0.5, a["t_idle"] - 0.8))
         need = max(float(d.get("min_dur", 2.6)), self.vo_at + self.vo_len() + 0.9)
         self.dur = max(need, 1.0)
+        if d.get("recorded_shot_card"):
+            self.dur = max(self.dur, self.shot_settle_end + (len(self.recorded_shots) - 2) * .045 + .8)
         # camera keyframes
         self.keys = []
         for k in d.get("camera", []):
@@ -1043,6 +1109,9 @@ class AppSeg(Seg):
         return c
 
     def render(self, u):
+        if self.d.get("recorded_shot_card"):
+            shown = shot_count_at(u, self.shot_reveal, self.shot_settle_end, len(self.recorded_shots))
+            return recorded_shot_card(self.recorded_shots, shown, *FACTS["tile_rc"], FACTS["strict_p1"]).copy()
         fid, src = self.take.frame(self.out_to_src(u))
         if self.d.get("isolated_target"):
             box = self.take.beats[self.id]["targets"][self.d["isolated_target"]]
