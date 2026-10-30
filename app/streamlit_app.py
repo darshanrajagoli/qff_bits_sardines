@@ -716,22 +716,23 @@ def tab_verify():
                 st.rerun()
         return
 
-    top = st.columns([1, 3])
-    if top[0].button("Verify", type="primary", width="stretch"):
+    # the Verify button on its own centred row; the verdict and its summary go full width underneath
+    _, mid, _ = st.columns([1, 1, 1])
+    if mid.button("Verify", type="primary", width="stretch"):
         run_verify()
         st.rerun()
     v = ss.verify
     if v is None:
-        top[1].markdown("Compare the edited image with the original, tile by tile, with SWAP tests. "
+        st.markdown("Compare the edited image with the original, tile by tile, with SWAP tests. "
                         + ("" if ss.history else "_No edits yet: Verify the untouched image, or make an edit in [2 · Tamper](#go-tamper)._"))
         return
     if v["key"] != key:
-        top[1].warning("The image or settings changed since the last check: press Verify again.")
+        st.warning("The image or settings changed since the last check: press Verify again.")
         return
     cmp = v["cmp"]
     hit = cmp.tampered
     word = core.UNIT_WORD[mode]
-    top[1].markdown(f'<div class="verdict {"hit" if hit else "miss"}">{core.verdict(cmp)}</div>'
+    st.markdown(f'<div class="verdict {"hit" if hit else "miss"}">{core.verdict(cmp)}</div>'
                     f'<div class="lead">{core.summary_line(cmp)}</div>'
                     f'<div class="fine">{cmp.shots:,} shots per {word} · {cmp.flagged.size:,} {word}s · compared on '
                     f'the canonical 256×256 image · exact backend · {v["seconds"] * 1000:.0f} ms</div>',
