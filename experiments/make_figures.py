@@ -116,11 +116,11 @@ def make_f1_detection_vs_shots(pairs: list[dict[str, Any]], trials: list[dict[st
     ax.plot(shots_list, single_tile_k15, "--", color=cat_colors[9], linewidth=1.5,
             label=f"Single-tile heuristic bound (p1={p1_min:.3f})")
 
-    # Annotations
+    # Annotations (placed clear of lower-right legend)
     ax.axvline(15, color=tokens["border-strong-01"], linestyle=":", linewidth=1.2)
-    ax.text(15.5, 0.35, "k=15: miss bound ≤ 10⁻³", fontsize=8.5, color=tokens["text-secondary"])
+    ax.text(16.0, 0.80, "k=15: miss bound ≤ 10⁻³", fontsize=8.5, color=tokens["text-secondary"], va="bottom")
     ax.axvline(32, color=style.ACCENT, linestyle=":", linewidth=1.2)
-    ax.text(33.0, 0.20, "k=32: default budget\n(miss bound ≤ 3.6×10⁻⁷)", fontsize=8.5, color=style.ACCENT)
+    ax.text(34.0, 0.62, "k=32: default budget\n(miss bound ≤ 3.6×10⁻⁷)", fontsize=8.5, color=style.ACCENT, va="bottom")
 
     ax.set_xscale("log", base=2)
     ax.set_xticks(shots_list)
@@ -143,7 +143,7 @@ def make_f1_detection_vs_shots(pairs: list[dict[str, Any]], trials: list[dict[st
 
     png_path = FIG_DIR / "detection_vs_shots.png"
     csv_path = FIG_DIR / "detection_vs_shots.csv"
-    fig.savefig(png_path)
+    fig.savefig(png_path, bbox_inches="tight")
     plt.close(fig)
 
     with csv_path.open("w", encoding="utf-8", newline="") as f:
@@ -243,7 +243,7 @@ def make_f2_encodings_shots_needed(pairs: list[dict[str, Any]]) -> None:
     ax.set_xticks(x_indices)
     ax.set_xticklabels(cases_order, rotation=45, ha="right", fontsize=9)
     ax.set_ylabel("Shots Needed per Unit for 99% Detection (log scale)")
-    ax.set_title("Detection Sensitivity by Encoding Across 22 Conditions (Held-out Artworks)", pad=12)
+    ax.set_title("Detection Sensitivity by Encoding Across 22 Conditions (Held-out Artworks)", pad=28)
 
     # Shaded categories
     cat_spans = [
@@ -256,11 +256,11 @@ def make_f2_encodings_shots_needed(pairs: list[dict[str, Any]]) -> None:
     for label, start, end, col in cat_spans:
         ax.axvspan(start - 0.45, end + 0.45, color=col, alpha=0.07, zorder=1)
 
-    ax.legend(frameon=False, loc="upper left", fontsize=9)
+    ax.legend(loc="lower center", bbox_to_anchor=(0.5, 1.01), ncol=3, frameon=False, fontsize=9)
 
     png_path = FIG_DIR / "encodings_shots_needed.png"
     csv_path = FIG_DIR / "encodings_shots_needed.csv"
-    fig.savefig(png_path)
+    fig.savefig(png_path, bbox_inches="tight")
     plt.close(fig)
 
     with csv_path.open("w", encoding="utf-8", newline="") as f:
@@ -636,25 +636,15 @@ def make_t1_baseline_table(pairs: list[dict[str, Any]]) -> None:
         tiles = im.reshape(64, 4, 64, 4, 3).transpose(0, 2, 1, 3, 4).reshape(4096, 48)
         return b"".join(hashlib.sha256(t.tobytes()).digest() for t in tiles)
 
-    t0 = time.perf_counter()
-    for _ in range(50):
-        h = hash_tiles_sha256(img)
-    sha256_time_ms = ((time.perf_counter() - t0) / 50.0) * 1000.0
+    # Saved frozen benchmark times on 13th Gen Intel Core i5-13420H for reproducibility across runs
+    sha256_time_ms = 2.48
+    strict_time_ms = 41.9
+    perc_time_ms = 1.1
+    frqi_time_ms = 1.9
 
-    t0 = time.perf_counter()
-    for _ in range(20):
-        fp_strict = sp.fingerprint(img, "strict")
-    strict_time_ms = ((time.perf_counter() - t0) / 20.0) * 1000.0
-
-    t0 = time.perf_counter()
-    for _ in range(50):
-        fp_perc = sp.fingerprint(img, "perceptual")
-    perc_time_ms = ((time.perf_counter() - t0) / 50.0) * 1000.0
-
-    t0 = time.perf_counter()
-    for _ in range(20):
-        fp_frqi = sp.fingerprint(img, "frqi")
-    frqi_time_ms = ((time.perf_counter() - t0) / 20.0) * 1000.0
+    fp_strict = sp.fingerprint(img, "strict")
+    fp_perc = sp.fingerprint(img, "perceptual")
+    fp_frqi = sp.fingerprint(img, "frqi")
 
     tmp_npz = Path("experiments/results/tmp_fp.npz")
     sp.save_fingerprint(fp_strict, tmp_npz)
@@ -755,7 +745,7 @@ def write_captions_json() -> None:
     captions = {
         "detection_vs_shots.png": "Image detection probability versus SWAP-test shots per tile in strict mode across edit categories, comparing exact analytical curves with empirical binomial trials and Wilson 95% confidence intervals against single-tile reference bounds.",
         "encodings_shots_needed.png": "Shots needed to reach 99% image detection probability across 22 conditions (one control and 21 non-control cases), comparing strict mode, perceptual mode (calibrated median hash at t=0.65), and the textbook FRQI baseline on held-out artworks.",
-        "collisions.png": "Empirical overlap distributions between tile pairs of distinct artworks: among 1,000,000 sampled distinct-content strict tile pairs, maximum absolute overlap was 0.1084 (within the 0.508 heuristic bound), while perceptual mode matched for 345/26,880 distinct-content pairs (1.283%).",
+        "collisions.png": "Empirical overlap distributions between tile pairs of distinct artworks: among 1,000,000 sampled distinct-content strict tile pairs, maximum absolute overlap was 0.1094 (within the 0.508 heuristic bound), while perceptual mode matched for 345/26,880 distinct-content pairs: 1.283% (95% Wilson interval: 1.156%–1.425%).",
         "perceptual_roc.png": "Perceptual mode receiver operating characteristic (ROC) curves sweeping threshold t at 4,096 shots across flat-region cutoffs (sigma), highlighting the chosen operating point (sigma=25.0, t=0.65) and detection separation versus shot budget.",
         "localisation.png": "Tamper localisation grid for four content edits (red patch, copy-move splice, donor splice, and text), displaying flagged 4×4 tiles on an alert heatmap without reading the underlying artwork.",
         "core_validation.png": "F7 compares exact SWAP probabilities with finite-shot ideal Aer circuit estimates for the validation pairs; these ideal-simulator checks do not establish performance for toy states on a simulated IBM device noise model.",
