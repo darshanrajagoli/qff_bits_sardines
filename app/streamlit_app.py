@@ -342,10 +342,7 @@ st.markdown('<div class="lead">Every 4×4 patch of an artwork gets an 11-qubit q
             'patch fires about half the time.</div>',
             unsafe_allow_html=True)
 
-tabs = st.tabs(["Start here", "1 · Fingerprint", "2 · Tamper", "3 · Verify", "How it works", "Results"])
-
-
-# ---------------------------------------------------------------- Start here
+# ---------------------------------------------------------------- Start here (welcome section above the tabs)
 
 
 @safe
@@ -1093,16 +1090,21 @@ def tab_results():
         st.info("No figures yet.")
 
 
-with tabs[0]:
+# Start here sits above the tabs, open on arrival; collapsing it brings the tabs up. ?welcome=closed starts it
+# collapsed (used by the scripted demo recordings).
+with st.expander("**Start here** · new to quantum fingerprints? A two-minute guide, no quantum knowledge needed",
+                 expanded=st.query_params.get("welcome") != "closed", icon=":material/explore:"):
     tab_start()
-with tabs[1]:
+
+tabs = st.tabs(["1 · Fingerprint", "2 · Tamper", "3 · Verify", "How it works", "Results"])
+with tabs[0]:
     tab_fingerprint()
-with tabs[2]:
+with tabs[1]:
     tab_tamper()
-with tabs[3]:
+with tabs[2]:
     tab_verify()
     check_a_file()
-with tabs[4]:
+with tabs[3]:
     tab_how()
-with tabs[5]:
+with tabs[4]:
     tab_results()

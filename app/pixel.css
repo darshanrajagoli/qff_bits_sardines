@@ -144,11 +144,17 @@ hr { border: 0; height: var(--px); background: repeating-linear-gradient(90deg, 
 /* the hidden component that adds double-click full screen takes no space */
 [data-testid="stElementContainer"]:has(iframe[height="0"]), .element-container:has(iframe[height="0"]) { display: none; }
 
-/* Start here: centred and welcoming */
-[role="tabpanel"]:has(.sp-hero) { max-width: 1000px; margin-left: auto; margin-right: auto; }
-[role="tabpanel"]:has(.sp-hero) h3, [role="tabpanel"]:has(.sp-hero) h4 { text-align: center; }
-[role="tabpanel"]:has(.sp-hero) h3::before { content: ""; }
-[role="tabpanel"]:has(.sp-hero) [data-testid="stCaptionContainer"] { text-align: center; }
+/* Start here: a welcome section above the tabs (an expander), centred, with a pixel frame in the accent colour */
+[data-testid="stExpander"]:has(.sp-hero) details { border: 0 !important; margin: var(--px) var(--px) 18px var(--px);
+  box-shadow: 0 calc(-1 * var(--px)) 0 0 var(--accent), 0 var(--px) 0 0 var(--accent),
+              calc(-1 * var(--px)) 0 0 0 var(--accent), var(--px) 0 0 0 var(--accent); }
+[data-testid="stExpander"]:has(.sp-hero) summary { font-size: 17px; padding-top: 14px; padding-bottom: 14px; }
+[data-testid="stExpander"]:has(.sp-hero) summary strong { font-family: var(--font-pixel) !important; font-size: 19px;
+  letter-spacing: 0.02em; color: var(--accent-text); font-weight: 400; }
+[data-testid="stExpanderDetails"]:has(.sp-hero) > div { max-width: 1000px; margin-left: auto; margin-right: auto; }
+[data-testid="stExpanderDetails"]:has(.sp-hero) h3, [data-testid="stExpanderDetails"]:has(.sp-hero) h4 { text-align: center; }
+[data-testid="stExpanderDetails"]:has(.sp-hero) h3::before { content: ""; }
+[data-testid="stExpanderDetails"]:has(.sp-hero) [data-testid="stCaptionContainer"] { text-align: center; }
 .sp-hero { text-align: center; margin: 8px auto 28px auto; max-width: 880px; }
 .sp-hero .kicker { color: var(--accent-text); font-size: 16px; letter-spacing: 0.12em; }
 .sp-hero .big { font-size: 55px; line-height: 1.15; color: var(--text-primary); margin: 10px 0 14px 0; }

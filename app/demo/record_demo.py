@@ -195,7 +195,7 @@ def main() -> None:
         page = ctx.new_page()
         page.set_default_timeout(15_000)
         t0 = time.monotonic()  # video time 0 is ~ here
-        page.goto(url)
+        page.goto(url + "/?welcome=closed")  # Start here collapsed, so the takes open on the tabs
         page.get_by_role("tab", name="1 · Fingerprint").wait_for(timeout=120_000)
         wait_idle(page)
         for i, step in enumerate(steps, 1):

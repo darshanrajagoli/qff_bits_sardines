@@ -22,16 +22,23 @@
     if (now - lastTap < 320 && toggleFullscreen(e.target)) { e.preventDefault(); lastTap = 0; } else { lastTap = now; }
   }, {passive: false});
 
-  // 2. tab links
-  const TABS = {start: 'start here', fingerprint: 'fingerprint', tamper: 'tamper', verify: 'verify',
-                how: 'how it works', results: 'results'};
+  // 2. tab links. The Start here section sits above the tabs, so a link scrolls the tab bar (not the page top) into
+  //    view; #go-start opens Start here and scrolls up to it.
+  const TABS = {fingerprint: 'fingerprint', tamper: 'tamper', verify: 'verify', how: 'how it works', results: 'results'};
   const goTab = (slug) => {
+    if (slug === 'start') {
+      const box = doc.querySelector('[data-testid="stExpander"] details');
+      if (!box) return false;
+      if (!box.open) box.querySelector('summary').click();
+      setTimeout(() => box.scrollIntoView({behavior: 'smooth', block: 'start'}), 50);
+      return true;
+    }
     const want = TABS[slug];
     const tab = [...doc.querySelectorAll('[role="tab"]')].find((t) => t.innerText.toLowerCase().includes(want));
     if (!tab) return false;
     tab.click();
-    const main = doc.querySelector('[data-testid="stMain"]') || doc.querySelector('.stMain');
-    setTimeout(() => (main ? main.scrollTo({top: 0, behavior: 'smooth'}) : tab.scrollIntoView()), 50);
+    const bar = tab.closest('[role="tablist"]') || tab;
+    setTimeout(() => bar.scrollIntoView({behavior: 'smooth', block: 'start'}), 50);
     return true;
   };
 
