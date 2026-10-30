@@ -931,10 +931,11 @@ def compare_encodings():
     fig.add_bar(x=xs, y=ys, marker_color=[PURPLE if r["mode"] == "strict" else G100["border-strong-01"]
                                           for r in rows],
                 text=[core.fmt_shots(r["expected_first"], r["never"]) for r in rows], textposition="outside")
-    fig.update_layout(yaxis_type="log", yaxis_title="expected shots to the first 1 (log scale)", height=340,
+    fig.update_layout(yaxis_type="log", yaxis_title="expected shots to first 1 (log)", height=340,
                       margin=dict(l=10, r=10, t=30, b=10), paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
-                      font_color=G100["text-secondary"],
-                      font_family="IBM Plex Sans", showlegend=False)
+                      # the app's body font (Plex Sans isn't loaded, so it fell back to a serif); no fixed colour, so
+                      # Streamlit's chart theme picks readable text for light and dark mode
+                      font_family="IBM Plex Mono, ui-monospace, monospace", showlegend=False)
     st.plotly_chart(fig, width="stretch")
     st.caption("Exact values (1/p1 from the exact overlap), no sampling, except the last column, which is one run at the "
                "seed above. Perceptual mode ignores tiny edits by design and decides by a threshold on overlap², not by "
