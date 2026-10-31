@@ -8,7 +8,22 @@
 
 ---
 
-> **One-line pitch:** Can a quantum experiment tell you whether a piece of digital art has been changed? We encode 4×4 image tiles into 11-qubit sign states using Buhrman et al.'s error-correcting code, flag single-pixel changes in a median budget of 7 shots with SWAP tests, and pinpoint altered regions with a tile-by-tile heatmap.
+> **One-line pitch:** Change one pixel in a painting, then explore how three quantum encodings make the same SWAP test sensitive to different kinds of edits. SwapPrint shows where a change is detected, how many shots it needs, and where noise and classical baselines limit the approach.
+
+## Try SwapPrint in 60 seconds
+
+**[Open the app](https://qffbitssardines-withoutthes.streamlit.app/)** · **[Watch the 2:59 human-narrated demo](https://drive.google.com/file/d/1MgQzH2eoaSqJfYkz7lAx7c88kPXjNzxP/view)** · **[Inspect the rubric and evidence](docs/JUDGE_GUIDE.md)**
+
+1. In a fresh app session, keep **Hokusai's Great Wave**, **strict**, **32 shots per tile** and **Seed 0**. If the sidebar is hidden, expand it; a sleeping app may take a moment to wake.
+2. Open **2 · Tamper** and press **Surprise me** to hide a one-pixel, one-colour-level edit.
+3. Open **3 · Verify**, click a guess on the image, then press **Verify**. Inspect the flagged tile, heatmap and simulated shots. A different guess does not change the verification result.
+4. Scroll to **Compare encodings**: the same edit is evaluated through strict, perceptual and FRQI representations. Below the shot display, **Run on Qiskit Aer** separately checks a selected unit as a circuit.
+
+**What actually runs:** full-image Verify uses an analytical sampler of ideal SWAP-test probabilities. The Aer button executes a selected-unit Qiskit circuit on a simulator. The real IBM hardware results are a **separate small-state study**, not full-image QPU verification.
+
+**What we contribute:** a reproducible artwork experiment comparing an error-correcting-code sign-state construction, a perceptual hash and a pixel-angle baseline, with localisation, uncertainty, noise and resource costs. The protocol builds on published work; the comparison does **not** establish a practical quantum advantage. **SHA-256 is better for practical integrity checking today.**
+
+For the specified held-out one-channel edits, strict mode's **median exact budget for 99% detection is 7 shots**; the FRQI one-level calculation needs **15,534,513**. These are probability budgets, not a promise that every trial detects by shot seven. [Data, denominators and qualifications](docs/RELEASE_AUDIT.md).
 
 ---
 
@@ -24,7 +39,7 @@
 
 ## The Demo
 
-An interactive web application built with Streamlit and styled with the open-source Carbon Design System lets users register artwork fingerprints, apply realistic digital tampering, challenge a friend, run live SWAP tests shot by shot, and execute real 23-qubit circuits on Qiskit Aer.
+An interactive Streamlit application with a pixel-art theme and open-source Carbon colour tokens lets users register artwork fingerprints, edit images, challenge a friend, inspect simulated SWAP-test shots, and separately execute selected-unit Qiskit circuits on Aer (23 qubits for strict ancilla mode).
 
 ![SwapPrint Teaser Animation](docs/media/teaser.gif)
 
@@ -190,7 +205,7 @@ Every artwork was evaluated across 22 conditions: one unchanged control and 21 n
 | Figure | Summary Visualization | Key Takeaway |
 |---|:---:|---|
 | **F1: Detection vs Shots** | ![F1](experiments/figures/detection_vs_shots.png) | In strict mode, analytical curves and empirical trials match precisely (within Wilson 95% intervals). At eight shots, the five single-pixel cases produced 744/750 detections: 99.20% (95% Wilson interval: 98.27%–99.63%). Strict controls produced 0/1,350 false alarms (95% Wilson interval: 0%–0.284%); the ideal identical-input false-alarm probability is exactly zero. |
-| **F2: Shots Needed Across Cases** | ![F2](experiments/figures/encodings_shots_needed.png) | Strict mode detects all 21 tampering cases in $< 32$ shots. Perceptual mode uses the calibrated median hash ($t=0.65$, 2,048 shots). FRQI requires over $10^7$ shots for fine edits, showing that encoding dictates sensitivity. **Marker key:** upward triangles denote budgets exceeding the 16,384-shot search cap (drawn at sentinel value 30,000 for visibility, not an empirical 30,000-shot budget); crosses denote edits never detected (zero difference / identical hash). |
+| **F2: Shots Needed Across Cases** | ![F2](experiments/figures/encodings_shots_needed.png) | Across the 21 non-control case types, strict mode's plotted median exact 99%-detection budgets are below 32 shots; these are not guarantees of detection in every finite-shot run. Perceptual mode uses the calibrated median hash ($t=0.65$, 2,048 shots). FRQI requires over $10^7$ shots for the one-level pixel cases, showing that encoding dictates sensitivity. **Marker key:** upward triangles denote budgets exceeding the 16,384-shot search cap (drawn at sentinel value 30,000 for visibility, not an empirical 30,000-shot budget); crosses denote edits never detected (zero difference / identical hash). |
 | **F3: Collision Distribution** | ![F3](experiments/figures/collisions.png) | Overlap distribution over $1,000,000$ distinct tile pairs is compared with a Gaussian $\mathcal{N}(0, 1/2048)$ reference (the Gaussian curve is a reference, not a goodness-of-fit certificate). Among 1,000,000 sampled distinct-content strict tile pairs, maximum absolute overlap was 0.1094 (exact max: 0.109375), supporting the heuristic bound. Perceptual hashes matched for 345/26,880 distinct-content pairs: 1.283% (95% Wilson interval: 1.156%–1.425%). |
 | **F4: Perceptual ROC Curves** | ![F4](experiments/figures/perceptual_roc.png) | Sweeping threshold $t$ across flatness cutoffs $\sigma$ reveals an optimal operating point at $\sigma = 25.0, t = 0.65$. Constant-colour regions share an all-zero AC hash, so perceptual mode cannot distinguish their colours; strict mode retains that information. |
 | **F5: Tamper Localisation** | ![F5](experiments/figures/localisation.png) | The heatmap displays flagged 4×4 tiles. Finite-shot checks can miss changed tiles; unchanged tiles have exactly zero flag probability in the ideal model. Flagged 4×4 tiles identify modified regions for `patch12`, `copy_move48`, `splice48`, and `text`. |
@@ -290,7 +305,7 @@ Open `http://localhost:8501` in your browser, or visit the live public deploymen
 | **2 · Tamper** | The original and the edited image sit side by side at the top. Click the edited one to choose a spot, then apply an edit: nudge one pixel by ±1, recolour a pixel, paint a patch, write text, copy-move, splice from another artwork, hide a message in the lowest bits, or change brightness, contrast, JPEG quality or size. Edit history with Undo and Reset, and a download of the edited PNG. **Surprise me** makes a hidden, invisible one-pixel edit for the game; **Challenge a friend** hides your own edits so someone else can play. |
 | **3 · Verify** | **Spot the Edit:** Guess where the tamper occurred, then run verification. Displays the verdict, total shots evaluated, a 64×64 **tamper heatmap** highlighting altered tiles, a zoomed inspection of the most suspicious tile, and a **Live SWAP Test** visualizer that plays shots one by one with a real-time Wilson interval. Includes **Compare Encodings** (Strict vs Perceptual vs FRQI), a **"Run on Qiskit Aer"** button to execute true 23-qubit circuits, and **Check a file** to verify an image against a registered `.npz` without uploading the original (a strict `.npz` can itself reconstruct the canonical image). |
 | **How It Works** | Comprehensive educational walkthrough of the 5-step pipeline, circuit diagrams, mathematical derivations, and honest limitations. |
-| **Results** | Interactive gallery displaying all generated figures (F1–F7, ablation, noise) with captions from `captions.json` and `core_captions.json`. |
+| **Results** | Gallery of recorded experiments, including F1–F5, Aer validation, ablation, simulated noise and the separate real-hardware toy study F8, with plain-language summaries and technical captions. |
 
 The app uses a pixel-art theme with light and dark modes (Light / Dark switch in the sidebar, or the ⋮ menu → Settings). Double-click or double-tap any picture to open it full screen.
 
@@ -364,7 +379,6 @@ qff_bits_sardines/
 ├── README.md                      # Complete submission document (Rashida)
 ├── requirements.txt               # Quantum core dependencies
 ├── pyproject.toml                 # Packaging configuration for swapprint v0.3.0
-│
 ├── swapprint/                     # Quantum Core Library (Owner: Darshan)
 │   ├── __init__.py                # Top-level API: load_image, fingerprint, compare
 │   ├── circuits.py                # 23-qubit Ancilla & 22-qubit Destructive SWAP test circuits

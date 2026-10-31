@@ -28,4 +28,4 @@ core_validation.csv          26e72c6ecfcde00407dc88c96468ae3b1e4f39f5f450a255348
 perceptual_calibration.json   032c84ab18f253e32c9e992136f6217a60dda98ac824b778cc5125215ce5718e
 ```
 
-See the [judge guide](JUDGE_GUIDE.md) and [limitations/Q&A](QA.md).
+This audit records the saved experiment evidence. See the [judge guide](JUDGE_GUIDE.md) and [limitations/Q&A](QA.md).
