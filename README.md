@@ -33,8 +33,8 @@ An interactive web application built with Streamlit and styled with the open-sou
 | ![Verification View](app/screenshots/verify_full.png) | ![Tamper Studio](app/screenshots/tamper.png) |
 
 - **Live Public App:** **[Launch SwapPrint on Streamlit Community Cloud](https://qffbitssardines-withoutthes.streamlit.app/)** *(No installation required; runs in any modern desktop browser)*.
-- **Keynote Video (Timing reference — synthetic narration; Rashida final cut pending):** [Watch the Video on Google Drive](https://drive.google.com/file/d/1MgQzH2eoaSqJfYkz7lAx7c88kPXjNzxP/view) *(2:41 story-first keynote presentation, 1080p30, Carbon title/section/end cards, synchronized shot-two reveal, real Heron r2 hardware run on ibm_marrakesh, and honest limits; script in [`video/narration.md`](video/narration.md) and [`docs/DEMO_SCRIPT.md`](docs/DEMO_SCRIPT.md))*.
-- **Interactive App Walkthrough:** [Watch the UI Demo on Google Drive](https://drive.google.com/file/d/18DblHaZpW1hQR3vbmxkzonuY0GlAkSgy/view?usp=drive_link) *(2:45 walkthrough of the live Streamlit app recorded by Ansh)*.
+- **Keynote Video — Rashida's original human narration:** [Watch SwapPrint on Google Drive](https://drive.google.com/file/d/1MgQzH2eoaSqJfYkz7lAx7c88kPXjNzxP/view) *(2:59, 1080p30, pixel-themed story and actual app capture: the one-pixel edit, recorded simulated shot-two reveal, localised heatmap, encoding comparison, and a separate real ibm_marrakesh toy-state study with honest limits. Script: [`video/narration.md`](video/narration.md); production/credits: [`video/README.md`](video/README.md))*.
+- **Interactive App Walkthrough:** [Watch the UI Demo on Google Drive](https://drive.google.com/file/d/1dgfz55XI1keohNNpRWS6n_HypWbDnu88/view) *(3:11, 1080p, silent captioned walkthrough of the final app recorded by Ansh; supplementary to the narrated keynote)*.
 - **Live Local App:** `streamlit run app/streamlit_app.py --server.headless true` (opens at `http://localhost:8501`).
 
 ---
@@ -381,7 +381,7 @@ qff_bits_sardines/
 │   ├── helpers.py                 # Color conversions, heatmaps, state formatting
 │   ├── demo/                      # Automated recording scripts and storyboards
 │   ├── screenshots/               # High-resolution screenshots of the UI
-│   └── tests/                     # 21 automated unit tests for app behavior
+│   └── tests/                     # 51 automated tests for app behavior
 │
 ├── experiments/                   # Tampering Experiments & Evaluation (Owner: Rashida)
 │   ├── fetch_artworks.py          # Museum API ingestion script (CC0 / Public Domain)
@@ -418,6 +418,8 @@ qff_bits_sardines/
 - **Matplotlib** (PSF-based) — Scientific publication figure generation.
 - **Carbon Design System** (Apache-2.0, `@carbon/colors`, `@carbon/themes`) — Palette and visual design tokens.
 - **IBM Plex** (SIL OFL 1.1) — Typography (IBM Plex Sans, IBM Plex Mono).
+- **Departure Mono** (SIL OFL 1.1) — Pixel typography; licence in [`app/static/fonts/DepartureMono-OFL.txt`](app/static/fonts/DepartureMono-OFL.txt).
+- **Final keynote:** Rashida Baldiwala's original human narration, an original code-generated backing pad and pixel sardine mark; asset and production details in [`video/README.md`](video/README.md).
 - *Disclaimer:* SwapPrint is an independent student project and is not made or endorsed by IBM.
 
 ### Image Sources
