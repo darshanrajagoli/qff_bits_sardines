@@ -2,6 +2,8 @@
 
 ![SwapPrint Hero Banner](docs/media/hero.png)
 
+🏆 **Winner · Problem 5: Quantum Fingerprint**
+
 **IBM Qiskit Fall Fest 2026 · BITS Pilani K.K. Birla Goa Campus**  
 **Track:** Beginner Track · **Problem 5:** *Quantum Fingerprint: creative integrity and tamper detection*  
 **Team:** **sardines** · **Team Code:** `TEAM-P6GK23`  
